@@ -85,7 +85,7 @@ def clip_masked_boxes(boxes, masks, im_shape):
     Clipped masked boxes inside image boundary
     """
     num_box = boxes.shape[0]
-    for i in xrange(num_box):
+    for i in range(num_box):
         box = np.round(boxes[i]).astype(int)
         mask = cv2.resize(masks[i, 0].astype(np.float32), (box[2] - box[0] + 1, box[3] - box[1] + 1))
         clip_x1 = max(0, 0 - box[0])
@@ -117,7 +117,7 @@ def mask_aggregation(boxes, masks, mask_weights, im_width, im_height):
     """
     assert boxes.shape[0] == len(masks) and boxes.shape[0] == mask_weights.shape[0]
     im_mask = np.zeros((im_height, im_width))
-    for mask_ind in xrange(len(masks)):
+    for mask_ind in range(len(masks)):
         box = np.round(boxes[mask_ind])
         mask = (masks[mask_ind] >= cfg.BINARIZE_THRESH).astype(float)
         mask_weight = mask_weights[mask_ind]
@@ -153,8 +153,8 @@ def cpu_mask_voting(masks, boxes, scores, num_classes, max_per_image, im_width, 
     # apply nms and sort to get first images according to their scores
     scores = scores[:, 1:]
     num_detect = boxes.shape[0]
-    res_mask = [[] for _ in xrange(num_detect)]
-    for i in xrange(num_detect):
+    res_mask = [[] for _ in range(num_detect)]
+    for i in range(num_detect):
         box = np.round(boxes[i]).astype(int)
         mask = cv2.resize(masks[i, 0].astype(np.float32), (box[2] - box[0] + 1, box[3] - box[1] + 1))
         res_mask[i] = mask
@@ -164,7 +164,7 @@ def cpu_mask_voting(masks, boxes, scores, num_classes, max_per_image, im_width, 
     sup_scores = []
     tobesort_scores = []
 
-    for i in xrange(num_classes - 1):
+    for i in range(num_classes - 1):
         dets = np.hstack((boxes.astype(np.float32), scores[:, i:i+1]))
         inds = nms(dets, cfg.TEST.MASK_MERGE_NMS_THRESH)
         ind_boxes = boxes[inds]
@@ -183,7 +183,7 @@ def cpu_mask_voting(masks, boxes, scores, num_classes, max_per_image, im_width, 
     thresh = sorted_scores[num_keep-1]
     result_box = []
     result_mask = []
-    for c in xrange(num_classes - 1):
+    for c in range(num_classes - 1):
         cls_box = sup_boxes[c]
         cls_score = sup_scores[c]
         keep = np.where(cls_score >= thresh)[0]
@@ -191,7 +191,7 @@ def cpu_mask_voting(masks, boxes, scores, num_classes, max_per_image, im_width, 
         num_sup_box = len(new_sup_boxes)
         masks_ar = np.zeros((num_sup_box, 1, cfg.MASK_SIZE, cfg.MASK_SIZE))
         boxes_ar = np.zeros((num_sup_box, 4))
-        for i in xrange(num_sup_box):
+        for i in range(num_sup_box):
             # Get weights according to their segmentation scores
             cur_ov = bbox_overlaps(boxes.astype(np.float), new_sup_boxes[i, np.newaxis].astype(np.float))
             cur_inds = np.where(cur_ov >= cfg.TEST.MASK_MERGE_IOU_THRESH)[0]
@@ -225,7 +225,7 @@ def gpu_mask_voting(masks, boxes, scores, num_classes, max_per_image, im_width, 
     sup_boxes = []
     sup_scores = []
     tobesort_scores = []
-    for i in xrange(num_classes):
+    for i in range(num_classes):
         if i == 0:
             sup_boxes.append([])
             sup_scores.append([])
@@ -250,7 +250,7 @@ def gpu_mask_voting(masks, boxes, scores, num_classes, max_per_image, im_width, 
     candidate_start = []
     candidate_scores = []
     class_bar = []
-    for c in xrange(num_classes):
+    for c in range(num_classes):
         if c == 0:
             continue
         cls_box = sup_boxes[c]
@@ -258,7 +258,7 @@ def gpu_mask_voting(masks, boxes, scores, num_classes, max_per_image, im_width, 
         keep = np.where(cls_score >= thresh)[0]
         new_sup_boxes = cls_box[keep]
         num_sup_box = len(new_sup_boxes)
-        for i in xrange(num_sup_box):
+        for i in range(num_sup_box):
             cur_ov = bbox_overlaps(boxes.astype(np.float), new_sup_boxes[i, np.newaxis].astype(np.float))
             cur_inds = np.where(cur_ov >= cfg.TEST.MASK_MERGE_IOU_THRESH)[0]
             candidate_inds.extend(cur_inds)
@@ -277,7 +277,7 @@ def gpu_mask_voting(masks, boxes, scores, num_classes, max_per_image, im_width, 
     list_result_box = []
     list_result_mask = []
     # separate result mask into different classes
-    for i in xrange(num_classes - 1):
+    for i in range(num_classes - 1):
         cls_start = class_bar[i - 1] if i > 0 else 0
         cls_end = class_bar[i]
         list_result_box.append(result_box[cls_start:cls_end, :])

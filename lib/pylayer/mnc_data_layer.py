@@ -8,6 +8,7 @@
 import cv2
 import numpy as np
 import yaml
+import six
 
 import caffe
 from mnc_config import cfg
@@ -46,7 +47,7 @@ class MNCDataLayer(caffe.Layer):
     def forward(self, bottom, top):
         """Get blobs and copy them into this layer's top blob vector."""
         blobs = self._get_next_minibatch()
-        for blob_name, blob in blobs.iteritems():
+        for blob_name, blob in six.iteritems(blobs):
             top_ind = self._name_to_top_map[blob_name]
             # Reshape net's input blobs
             top[top_ind].reshape(*blob.shape)
@@ -93,7 +94,7 @@ class MNCDataLayer(caffe.Layer):
         num_images = 1  # len(roidb)
         processed_ims = []
         im_scales = []
-        for i in xrange(num_images):
+        for i in range(num_images):
             im = cv2.imread(roidb['image'])
             if roidb['flipped']:
                 im = im[:, ::-1, :]
@@ -137,7 +138,7 @@ class MNCDataLayer(caffe.Layer):
             mask_max_y = maskdb['mask_max'][1]
             gt_masks = np.zeros((len(mask_list), mask_max_y, mask_max_x))
             mask_info = np.zeros((len(mask_list), 2))
-            for j in xrange(len(mask_list)):
+            for j in range(len(mask_list)):
                 mask = mask_list[j]
                 mask_x = mask.shape[1]
                 mask_y = mask.shape[0]

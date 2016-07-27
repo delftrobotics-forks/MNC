@@ -9,6 +9,7 @@ import caffe
 import yaml
 import numpy as np
 import numpy.random as npr
+import six
 from mnc_config import cfg
 from transform.bbox_transform import \
     bbox_transform, bbox_compute_targets, \
@@ -92,7 +93,7 @@ class ProposalTargetLayer(caffe.Layer):
             all_rois, gt_boxes, rois_per_image, self._num_classes, gt_masks, im_scale, mask_info)
         self._keep_ind = keep_inds if self._bp_all else fg_inds
 
-        for blob_name, blob in blobs.iteritems():
+        for blob_name, blob in six.iteritems(blobs):
             top[self._top_name_map[blob_name]].reshape(*blob.shape)
             top[self._top_name_map[blob_name]].data[...] = blob.astype(np.float32, copy=False)
 
@@ -130,7 +131,7 @@ def _sample_rois(all_rois, gt_boxes, rois_per_image, num_classes, gt_masks, im_s
 
     # Sample foreground indexes
     fg_inds = []
-    for i in xrange(len(cfg.TRAIN.FG_FRACTION)):
+    for i in range(len(cfg.TRAIN.FG_FRACTION)):
         cur_inds = np.where((max_overlaps >= cfg.TRAIN.FG_THRESH_LO[i]) &
                             (max_overlaps <= cfg.TRAIN.FG_THRESH_HI[i]))[0]
         cur_rois_this_image = min(cur_inds.size, np.round(rois_per_image *
@@ -143,7 +144,7 @@ def _sample_rois(all_rois, gt_boxes, rois_per_image, num_classes, gt_masks, im_s
     # Sample background indexes according to number of foreground
     bg_rois_per_this_image = rois_per_image - fg_rois_per_image
     bg_inds = []
-    for i in xrange(len(cfg.TRAIN.BG_FRACTION)):
+    for i in range(len(cfg.TRAIN.BG_FRACTION)):
         cur_inds = np.where((max_overlaps >= cfg.TRAIN.BG_THRESH_LO[i]) &
                             (max_overlaps <= cfg.TRAIN.BG_THRESH_HI[i]))[0]
         cur_rois_this_image = min(cur_inds.size, np.round(bg_rois_per_this_image *

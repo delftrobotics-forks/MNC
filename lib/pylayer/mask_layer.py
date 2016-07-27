@@ -8,6 +8,7 @@
 import caffe
 import cv2
 import numpy as np
+import six
 from transform.mask_transform import mask_overlap
 from mnc_config import cfg
 
@@ -40,10 +41,10 @@ class MaskLayer(caffe.Layer):
         elif str(self.phase) == 'TEST':
             blobs = self.forward_test(bottom, top)
         else:
-            print 'Unrecognized phase'
+            print('Unrecognized phase')
             raise NotImplementedError
 
-        for blob_name, blob in blobs.iteritems():
+        for blob_name, blob in six.iteritems(blobs):
             top[self._top_name_map[blob_name]].reshape(*blob.shape)
             top[self._top_name_map[blob_name]].data[...] = blob.astype(np.float32, copy=False)
 
@@ -65,7 +66,7 @@ class MaskLayer(caffe.Layer):
         #    Since the target gt mask may have different size
         #    We need to resize predicted masks into different sizes
         mask_size = cfg.MASK_SIZE
-        for i in xrange(num_mask_pred):
+        for i in range(num_mask_pred):
             # if the bounding box is itself background
             if gt_masks_info[i][0] == -1:
                 top_label[i][0] = 0

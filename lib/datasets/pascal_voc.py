@@ -113,7 +113,7 @@ class PascalVOC(object):
     @staticmethod
     def merge_roidbs(a, b):
         assert len(a) == len(b)
-        for i in xrange(len(a)):
+        for i in range(len(a)):
             a[i]['boxes'] = np.vstack((a[i]['boxes'], b[i]['boxes']))
             a[i]['gt_classes'] = np.hstack((a[i]['gt_classes'],
                                             b[i]['gt_classes']))

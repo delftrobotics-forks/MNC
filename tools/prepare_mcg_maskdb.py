@@ -94,7 +94,7 @@ def process_roidb(file_start, file_end, db):
             }
             sio.savemat(output_cache, roidb)
             use_time = time.time() - timer_tic
-            print '%d/%d use time %f' % (cnt, len(file_list), use_time)
+            print('%d/%d use time %f' % (cnt, len(file_list), use_time))
 
         else:
             # Otherwise we need to prepare other information like overlaps
@@ -159,7 +159,7 @@ def process_roidb(file_start, file_end, db):
 
             sio.savemat(output_cache, roidb)
             use_time = time.time() - timer_tic
-            print '%d/%d use time %f' % (cnt, len(file_list), use_time)
+            print('%d/%d use time %f' % (cnt, len(file_list), use_time)
 
 
 def process_flip_masks(image_names, im_start, im_end):
@@ -246,7 +246,7 @@ if __name__ == '__main__':
     # If db_name == 'train', we still need to add flipped maskdb into output folder
     # Add flipped mask and mask regression targets after prepare the original mcg proposals
     if args.db_name == 'train':
-        print 'Appending flipped MCG to ROI'
+        print('Appending flipped MCG to ROI')
         processes = []
         file_start = 0
         file_offset = int(np.ceil(len(file_list) / float(num_process)))

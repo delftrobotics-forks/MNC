@@ -12,15 +12,15 @@ from db.imdb import get_imdb
 def get_maskdb(imdb_name):
 
     imdb = get_imdb(imdb_name)
-    print 'Loaded dataset `{:s}` for training'.format(imdb.name)
+    print('Loaded dataset `{:s}` for training'.format(imdb.name))
     # Here set handler function. (e.g. gt_roidb in faster RCNN)
     imdb.set_roi_handler(cfg.TRAIN.PROPOSAL_METHOD)
     imdb.set_mask_handler(cfg.TRAIN.PROPOSAL_METHOD)
-    print 'Set proposal method: {:s}'.format(cfg.TRAIN.PROPOSAL_METHOD)
+    print('Set proposal method: {:s}'.format(cfg.TRAIN.PROPOSAL_METHOD))
     if cfg.TRAIN.USE_FLIPPED:
-        print 'Appending horizontally-flipped training examples...'
+        print('Appending horizontally-flipped training examples...')
         imdb.append_flipped_masks()
-        print 'done'
+        print('done')
     return imdb.maskdb
 
 

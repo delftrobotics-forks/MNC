@@ -4,6 +4,7 @@
 import numpy as np
 import os.path
 from easydict import EasyDict as edict
+import six
 
 __C = edict()
 cfg = __C
@@ -172,9 +173,9 @@ def _merge_two_config(user_cfg, default_cfg):
     """
     if type(user_cfg) is not edict:
         return
-    for key, val in user_cfg.iteritems():
+    for key, val in six.iteritems(user_cfg):
         # Since user_cfg is a sub-file of default_cfg
-        if not default_cfg.has_key(key):
+        if key not in default_cfg:
             raise KeyError('{} is not a valid config key'.format(key))
 
         if type(default_cfg[key]) is not type(val):
@@ -190,7 +191,7 @@ def _merge_two_config(user_cfg, default_cfg):
             try:
                 _merge_two_config(user_cfg[key], default_cfg[key])
             except:
-                print 'Error under config key: {}'.format(key)
+                print('Error under config key: {}'.format(key))
                 raise
         else:
             default_cfg[key] = val

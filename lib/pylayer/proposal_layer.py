@@ -8,6 +8,7 @@
 import caffe
 import numpy as np
 import yaml
+import six
 
 from mnc_config import cfg
 from transform.anchors import generate_anchors
@@ -170,7 +171,7 @@ class ProposalLayer(caffe.Layer):
                 blobs['proposal_index'] = all_rois_index
 
         # Copy data to forward to top layer
-        for blob_name, blob in blobs.iteritems():
+        for blob_name, blob in six.iteritems(blobs):
             top[self._top_name_map[blob_name]].reshape(*blob.shape)
             top[self._top_name_map[blob_name]].data[...] = blob.astype(np.float32, copy=False)
 
@@ -180,7 +181,7 @@ class ProposalLayer(caffe.Layer):
             bottom[1].diff.fill(0.0)
 
             # first count only non-zero top gradient to accelerate computing
-            top_non_zero_ind = np.unique(np.where(abs(top[0].diff[:, :]) > 0)[0])
+            top_non_zero_ind = np.unique(np.where(abs(top[0].diff[:, :]) > 0)[0].astype(np.uint64))
             proposal_index = np.asarray(self._proposal_index)
             # unmap indexes to the original scale
             unmap_val = self._ind_after_filter[self._ind_after_sort[proposal_index[top_non_zero_ind]]]
@@ -193,8 +194,8 @@ class ProposalLayer(caffe.Layer):
             # unmap_val are arranged as (H * W * A) as stated in forward comment
             # with A as the fastest dimension (which is different from caffe)
             c = unmap_val % self._num_anchors
-            w = (unmap_val / self._num_anchors) % self._width
-            h = (unmap_val / self._num_anchors / self._width) % self._height
+            w = (unmap_val / self._num_anchors).astype(np.int64) % self._width
+            h = (unmap_val / self._num_anchors / self._width).astype(np.uint64) % self._height
 
             # width and height should be in feature map scale
             anchor_w = (self._anchors[c, 2] - self._anchors[c, 0]) / self._feat_stride
