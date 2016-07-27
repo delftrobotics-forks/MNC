@@ -6,7 +6,7 @@
 # --------------------------------------------------------
 
 import os
-import cPickle
+import pickle
 import scipy
 import numpy as np
 import cv2
@@ -54,33 +54,33 @@ class TesterWrapper(object):
         elif self.task_name == 'seg':
             if os.path.isfile(det_file) and os.path.isfile(seg_file):
                 with open(det_file, 'rb') as f:
-                    seg_box = cPickle.load(f)
+                    seg_box = pickle.load(f, encoding='bytes')
                 with open(seg_file, 'rb') as f:
-                    seg_mask = cPickle.load(f)
+                    seg_mask = pickle.load(f, encoding='bytes')
             else:
                 seg_box, seg_mask = self.get_segmentation_result()
                 with open(det_file, 'wb') as f:
-                    cPickle.dump(seg_box, f, cPickle.HIGHEST_PROTOCOL)
+                    pickle.dump(seg_box, f, pickle.HIGHEST_PROTOCOL)
                 with open(seg_file, 'wb') as f:
-                    cPickle.dump(seg_mask, f, cPickle.HIGHEST_PROTOCOL)
-            print 'Evaluating segmentation using MNC 5 stage inference'
+                    pickle.dump(seg_mask, f, pickle.HIGHEST_PROTOCOL)
+            print('Evaluating segmentation using MNC 5 stage inference')
             self.imdb.evaluate_segmentation(seg_box, seg_mask, output_dir)
         elif self.task_name == 'cfm':
             if os.path.isfile(det_file) and os.path.isfile(seg_file):
                 with open(det_file, 'rb') as f:
-                    cfm_boxes = cPickle.load(f)
+                    cfm_boxes = pickle.load(f, encoding='bytes')
                 with open(seg_file, 'rb') as f:
-                    cfm_masks = cPickle.load(f)
+                    cfm_masks = pickle.load(f, encoding='bytes')
             else:
                 cfm_boxes, cfm_masks = self.get_cfm_result()
                 with open(det_file, 'wb') as f:
-                    cPickle.dump(cfm_boxes, f, cPickle.HIGHEST_PROTOCOL)
+                    pickle.dump(cfm_boxes, f, pickle.HIGHEST_PROTOCOL)
                 with open(seg_file, 'wb') as f:
-                    cPickle.dump(cfm_masks, f, cPickle.HIGHEST_PROTOCOL)
-            print 'Evaluating segmentation using convolutional feature masking'
+                    pickle.dump(cfm_masks, f, pickle.HIGHEST_PROTOCOL)
+            print('Evaluating segmentation using convolutional feature masking')
             self.imdb.evaluate_segmentation(cfm_boxes, cfm_masks, output_dir)
         else:
-            print 'task name only support \'det\', \'seg\', \'cfm\' and \'vis_seg\''
+            print('task name only support \'det\', \'seg\', \'cfm\' and \'vis_seg\'')
             raise NotImplementedError
 
     def get_detection_result(self):
@@ -94,19 +94,19 @@ class TesterWrapper(object):
         thresh = -np.inf * np.ones(self.num_classes)
         # top_scores will hold one min heap of scores per class (used to enforce
         # the max_per_set constraint)
-        top_scores = [[] for _ in xrange(self.num_classes)]
+        top_scores = [[] for _ in range(self.num_classes)]
         # all detections are collected into:
         #    all_boxes[cls][image] = N x 5 array of detections in
         #    (x1, y1, x2, y2, score)
-        all_boxes = [[[] for _ in xrange(self.num_images)]
-                     for _ in xrange(self.num_classes)]
+        all_boxes = [[[] for _ in range(self.num_images)]
+                     for _ in range(self.num_classes)]
         _t = {'im_detect': Timer(), 'misc': Timer()}
-        for i in xrange(self.num_images):
+        for i in range(self.num_images):
             im = cv2.imread(self.imdb.image_path_at(i))
             _t['im_detect'].tic()
             scores, boxes = self._detection_forward(im)
             _t['im_detect'].toc()
-            for j in xrange(1, self.num_classes):
+            for j in range(1, self.num_classes):
                 inds = np.where(scores[:, j] > thresh[j])[0]
                 cls_scores = scores[inds, j]
                 cls_boxes = boxes[inds, j*4:(j+1)*4]
@@ -125,22 +125,22 @@ class TesterWrapper(object):
 
                 all_boxes[j][i] = np.hstack((cls_boxes, cls_scores[:, np.newaxis]))\
                     .astype(np.float32, copy=False)
-            print 'process image %d/%d, forward average time %f' % (i, self.num_images,
-                                                                    _t['im_detect'].average_time)
+            print('process image %d/%d, forward average time %f' % (i, self.num_images,
+                                                                    _t['im_detect'].average_time))
 
-        for j in xrange(1, self.num_classes):
-            for i in xrange(self.num_images):
+        for j in range(1, self.num_classes):
+            for i in range(self.num_images):
                 inds = np.where(all_boxes[j][i][:, -1] > thresh[j])[0]
                 all_boxes[j][i] = all_boxes[j][i][inds, :]
 
         det_file = os.path.join(output_dir, 'detections.pkl')
         with open(det_file, 'wb') as f:
-            cPickle.dump(all_boxes, f, cPickle.HIGHEST_PROTOCOL)
+            pickle.dump(all_boxes, f, pickle.HIGHEST_PROTOCOL)
 
-        print 'Applying NMS to all detections'
+        print('Applying NMS to all detections')
         nms_dets = apply_nms(all_boxes, cfg.TEST.NMS)
 
-        print 'Evaluating detections'
+        print('Evaluating detections')
         self.imdb.evaluate_detections(nms_dets, output_dir)
 
     def vis_segmentation_result(self):
@@ -152,22 +152,22 @@ class TesterWrapper(object):
         thresh = -np.inf * np.ones(self.num_classes)
         # top_scores will hold one min heap of scores per class (used to enforce
         # the max_per_set constraint)
-        top_scores = [[] for _ in xrange(self.num_classes)]
+        top_scores = [[] for _ in range(self.num_classes)]
         # all detections and segmentation are collected into a list:
         # Since the number of dets/segs are of variable size
-        all_boxes = [[[] for _ in xrange(self.num_images)]
-                     for _ in xrange(self.num_classes)]
-        all_masks = [[[] for _ in xrange(self.num_images)]
-                     for _ in xrange(self.num_classes)]
+        all_boxes = [[[] for _ in range(self.num_images)]
+                     for _ in range(self.num_classes)]
+        all_masks = [[[] for _ in range(self.num_images)]
+                     for _ in range(self.num_classes)]
 
         _t = {'im_detect': Timer(), 'misc': Timer()}
-        for i in xrange(self.num_images):
+        for i in range(self.num_images):
             im = cv2.imread(self.imdb.image_path_at(i))
             _t['im_detect'].tic()
             masks, boxes, seg_scores = self._segmentation_forward(im)
             _t['im_detect'].toc()
             if not cfg.TEST.USE_MASK_MERGE:
-                for j in xrange(1, self.num_classes):
+                for j in range(1, self.num_classes):
                     inds = np.where(seg_scores[:, j] > thresh[j])[0]
                     cls_scores = seg_scores[inds, j]
                     cls_boxes = boxes[inds, :]
@@ -198,15 +198,15 @@ class TesterWrapper(object):
                     result_box, result_mask = cpu_mask_voting(masks, boxes, seg_scores, self.num_classes,
                                                               self.max_per_image, im.shape[1], im.shape[0])
                 # no need to create a min heap since the output will not exceed max number of detection
-                for j in xrange(1, self.num_classes):
+                for j in range(1, self.num_classes):
                     all_boxes[j][i] = result_box[j-1]
                     all_masks[j][i] = result_mask[j-1]
 
-            print 'process image %d/%d, forward average time %f' % (i, self.num_images,
-                                                                    _t['im_detect'].average_time)
+            print('process image %d/%d, forward average time %f' % (i, self.num_images,
+                                                                    _t['im_detect'].average_time))
 
-        for j in xrange(1, self.num_classes):
-            for i in xrange(self.num_images):
+        for j in range(1, self.num_classes):
+            for i in range(self.num_images):
                 inds = np.where(all_boxes[j][i][:, -1] > thresh[j])[0]
                 all_boxes[j][i] = all_boxes[j][i][inds, :]
                 all_masks[j][i] = all_masks[j][i][inds]
@@ -289,18 +289,18 @@ class TesterWrapper(object):
         thresh = -np.inf * np.ones(self.num_classes)
         # top_scores will hold one min heap of scores per class (used to enforce
         # the max_per_set constraint)
-        top_scores = [[] for _ in xrange(self.num_classes)]
+        top_scores = [[] for _ in range(self.num_classes)]
         # all detections and segmentation are collected into a list:
         # Since the number of dets/segs are of variable size
-        all_boxes = [[[] for _ in xrange(self.num_images)]
-                     for _ in xrange(self.num_classes)]
-        all_masks = [[[] for _ in xrange(self.num_images)]
-                     for _ in xrange(self.num_classes)]
+        all_boxes = [[[] for _ in range(self.num_images)]
+                     for _ in range(self.num_classes)]
+        all_masks = [[[] for _ in range(self.num_images)]
+                     for _ in range(self.num_classes)]
         _t = {'im_detect': Timer(), 'misc': Timer()}
-        for i in xrange(self.num_images):
+        for i in range(self.num_images):
             _t['im_detect'].tic()
             masks, boxes, seg_scores = self.cfm_network_forward(i)
-            for j in xrange(1, self.num_classes):
+            for j in range(1, self.num_classes):
                 inds = np.where(seg_scores[:, j] > thresh[j])[0]
                 cls_scores = seg_scores[inds, j]
                 cls_boxes = boxes[inds, :]
@@ -323,10 +323,10 @@ class TesterWrapper(object):
                 mask_before_nms = cls_masks.astype(np.float32, copy=False)
                 all_boxes[j][i], all_masks[j][i] = apply_nms_mask_single(box_before_nms, mask_before_nms, cfg.TEST.NMS)
             _t['im_detect'].toc()
-            print 'process image %d/%d, forward average time %f' % (i, self.num_images,
-                                                                    _t['im_detect'].average_time)
-        for j in xrange(1, self.num_classes):
-            for i in xrange(self.num_images):
+            print('process image %d/%d, forward average time %f' % (i, self.num_images,
+                                                                    _t['im_detect'].average_time))
+        for j in range(1, self.num_classes):
+            for i in range(self.num_images):
                 inds = np.where(all_boxes[j][i][:, -1] > thresh[j])[0]
                 all_boxes[j][i] = all_boxes[j][i][inds, :]
                 all_masks[j][i] = all_masks[j][i][inds]
@@ -346,7 +346,7 @@ class TesterWrapper(object):
 
         # Resize input mask, make it the same as CFM's input size
         mask_resize = np.zeros((masks.shape[0], cfg.TEST.CFM_INPUT_MASK_SIZE, cfg.TEST.CFM_INPUT_MASK_SIZE))
-        for i in xrange(masks.shape[0]):
+        for i in range(masks.shape[0]):
             mask_resize[i, :, :] = cv2.resize(masks[i, :, :].astype(np.float),
                                               (cfg.TEST.CFM_INPUT_MASK_SIZE, cfg.TEST.CFM_INPUT_MASK_SIZE))
         masks = mask_resize
@@ -370,7 +370,7 @@ class TesterWrapper(object):
         res_masks = np.zeros((0, 1, cfg.MASK_SIZE, cfg.MASK_SIZE), dtype=np.float32)
         res_seg_scores = np.zeros((0, self.num_classes), dtype=np.float32)
 
-        for scale_iter in xrange(num_scale_iter):
+        for scale_iter in range(num_scale_iter):
             HI_SCALE = min(LO_SCALE + cfg.TEST.GROUP_SCALE, len(cfg.TEST.SCALES))
             inds_this_scale = np.where((boxes[:, 0] >= LO_SCALE) & (boxes[:, 0] < HI_SCALE))[0]
             if len(inds_this_scale) == 0:
@@ -387,7 +387,7 @@ class TesterWrapper(object):
             input_blobs['data'], _ = prep_im_for_blob_cfm(im, cfg.TEST.SCALES[LO_SCALE:HI_SCALE])
             input_blobs['data'] = input_blobs['data'].astype(np.float32, copy=False)
             input_start = 0
-            for test_iter in xrange(num_iter_this_scale):
+            for test_iter in range(num_iter_this_scale):
                 input_end = min(input_start + max_rois_this_scale, boxes_this_scale.shape[0])
                 input_box = boxes_this_scale[input_start:input_end, :]
                 input_mask = masks_this_scale[input_start:input_end, :, :]

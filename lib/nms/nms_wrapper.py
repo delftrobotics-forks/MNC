@@ -6,8 +6,8 @@
 # --------------------------------------------------------
 
 from mnc_config import cfg
-from gpu_nms import gpu_nms
-from cpu_nms import cpu_nms
+from .gpu_nms import gpu_nms
+from .cpu_nms import cpu_nms
 
 
 def nms(dets, thresh):
@@ -27,10 +27,10 @@ def apply_nms(all_boxes, thresh):
     """
     num_classes = len(all_boxes)
     num_images = len(all_boxes[0])
-    nms_boxes = [[[] for _ in xrange(num_images)]
-                 for _ in xrange(num_classes)]
-    for cls_ind in xrange(num_classes):
-        for im_ind in xrange(num_images):
+    nms_boxes = [[[] for _ in range(num_images)]
+                 for _ in range(num_classes)]
+    for cls_ind in range(num_classes):
+        for im_ind in range(num_images):
             dets = all_boxes[cls_ind][im_ind]
             if dets == []:
                 continue
@@ -44,12 +44,12 @@ def apply_nms(all_boxes, thresh):
 def apply_nms_mask(all_boxes, all_masks, thresh):
     num_classes = len(all_boxes)
     num_images = len(all_boxes[0])
-    nms_boxes = [[[] for _ in xrange(num_images)]
-                 for _ in xrange(num_classes)]
-    nms_masks = [[[] for _ in xrange(num_images)]
-                 for _ in xrange(num_classes)]
-    for cls_ind in xrange(num_classes):
-        for im_ind in xrange(num_images):
+    nms_boxes = [[[] for _ in range(num_images)]
+                 for _ in range(num_classes)]
+    nms_masks = [[[] for _ in range(num_images)]
+                 for _ in range(num_classes)]
+    for cls_ind in range(num_classes):
+        for im_ind in range(num_images):
             dets = all_boxes[cls_ind][im_ind]
             masks = all_masks[cls_ind][im_ind]
             if dets == []:

@@ -65,7 +65,7 @@ class CFMDataLayer(caffe.Layer):
     def forward(self, bottom, top):
         """Get blobs and copy them into this layer's top blob vector."""
         blobs = self._get_next_minibatch()
-        for blob_name, blob in blobs.iteritems():
+        for blob_name, blob in blobs.items():
             top_ind = self._name_to_top_map[blob_name]
             # Reshape net's input blobs
             top[top_ind].reshape(*blob.shape)
@@ -87,10 +87,10 @@ class CFMDataLayer(caffe.Layer):
         if cfg.TRAIN.ASPECT_GROUPING:
             import PIL
             num_images = len(self.imdb.image_index)
-            width_r = [PIL.Image.open(self.imdb.image_path_at(i)).size[0] for i in xrange(num_images)]
-            height_r = [PIL.Image.open(self.imdb.image_path_at(i)).size[0] for i in xrange(num_images)]
-            widths = np.array([width_r[i] for i in xrange(len(width_r))])
-            heights = np.array([height_r[i] for i in xrange(len(height_r))])
+            width_r = [PIL.Image.open(self.imdb.image_path_at(i)).size[0] for i in range(num_images)]
+            height_r = [PIL.Image.open(self.imdb.image_path_at(i)).size[0] for i in range(num_images)]
+            widths = np.array([width_r[i] for i in range(len(width_r))])
+            heights = np.array([height_r[i] for i in range(len(height_r))])
             horz = (widths >= heights)
             vert = np.logical_not(horz)
             horz_inds = np.where(horz)[0]
@@ -113,7 +113,7 @@ class CFMDataLayer(caffe.Layer):
         num_images = len(roidb)
         processed_ims = []
         im_scales = []
-        for i in xrange(num_images):
+        for i in range(num_images):
             im = cv2.imread(im_names[i])
             # here [0][0] is due to the nature of scipy.io.savemat
             # since it will change True/False to [[1]] or [[0]] with shape (1,1)
@@ -173,7 +173,7 @@ class CFMDataLayer(caffe.Layer):
             num_gt = len(roidb['gt_classes'])
             fg_det_inds = np.where(det_overlap >= cfg.TRAIN.FG_DET_THRESH)
             keep_inds = []
-            for i in xrange(len(cfg.TRAIN.FRACTION_SAMPLE)):
+            for i in range(len(cfg.TRAIN.FRACTION_SAMPLE)):
                 cur_keep_inds = np.where((det_overlap >= cfg.TRAIN.THRESH_LO_SAMPLE[i]) &
                                          (det_overlap <= cfg.TRAIN.THRESH_HI_SAMPLE[i]))[0]
                 cur_rois_this_image = np.round(rois_per_img * cfg.TRAIN.FRACTION_SAMPLE[i])
@@ -205,7 +205,7 @@ class CFMDataLayer(caffe.Layer):
             mask_target = roidb['mask_targets']
             mask_target = mask_target[keep_inds, :, :]
             mask_resize = np.zeros((input_masks.shape[0], self.input_mz, self.input_mz))
-            for i in xrange(mask_target.shape[0]):
+            for i in range(mask_target.shape[0]):
                 mask_resize[i, :, :] = cv2.resize(input_masks[i, :, :].astype(np.float), (self.input_mz, self.input_mz))
             mask_resize = mask_resize >= cfg.BINARIZE_THRESH
 
@@ -222,7 +222,7 @@ class CFMDataLayer(caffe.Layer):
             bbox_targets, bbox_inside_weights = get_bbox_regression_label(
                 bbox_target_data, self._num_classes)
 
-            for i in xrange(len(fg_inds_det)):
+            for i in range(len(fg_inds_det)):
                 cls = gt_classes[gt_assignment[fg_inds_det[i]]][0]
                 if cls == 0:
                     continue

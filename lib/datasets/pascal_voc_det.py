@@ -7,7 +7,7 @@
 
 import os
 import uuid
-import cPickle
+import pickle
 import numpy as np
 import scipy.sparse
 import PIL
@@ -34,7 +34,7 @@ class PascalVOCDet(PascalVOC):
                          'cow', 'diningtable', 'dog', 'horse',
                          'motorbike', 'person', 'pottedplant',
                          'sheep', 'sofa', 'train', 'tvmonitor')
-        self._class_to_ind = dict(zip(self.classes, xrange(self.num_classes)))
+        self._class_to_ind = dict(zip(self.classes, range(self.num_classes)))
         self._image_ext = '.jpg'
         self._image_index = self._load_image_set_index()
         # Default to roidb handler
@@ -73,18 +73,18 @@ class PascalVOCDet(PascalVOC):
         cache_file = os.path.join(self.cache_path, self.name + '_gt_roidb.pkl')
         if os.path.exists(cache_file):
             with open(cache_file, 'rb') as fid:
-                roidb = cPickle.load(fid)
-            print '{} gt roidb loaded from {}'.format(self.name, cache_file)
+                roidb = pickle.load(fid, encoding='bytes')
+            print('{} gt roidb loaded from {}'.format(self.name, cache_file))
             return roidb
 
         num_image = len(self.image_index)
         if cfg.MNC_MODE:
-            gt_roidb = [self._load_sbd_annotations(index) for index in xrange(num_image)]
+            gt_roidb = [self._load_sbd_annotations(index) for index in range(num_image)]
         else:
-            gt_roidb = [self._load_pascal_annotations(index) for index in xrange(num_image)]
+            gt_roidb = [self._load_pascal_annotations(index) for index in range(num_image)]
         with open(cache_file, 'wb') as fid:
-            cPickle.dump(gt_roidb, fid, cPickle.HIGHEST_PROTOCOL)
-        print 'wrote gt roidb to {}'.format(cache_file)
+            pickle.dump(gt_roidb, fid, pickle.HIGHEST_PROTOCOL)
+        print('wrote gt roidb to {}'.format(cache_file))
         return gt_roidb
 
     def _load_image_set_index(self):
@@ -112,14 +112,14 @@ class PascalVOCDet(PascalVOC):
         cache_file = os.path.join(self.cache_path, self.name + '_' + cfg.TRAIN.PROPOSAL_METHOD + '_roidb_flip.pkl')
         if os.path.exists(cache_file):
             with open(cache_file, 'rb') as fid:
-                flip_roidb = cPickle.load(fid)
-            print '{} gt flipped roidb loaded from {}'.format(self.name, cache_file)
+                flip_roidb = pickle.load(fid, encoding='bytes')
+            print('{} gt flipped roidb loaded from {}'.format(self.name, cache_file))
         else:
             num_images = self.num_images
             widths = [PIL.Image.open(self.image_path_at(i)).size[0]
-                      for i in xrange(num_images)]
+                      for i in range(num_images)]
             flip_roidb = []
-            for i in xrange(num_images):
+            for i in range(num_images):
                 boxes = self.roidb[i]['boxes'].copy()
                 oldx1 = boxes[:, 0].copy()
                 oldx2 = boxes[:, 2].copy()
@@ -132,8 +132,8 @@ class PascalVOCDet(PascalVOC):
                          'flipped': True}
                 flip_roidb.append(entry)
             with open(cache_file, 'wb') as fid:
-                cPickle.dump(flip_roidb, fid, cPickle.HIGHEST_PROTOCOL)
-            print 'wrote gt flipped roidb to {}'.format(cache_file)
+                pickle.dump(flip_roidb, fid, pickle.HIGHEST_PROTOCOL)
+            print('wrote gt flipped roidb to {}'.format(cache_file))
 
         self.roidb.extend(flip_roidb)
         self._image_index *= 2
@@ -158,7 +158,7 @@ class PascalVOCDet(PascalVOC):
             non_diff_objs = [
                 obj for obj in objs if int(obj.find('difficult').text) == 0]
             if len(non_diff_objs) != len(objs):
-                print 'Removed {} difficult objects'.format(len(objs) - len(non_diff_objs))
+                print('Removed {} difficult objects'.format(len(objs) - len(non_diff_objs)))
             objs = non_diff_objs
         num_objs = len(objs)
 
@@ -189,7 +189,7 @@ class PascalVOCDet(PascalVOC):
                 'flipped': False}
 
     def _load_sbd_annotations(self, index):
-        if index % 1000 == 0: print '%d / %d' % (index, len(self._image_index))
+        if index % 1000 == 0: print('%d / %d' % (index, len(self._image_index)))
         image_name = self._image_index[index]
         inst_file_name = os.path.join(self._data_path, 'inst', image_name + '.mat')
         gt_inst_mat = scipy.io.loadmat(inst_file_name)
@@ -259,7 +259,7 @@ class PascalVOCDet(PascalVOC):
         for cls_ind, cls in enumerate(self.classes):
             if cls == '__background__':
                 continue
-            print 'Writing {} VOC results file'.format(cls)
+            print('Writing {} VOC results file'.format(cls))
             filename = self._get_voc_results_file_template().format(cls)
             with open(filename, 'wt') as f:
                 for im_ind, index in enumerate(self.image_index):
@@ -267,18 +267,18 @@ class PascalVOCDet(PascalVOC):
                     if dets == []:
                         continue
                     # the VOCdevkit expects 1-based indices
-                    for k in xrange(dets.shape[0]):
+                    for k in range(dets.shape[0]):
                         f.write('{:s} {:.3f} {:.1f} {:.1f} {:.1f} {:.1f}\n'.
                                 format(index, dets[k, -1],
                                        dets[k, 0] + 1, dets[k, 1] + 1,
                                        dets[k, 2] + 1, dets[k, 3] + 1))
 
     def _do_python_eval(self, output_dir = 'output'):
-        print '--------------------------------------------------------------'
-        print 'Computing results with **unofficial** Python eval code.'
-        print 'Results should be very close to the official MATLAB eval code.'
-        print 'Recompute with `./tools/reval.py --matlab ...` for your paper.'
-        print '--------------------------------------------------------------'
+        print('--------------------------------------------------------------')
+        print('Computing results with **unofficial** Python eval code.')
+        print('Results should be very close to the official MATLAB eval code.')
+        print('Recompute with `./tools/reval.py --matlab ...` for your paper.')
+        print('--------------------------------------------------------------')
         annopath = os.path.join(
             self._devkit_path,
             'VOC' + self._year,
@@ -294,7 +294,7 @@ class PascalVOCDet(PascalVOC):
         aps = []
         # The PASCAL VOC metric changed in 2010
         use_07_metric = True if int(self._year) < 2010 else False
-        print 'VOC07 metric? ' + ('Yes' if use_07_metric else 'No')
+        print('VOC07 metric? ' + ('Yes' if use_07_metric else 'No'))
         if not os.path.isdir(output_dir):
             os.mkdir(output_dir)
         for i, cls in enumerate(self._classes):
@@ -307,7 +307,7 @@ class PascalVOCDet(PascalVOC):
             aps += [ap]
             print('AP for {} = {:.4f}'.format(cls, ap))
             with open(os.path.join(output_dir, cls + '_pr.pkl'), 'w') as f:
-                cPickle.dump({'rec': rec, 'prec': prec, 'ap': ap}, f)
+                pickle.dump({'rec': rec, 'prec': prec, 'ap': ap}, f)
         print('Mean AP = {:.4f}'.format(np.mean(aps)))
         print('~~~~~~~~')
         print('Results:')

@@ -22,7 +22,7 @@ from utils.blob import prep_im_for_blob, im_list_to_blob
 from transform.mask_transform import gpu_mask_voting
 import matplotlib.pyplot as plt
 from utils.vis_seg import _convert_pred_to_image, _get_voc_color_map
-import Image
+from PIL import Image
 
 # VOC 20 classes
 CLASSES = ('aeroplane', 'bicycle', 'bird', 'boat',
@@ -136,14 +136,14 @@ if __name__ == '__main__':
                 '2008_001717.jpg', '2008_008093.jpg']
     demo_dir = './data/demo'
     for im_name in im_names:
-        print '~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~'
-        print 'Demo for data/demo/{}'.format(im_name)
+        print('~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~')
+        print('Demo for data/demo/{}'.format(im_name))
         gt_image = os.path.join(demo_dir, im_name)
         im = cv2.imread(gt_image)
         start = time.time()
         boxes, masks, seg_scores = im_detect(im, net)
         end = time.time()
-        print 'forward time %f' % (end-start)
+        print('forward time {}'.format(end-start))
         result_mask, result_box = gpu_mask_voting(masks, boxes, seg_scores, len(CLASSES) + 1,
                                                   100, im.shape[1], im.shape[0])
         pred_dict = get_vis_dict(result_box, result_mask, 'data/demo/' + im_name, CLASSES)
@@ -155,8 +155,8 @@ if __name__ == '__main__':
         color_map = _get_voc_color_map()
         target_cls_file = os.path.join(demo_dir, 'cls_' + im_name)
         cls_out_img = np.zeros((img_height, img_width, 3))
-        for i in xrange(img_height):
-            for j in xrange(img_width):
+        for i in range(img_height):
+            for j in range(img_width):
                 cls_out_img[i][j] = color_map[cls_img[i][j]][::-1]
         cv2.imwrite(target_cls_file, cls_out_img)
         

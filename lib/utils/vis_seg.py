@@ -6,10 +6,10 @@
 # --------------------------------------------------------
 
 import numpy as np
-import cPickle
+import pickle
 import os
 import cv2
-import Image
+from PIL import Image
 from mnc_config import cfg
 
 
@@ -35,7 +35,7 @@ def vis_seg(img_names, cls_names, output_dir, gt_dir):
     for img_ind, image_name in enumerate(img_names):
         target_inst_file = os.path.join(inst_dir, image_name + '.jpg')
         target_cls_file = os.path.join(cls_dir, image_name + '.jpg')
-        print image_name
+        print(image_name)
         gt_image = gt_dir + '/img/' + image_name + '.jpg'
         img_data = cv2.imread(gt_image)
         img_width = img_data.shape[1]
@@ -45,8 +45,8 @@ def vis_seg(img_names, cls_names, output_dir, gt_dir):
         color_map = _get_voc_color_map()
         inst_out_img = np.zeros((img_height, img_width, 3))
         cls_out_img = np.zeros((img_height, img_width, 3))
-        for i in xrange(img_height):
-            for j in xrange(img_width):
+        for i in range(img_height):
+            for j in range(img_width):
                 inst_out_img[i][j] = color_map[inst_img[i][j]][::-1]
                 cls_out_img[i][j] = color_map[cls_img[i][j]][::-1]
 
@@ -69,10 +69,10 @@ def _prepare_dict(img_names, cls_names, cache_dir, vis_thresh=0.5):
     res_list = []
     det_file = os.path.join(cache_dir, 'res_boxes.pkl')
     with open(det_file, 'rb') as f:
-        det_pkl = cPickle.load(f)
+        det_pkl = pickle.load(f, encoding='bytes')
     seg_file = os.path.join(cache_dir, 'res_masks.pkl')
     with open(seg_file, 'rb') as f:
-        seg_pkl = cPickle.load(f)
+        seg_pkl = pickle.load(f, encoding='bytes')
 
     for img_ind, image_name in enumerate(img_names):
         box_for_img = []
@@ -102,7 +102,7 @@ def _convert_pred_to_image(img_width, img_height, pred_dict):
     num_inst = len(pred_dict['boxes'])
     inst_img = np.zeros((img_height, img_width))
     cls_img = np.zeros((img_height, img_width))
-    for i in xrange(num_inst):
+    for i in range(num_inst):
         box = np.round(pred_dict['boxes'][i]).astype(int)
         mask = pred_dict['masks'][i]
         cls_num = pred_dict['cls_name'][i]
@@ -132,10 +132,10 @@ def _convert_pred_to_image(img_width, img_height, pred_dict):
 
 def _get_voc_color_map(n=256):
     color_map = np.zeros((n, 3))
-    for i in xrange(n):
+    for i in range(n):
         r = b = g = 0
         cid = i
-        for j in xrange(0, 8):
+        for j in range(0, 8):
             r = np.bitwise_or(r, np.left_shift(np.unpackbits(np.array([cid], dtype=np.uint8))[-1], 7-j))
             g = np.bitwise_or(g, np.left_shift(np.unpackbits(np.array([cid], dtype=np.uint8))[-2], 7-j))
             b = np.bitwise_or(b, np.left_shift(np.unpackbits(np.array([cid], dtype=np.uint8))[-3], 7-j))

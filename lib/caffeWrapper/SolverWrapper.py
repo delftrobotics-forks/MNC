@@ -33,9 +33,9 @@ class SolverWrapper(object):
 
         if cfg.TRAIN.BBOX_REG:
             if not cfg.CFM_MODE:
-                print 'Computing bounding-box regression targets...'
+                print('Computing bounding-box regression targets...')
                 self.bbox_means, self.bbox_stds = add_bbox_regression_targets(roidb)
-                print 'done'
+                print('done')
             else:
                 # Pre-defined mcg bbox_mean and bbox_std
                 # We store them on disk to avoid disk level IO
@@ -51,7 +51,7 @@ class SolverWrapper(object):
 
         self.solver = caffe.SGDSolver(solver_prototxt)
         if pretrained_model is not None:
-            print 'Loading pretrained model weights from {:s}'.format(pretrained_model)
+            print('Loading pretrained model weights from {:s}'.format(pretrained_model))
             self.solver.net.copy_from(pretrained_model)
 
         self.solver_param = caffe_pb2.SolverParameter()
@@ -111,8 +111,8 @@ class SolverWrapper(object):
             net.save(str(filename))
         else:
             filename = os.path.join(self.output_dir, filename + '.h5')
-            net.save_to_hdf5(str(filename), False)
-        print 'Wrote snapshot to: {:s}'.format(filename)
+            net.save_hdf5(str(filename))
+        print('Wrote snapshot to: {:s}'.format(filename))
 
         if scale_bbox_params:
             # restore net to original state
@@ -127,7 +127,7 @@ class SolverWrapper(object):
             self.solver.step(1)
             timer.toc()
             if self.solver.iter % (10 * self.solver_param.display) == 0:
-                print 'speed: {:.3f}s / iter'.format(timer.average_time)
+                print('speed: {:.3f}s / iter'.format(timer.average_time))
 
             if self.solver.iter % cfg.TRAIN.SNAPSHOT_ITERS == 0:
                 last_snapshot_iter = self.solver.iter

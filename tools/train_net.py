@@ -84,15 +84,15 @@ if __name__ == '__main__':
         imdb, maskdb = attach_maskdb(args.imdb_name)
     else:
         maskdb = None
-    print '{:d} roidb entries'.format(len(roidb))
+    print('{:d} roidb entries'.format(len(roidb)))
 
     output_dir = get_output_dir(imdb, None)
-    print 'Output will be saved to `{:s}`'.format(output_dir)
+    print('Output will be saved to `{:s}`'.format(output_dir))
 
     _solver = SolverWrapper(args.solver, roidb, maskdb, output_dir, imdb,
                             pretrained_model=args.pretrained_model)
 
-    print 'Solving...'
+    print('Solving...')
     _solver.train_model(args.max_iters)
-    print 'done solving'
+    print('done solving')
 

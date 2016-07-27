@@ -58,7 +58,7 @@ class StageBridgeLayer(caffe.Layer):
             top[0].reshape(1, 5)
             self._top_name_map['rois'] = 0
         else:
-            print 'Unrecognized phase'
+            print('Unrecognized phase')
             raise NotImplementedError
 
     def reshape(self, bottom, top):
@@ -71,10 +71,10 @@ class StageBridgeLayer(caffe.Layer):
         elif str(self.phase) == 'TEST':
             blobs = self.forward_test(bottom, top)
         else:
-            print 'Unrecognized phase'
+            print('Unrecognized phase')
             raise NotImplementedError
 
-        for blob_name, blob in blobs.iteritems():
+        for blob_name, blob in blobs.items():
             top[self._top_name_map[blob_name]].reshape(*blob.shape)
             top[self._top_name_map[blob_name]].data[...] = blob.astype(np.float32, copy=False)
 
@@ -150,7 +150,7 @@ class StageBridgeLayer(caffe.Layer):
 
         # select bbox_deltas according to
         artificial_deltas = np.zeros((rois.shape[0], 4))
-        for i in xrange(rois.shape[0]):
+        for i in range(rois.shape[0]):
             artificial_deltas[i, :] = bbox_deltas[i, 4*self._bbox_reg_labels[i]:4*(self._bbox_reg_labels[i]+1)]
         artificial_deltas[self._bbox_reg_labels == 0, :] = 0
 
@@ -245,7 +245,7 @@ class StageBridgeLayer(caffe.Layer):
         rois_out = np.zeros((rois.shape[0], 5))
         # Single batch training
         rois_out[:, 0] = 0
-        for i in xrange(len(score_max)):
+        for i in range(len(score_max)):
             rois_out[i, 1:5] = all_rois[i, 4*score_max[i]:4*(score_max[i]+1)]
         rois_out[:, 1:5], _ = clip_boxes(rois_out[:, 1:5], im_info[0, :2])
         blobs = {
