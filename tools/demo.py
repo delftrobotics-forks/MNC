@@ -129,7 +129,7 @@ if __name__ == '__main__':
 
     # Warm up for the first two images
     im = 128 * np.ones((300, 500, 3), dtype=np.float32)
-    for i in xrange(2):
+    for i in range(2):
         _, _, _ = im_detect(im, net)
 
     im_names = ['2008_000533.jpg', '2008_000910.jpg', '2008_001602.jpg',
@@ -173,7 +173,7 @@ if __name__ == '__main__':
         fig, ax = plt.subplots(figsize=(12, 12))
         ax.imshow(im, aspect='equal')
         classes = pred_dict['cls_name']
-        for i in xrange(len(classes)):
+        for i in range(len(classes)):
             score = pred_dict['boxes'][i][-1]
             bbox = pred_dict['boxes'][i][:4]
             cls_ind = classes[i] - 1
