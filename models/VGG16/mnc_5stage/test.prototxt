@@ -1074,19 +1074,3 @@ layer {
   }
 }
 
-layer {
-  name: "bbox_pred_ext"
-  type: "InnerProduct"
-  bottom: "join_box_mask_ext"
-  top: "bbox_pred_ext"
-  param {
-    name: "bbox_pred_w" 
-  }
-  param {
-    name: "bbox_pred_b" 
-  }
-  inner_product_param {
-    num_output: 84
-  }
-}
-
