@@ -48,11 +48,11 @@ class StageBridgeLayer(caffe.Layer):
             self._top_name_map['mask_weight'] = 3
             top[4].reshape(1, 4)
             self._top_name_map['gt_mask_info'] = 4
-            top[5].reshape(1, 21 * 4)
+            top[5].reshape(1, 2 * 4)
             self._top_name_map['bbox_targets'] = 5
-            top[6].reshape(1, 21 * 4)
+            top[6].reshape(1, 2 * 4)
             self._top_name_map['bbox_inside_weights'] = 6
-            top[7].reshape(1, 21 * 4)
+            top[7].reshape(1, 2 * 4)
             self._top_name_map['bbox_outside_weights'] = 7
         elif self._phase == 'TEST':
             top[0].reshape(1, 5)
@@ -205,7 +205,7 @@ class StageBridgeLayer(caffe.Layer):
         bbox_target_data = np.hstack((labels[:, np.newaxis], bbox_target_data))\
             .astype(np.float32, copy=False)
         bbox_targets, bbox_inside_weights = get_bbox_regression_label(
-            bbox_target_data, 21)
+            bbox_target_data, 2)
 
         scaled_rois = rois[:, 1:5] / float(im_scale)
         scaled_gt_boxes = gt_boxes[:, :4] / float(im_scale)

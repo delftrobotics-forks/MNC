@@ -25,11 +25,7 @@ from utils.vis_seg import _convert_pred_to_image, _get_voc_color_map
 from PIL import Image
 
 # VOC 20 classes
-CLASSES = ('aeroplane', 'bicycle', 'bird', 'boat',
-           'bottle', 'bus', 'car', 'cat', 'chair',
-           'cow', 'diningtable', 'dog', 'horse',
-           'motorbike', 'person', 'pottedplant',
-           'sheep', 'sofa', 'train', 'tvmonitor')
+CLASSES = ('o',)
 
 
 def parse_args():
