@@ -7,7 +7,7 @@
 
 import os
 from os.path import join as pjoin
-from setuptools import setup
+from setuptools import setup, find_packages
 from distutils.extension import Extension
 from Cython.Distutils import build_ext
 import numpy as np
@@ -112,18 +112,18 @@ class custom_build_ext(build_ext):
 
 ext_modules = [
     Extension(
-        "utils.cython_bbox",
+        "multitask_network_cascades.utils.cython_bbox",
         ["utils/bbox.pyx"],
         extra_compile_args={'gcc': ["-Wno-cpp", "-Wno-unused-function"]},
         include_dirs = [numpy_include]
     ),
     Extension(
-        "nms.cpu_nms",
+        "multitask_network_cascades.nms.cpu_nms",
         ["nms/cpu_nms.pyx"],
         extra_compile_args={'gcc': ["-Wno-cpp", "-Wno-unused-function"]},
         include_dirs = [numpy_include]
     ),
-    Extension('nms.gpu_nms',
+    Extension('multitask_network_cascades.nms.gpu_nms',
         ['nms/nms_kernel.cu', 'nms/gpu_nms.pyx'],
         library_dirs=[CUDA['lib64']],
         libraries=['cudart'],
@@ -140,7 +140,7 @@ ext_modules = [
                                      "'-fPIC'"]},
         include_dirs = [numpy_include, CUDA['include']]
     ),
-    Extension('nms.mv',
+    Extension('multitask_network_cascades.nms.mv',
         ['nms/mv_kernel.cu', 'nms/gpu_mv.pyx'],
         library_dirs=[CUDA['lib64']],
         libraries=['cudart'],
@@ -160,8 +160,10 @@ ext_modules = [
 ]
 
 setup(
-    name='MNC',
+    name='multitask_network_cascades',
     ext_modules=ext_modules,
     # inject our custom trigger
     cmdclass={'build_ext': custom_build_ext},
+    packages=['multitask_network_cascades.' + p for p in find_packages()],
+    package_dir={'multitask_network_cascades' : '.'},
 )
