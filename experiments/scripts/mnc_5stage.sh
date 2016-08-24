@@ -1,8 +1,8 @@
 #!/bin/bash
 # Usage:
-# ./experiments/scripts/mnc_5stage.sh GPU NET [--set ...]
+# ./experiments/scripts/mnc.sh GPU NET [--set ...]
 # Example:
-# ./experiments/scripts/mnc_5stage.sh 0 VGG16 \
+# ./experiments/scripts/mnc.sh 0 VGG16 \
 #   --set EXP_DIR foobar RNG_SEED 42 TRAIN.SCALES "[400,500,600,700]"
 
 set -x
@@ -12,26 +12,35 @@ export PYTHONUNBUFFERED="True"
 
 GPU_ID=$1
 NET=$2
+STAGES=$3
 NET_lc=${NET,,}
 ITERS=25000
 DATASET_TRAIN=voc_2012_seg_train
 DATASET_TEST=voc_2012_seg_val
 array=( $@ )
 len=${#array[@]}
-EXTRA_ARGS=${array[@]:2:$len}
+EXTRA_ARGS=${array[@]:3:$len}
 EXTRA_ARGS_SLUG=${EXTRA_ARGS// /_}
 
-LOG="experiments/logs/mnc_5stage_${NET}_${EXTRA_ARGS_SLUG}.txt.`date +'%Y-%m-%d_%H-%M-%S'`"
+LOG="experiments/logs/mnc_${STAGES}stage_${NET}_${EXTRA_ARGS_SLUG}.txt.`date +'%Y-%m-%d_%H-%M-%S'`"
 exec &> >(tee -a "$LOG")
 echo Logging output to "$LOG"
 
-NET_INIT=data/imagenet_models/${NET}.mask.caffemodel
+case $NET in
+	ZF)
+		NET_INIT=data/imagenet_models/${NET}.caffemodel
+		;;
+	*)
+		NET_INIT=data/imagenet_models/${NET}.mask.caffemodel
+		;;
+esac
+
 time ./tools/train_net.py --gpu ${GPU_ID} \
-  --solver models/${NET}/mnc_5stage/solver.prototxt \
+  --solver models/${NET}/mnc_${STAGES}stage/solver.prototxt \
   --weights ${NET_INIT} \
   --imdb ${DATASET_TRAIN} \
   --iters ${ITERS} \
-  --cfg experiments/cfgs/${NET}/mnc_5stage.yml \
+  --cfg experiments/cfgs/${NET}/mnc_${STAGES}stage.yml \
   ${EXTRA_ARGS}
   
 set +x
@@ -39,9 +48,9 @@ NET_FINAL=`grep -B 1 "done solving" ${LOG} | grep "Wrote snapshot" | awk '{print
 set -x
 
 time ./tools/test_net.py --gpu ${GPU_ID} \
-  --def models/${NET}/mnc_5stage/test.prototxt \
+  --def models/${NET}/mnc_${STAGES}stage/test.prototxt \
   --net ${NET_FINAL} \
   --imdb ${DATASET_TEST} \
-  --cfg experiments/cfgs/${NET}/mnc_5stage.yml \
+  --cfg experiments/cfgs/${NET}/mnc_${STAGES}stage.yml \
   --task seg
 
