@@ -1,4 +1,4 @@
-name: "VGG16"
+name: "ZF"
 
 input: "data"
 input_shape {
