@@ -5,9 +5,9 @@
 # Licensed under The MIT License [see LICENSE for details]
 # --------------------------------------------------------
 
-from mnc_config import cfg
-from gpu_nms import gpu_nms
-from cpu_nms import cpu_nms
+from multitask_network_cascades.mnc_config import cfg
+from multitask_network_cascades.nms.gpu_nms import gpu_nms
+from multitask_network_cascades.nms.cpu_nms import cpu_nms
 
 
 def nms(dets, thresh):

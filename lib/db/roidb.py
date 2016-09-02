@@ -11,9 +11,9 @@ import os
 import cPickle
 import scipy
 
-from db.imdb import get_imdb
-from mnc_config import cfg
-from transform.bbox_transform import compute_targets
+from multitask_network_cascades.db.imdb import get_imdb
+from multitask_network_cascades.mnc_config import cfg
+from multitask_network_cascades.transform.bbox_transform import compute_targets
 
 
 def prepare_roidb(imdb):

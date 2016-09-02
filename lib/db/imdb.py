@@ -5,8 +5,8 @@
 # Licensed under The MIT License [see LICENSE for details]
 # --------------------------------------------------------
 
-from datasets.pascal_voc_det import PascalVOCDet
-from datasets.pascal_voc_seg import PascalVOCSeg
+from multitask_network_cascades.datasets.pascal_voc_det import PascalVOCDet
+from multitask_network_cascades.datasets.pascal_voc_seg import PascalVOCSeg
 
 __sets = {
     'voc_2012_seg_train': (lambda: PascalVOCSeg('train', '2012', 'data/VOCdevkitSDS/')),

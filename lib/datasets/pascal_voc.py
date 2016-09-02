@@ -8,7 +8,7 @@
 import os
 import numpy as np
 import scipy.sparse
-from mnc_config import cfg
+from multitask_network_cascades.mnc_config import cfg
 
 
 class PascalVOC(object):

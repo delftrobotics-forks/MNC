@@ -9,10 +9,10 @@ import cPickle
 import os
 import scipy.io as sio
 import numpy as np
-from datasets.pascal_voc_det import PascalVOCDet
-from mnc_config import cfg
-from utils.vis_seg import vis_seg
-from utils.voc_eval import voc_eval_sds
+from multitask_network_cascades.datasets.pascal_voc_det import PascalVOCDet
+from multitask_network_cascades.mnc_config import cfg
+from multitask_network_cascades.utils.vis_seg import vis_seg
+from multitask_network_cascades.utils.voc_eval import voc_eval_sds
 import scipy
 
 
