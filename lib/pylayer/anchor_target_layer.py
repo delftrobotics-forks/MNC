@@ -9,11 +9,11 @@ import yaml
 import numpy as np
 
 import caffe
-from transform.anchors import generate_anchors
-from utils.cython_bbox import bbox_overlaps
-from utils.unmap import unmap
-from mnc_config import cfg
-from transform.bbox_transform import bbox_transform
+from multitask_network_cascades.transform.anchors import generate_anchors
+from multitask_network_cascades.utils.cython_bbox import bbox_overlaps
+from multitask_network_cascades.utils.unmap import unmap
+from multitask_network_cascades.mnc_config import cfg
+from multitask_network_cascades.transform.bbox_transform import bbox_transform
 
 
 class AnchorTargetLayer(caffe.Layer):

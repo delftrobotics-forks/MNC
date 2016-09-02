@@ -9,10 +9,10 @@ import caffe
 import numpy as np
 import yaml
 
-from mnc_config import cfg
-from transform.anchors import generate_anchors
-from transform.bbox_transform import clip_boxes, bbox_transform_inv, filter_small_boxes
-from nms.nms_wrapper import nms
+from multitask_network_cascades.mnc_config import cfg
+from multitask_network_cascades.transform.anchors import generate_anchors
+from multitask_network_cascades.transform.bbox_transform import clip_boxes, bbox_transform_inv, filter_small_boxes
+from multitask_network_cascades.nms.nms_wrapper import nms
 
 DEBUG = False
 PRINT_GRADIENT = 1

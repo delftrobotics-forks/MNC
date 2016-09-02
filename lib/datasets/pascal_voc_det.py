@@ -13,9 +13,9 @@ import scipy.sparse
 import PIL
 
 import xml.etree.ElementTree as xmlET
-from datasets.pascal_voc import PascalVOC
-from mnc_config import cfg
-from utils.voc_eval import voc_eval
+from multitask_network_cascades.datasets.pascal_voc import PascalVOC
+from multitask_network_cascades.mnc_config import cfg
+from multitask_network_cascades.utils.voc_eval import voc_eval
 
 
 class PascalVOCDet(PascalVOC):
