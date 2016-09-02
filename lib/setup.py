@@ -162,6 +162,7 @@ ext_modules = [
 setup(
     name='multitask_network_cascades',
     ext_modules=ext_modules,
+    py_modules=['multitask_network_cascades.mnc_config'],
     # inject our custom trigger
     cmdclass={'build_ext': custom_build_ext},
     packages=['multitask_network_cascades.' + p for p in find_packages()],
