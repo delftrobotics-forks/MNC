@@ -10,7 +10,7 @@ import pickle
 import os
 import cv2
 from PIL import Image
-from mnc_config import cfg
+from multitask_network_cascades.mnc_config import cfg
 
 
 def vis_seg(img_names, cls_names, output_dir, gt_dir):
