@@ -5,8 +5,8 @@
 # Licensed under The MIT License [see LICENSE for details]
 # --------------------------------------------------------
 
-from mnc_config import cfg
-from db.imdb import get_imdb
+from multitask_network_cascades.mnc_config import cfg
+from multitask_network_cascades.db.imdb import get_imdb
 
 
 def get_maskdb(imdb_name):
