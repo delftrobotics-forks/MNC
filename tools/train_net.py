@@ -14,10 +14,10 @@ import pprint
 import numpy as np
 # User-defined module
 import _init_paths
-from mnc_config import cfg, cfg_from_file, get_output_dir  # config mnc
-from db.roidb import attach_roidb
-from db.maskdb import attach_maskdb
-from caffeWrapper.SolverWrapper import SolverWrapper
+from multitask_network_cascades.mnc_config import cfg, cfg_from_file, get_output_dir  # config mnc
+from multitask_network_cascades.db.roidb import attach_roidb
+from multitask_network_cascades.db.maskdb import attach_maskdb
+from multitask_network_cascades.caffeWrapper.SolverWrapper import SolverWrapper
 import caffe
 
 

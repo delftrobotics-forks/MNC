@@ -13,7 +13,7 @@ layer {
   top: 'bbox_outside_weights'
   top: 'mask_weight'
   python_param {
-    module: 'pylayer.cfm_data_layer'
+    module: 'multitask_network_cascades.pylayer.cfm_data_layer'
     layer: 'CFMDataLayer'
     param_str: "{'num_classes': 21}"
   }

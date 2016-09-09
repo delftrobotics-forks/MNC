@@ -16,12 +16,12 @@ import numpy as np
 # User-defined module
 import _init_paths
 import caffe
-from mnc_config import cfg
-from transform.bbox_transform import clip_boxes
-from utils.blob import prep_im_for_blob, im_list_to_blob
-from transform.mask_transform import gpu_mask_voting
+from multitask_network_cascades.mnc_config import cfg
+from multitask_network_cascades.transform.bbox_transform import clip_boxes
+from multitask_network_cascades.utils.blob import prep_im_for_blob, im_list_to_blob
+from multitask_network_cascades.transform.mask_transform import gpu_mask_voting
 import matplotlib.pyplot as plt
-from utils.vis_seg import _convert_pred_to_image, _get_voc_color_map
+from multitask_network_cascades.utils.vis_seg import _convert_pred_to_image, _get_voc_color_map
 from PIL import Image
 
 # VOC 20 classes
