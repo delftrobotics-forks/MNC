@@ -8,7 +8,7 @@ layer {
   top: 'gt_masks'
   top: 'mask_info'
   python_param {
-    module: 'pylayer.mnc_data_layer'
+    module: 'multitask_network_cascades.pylayer.mnc_data_layer'
     layer: 'MNCDataLayer'
     param_str: "{ 'num_classes': 21 }"
   }
@@ -488,7 +488,7 @@ layer {
   top: 'rpn_rois'
   top: 'rpn_rois_index'
   python_param {
-    module: 'pylayer.proposal_layer'
+    module: 'multitask_network_cascades.pylayer.proposal_layer'
     layer: 'ProposalLayer'
     param_str: "{ 'feat_stride': 16, 'use_clip': 1, 'clip_base': 512 }"
   }
@@ -520,7 +520,7 @@ layer {
   top: 'fg_inds'
   top: 'bg_inds'
   python_param {
-    module: 'pylayer.proposal_target_layer'
+    module: 'multitask_network_cascades.pylayer.proposal_target_layer'
     layer: 'ProposalTargetLayer'
     param_str: "{'num_classes': 21, 'bp_all': 1}"
   }
@@ -539,7 +539,7 @@ layer {
   top: 'rpn_bbox_inside_weights'
   top: 'rpn_bbox_outside_weights'
   python_param {
-    module: 'pylayer.anchor_target_layer'
+    module: 'multitask_network_cascades.pylayer.anchor_target_layer'
     layer: 'AnchorTargetLayer'
     param_str: "{'feat_stride': 16}"
   }
@@ -690,7 +690,7 @@ layer {
   top: 'mask_proposal'
   top: 'mask_proposal_label'
   python_param {
-    module: 'pylayer.mask_layer'
+    module: 'multitask_network_cascades.pylayer.mask_layer'
     layer: 'MaskLayer'
   }
 }
@@ -1042,7 +1042,7 @@ layer {
   top: 'bbox_inside_weights_ext'
   top: 'bbox_outside_weights_ext'
   python_param {
-    module: 'pylayer.stage_bridge_layer'
+    module: 'multitask_network_cascades.pylayer.stage_bridge_layer'
     layer: 'StageBridgeLayer'
     param_str: "{ 'feat_stride': 16,  'use_clip': 1,  'clip_base': 512 }"
   }
@@ -1162,7 +1162,7 @@ layer {
   top: 'mask_proposal_ext'
   top: 'mask_proposal_label_ext'
   python_param {
-    module: 'pylayer.mask_layer'
+    module: 'multitask_network_cascades.pylayer.mask_layer'
     layer: 'MaskLayer'
   }
 }
