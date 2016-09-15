@@ -6,7 +6,7 @@
 # --------------------------------------------------------
 
 import numpy as np
-import pickle
+from six.moves import cPickle
 import os
 import cv2
 from PIL import Image
@@ -69,10 +69,10 @@ def _prepare_dict(img_names, cls_names, cache_dir, vis_thresh=0.5):
     res_list = []
     det_file = os.path.join(cache_dir, 'res_boxes.pkl')
     with open(det_file, 'rb') as f:
-        det_pkl = pickle.load(f, encoding='bytes')
+        det_pkl = cPickle.load(f)
     seg_file = os.path.join(cache_dir, 'res_masks.pkl')
     with open(seg_file, 'rb') as f:
-        seg_pkl = pickle.load(f, encoding='bytes')
+        seg_pkl = cPickle.load(f)
 
     for img_ind, image_name in enumerate(img_names):
         box_for_img = []

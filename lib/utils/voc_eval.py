@@ -7,7 +7,7 @@
 
 import xml.etree.ElementTree as ET
 import os
-import pickle
+from six.moves import cPickle
 import numpy as np
 import cv2
 import scipy.io as sio
@@ -108,11 +108,11 @@ def voc_eval(detpath,
         # save
         print('Saving cached annotations to {:s}'.format(cachefile))
         with open(cachefile, 'w') as f:
-            pickle.dump(recs, f)
+            cPickle.dump(recs, f)
     else:
         # load
         with open(cachefile, 'r') as f:
-            recs = pickle.load(f)
+            recs = cPickle.load(f)
 
     # extract gt objects for this class
     class_recs = {}
@@ -202,13 +202,13 @@ def voc_eval_sds(det_file, seg_file, devkit_path, image_list, cls_name, cache_di
     check_voc_sds_cache(cache_dir, devkit_path, image_names, class_names)
     gt_cache = cache_dir + '/' + cls_name + '_mask_gt.pkl'
     with open(gt_cache, 'rb') as f:
-        gt_pkl = pickle.load(f, encoding='bytes')
+        gt_pkl = cPickle.load(f)
 
     # 2. Get predict pickle file for this class
     with open(det_file, 'rb') as f:
-        boxes_pkl = pickle.load(f, encoding='bytes')
+        boxes_pkl = cPickle.load(f)
     with open(seg_file, 'rb') as f:
-        masks_pkl = pickle.load(f, encoding='bytes')
+        masks_pkl = cPickle.load(f)
 
     # 3. Pre-compute number of total instances to allocate memory
     num_image = len(image_names)
@@ -391,4 +391,4 @@ def check_voc_sds_cache(cache_dir, devkit_path, image_names, class_names):
                 continue
             cachefile = os.path.join(cache_dir, name + '_mask_gt.pkl')
             with open(cachefile, 'wb') as f:
-                pickle.dump(record_list[cls_ind], f)
+                cPickle.dump(record_list[cls_ind], f)
