@@ -5,7 +5,7 @@
 # Licensed under The MIT License [see LICENSE for details]
 # --------------------------------------------------------
 
-import pickle
+from six.moves import cPickle
 import os
 import scipy.io as sio
 import numpy as np
@@ -53,7 +53,7 @@ class PascalVOCSeg(PascalVOCDet):
         cache_file = os.path.join(self.cache_path, self.name + '_gt_maskdb.pkl')
         if os.path.exists(cache_file):
             with open(cache_file, 'rb') as fid:
-                gt_maskdb = pickle.load(fid, encoding='bytes')
+                gt_maskdb = cPickle.load(fid)
             print('{} gt maskdb loaded from {}'.format(self.name, cache_file))
         else:
             num_image = len(self.image_index)
@@ -61,7 +61,7 @@ class PascalVOCSeg(PascalVOCDet):
             gt_maskdb = [self._load_sbd_mask_annotations(index, gt_roidbs)
                          for index in range(num_image)]
             with open(cache_file, 'wb') as fid:
-                pickle.dump(gt_maskdb, fid, pickle.HIGHEST_PROTOCOL)
+                cPickle.dump(gt_maskdb, fid, cPickle.HIGHEST_PROTOCOL)
             print('wrote gt roidb to {}'.format(cache_file))
         return gt_maskdb
 
@@ -120,7 +120,7 @@ class PascalVOCSeg(PascalVOCDet):
         cache_file = os.path.join(self.cache_path, self.name + '_' + cfg.TRAIN.PROPOSAL_METHOD + '_maskdb_flip.pkl')
         if os.path.exists(cache_file):
             with open(cache_file, 'rb') as fid:
-                flip_maskdb = pickle.load(fid, encoding='bytes')
+                flip_maskdb = cPickle.load(fid)
             print('{} gt flipped roidb loaded from {}'.format(self.name, cache_file))
             self.maskdb.extend(flip_maskdb)
             # Need to check this condition since otherwise we may occasionally *4
@@ -142,7 +142,7 @@ class PascalVOCSeg(PascalVOCDet):
                          'flipped': True}
                 flip_maskdb.append(entry)
             with open(cache_file, 'wb') as fid:
-                pickle.dump(flip_maskdb, fid, pickle.HIGHEST_PROTOCOL)
+                cPickle.dump(flip_maskdb, fid, cPickle.HIGHEST_PROTOCOL)
             print('wrote gt flipped maskdb to {}'.format(cache_file))
             self.maskdb.extend(flip_maskdb)
             # Need to check this condition since otherwise we may occasionally *4
@@ -171,10 +171,10 @@ class PascalVOCSeg(PascalVOCDet):
             print('Writing {} VOC results file'.format(cls))
             filename = os.path.join(output_dir, cls + '_det.pkl')
             with open(filename, 'wb') as f:
-                pickle.dump(all_boxes[cls_inds], f, pickle.HIGHEST_PROTOCOL)
+                cPickle.dump(all_boxes[cls_inds], f, cPickle.HIGHEST_PROTOCOL)
             filename = os.path.join(output_dir, cls + '_seg.pkl')
             with open(filename, 'wb') as f:
-                pickle.dump(all_masks[cls_inds], f, pickle.HIGHEST_PROTOCOL)
+                cPickle.dump(all_masks[cls_inds], f, cPickle.HIGHEST_PROTOCOL)
 
     def _reformat_result(self, boxes, masks):
         num_images = len(self.image_index)

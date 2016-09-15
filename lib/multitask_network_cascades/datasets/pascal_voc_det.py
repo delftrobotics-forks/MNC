@@ -7,7 +7,7 @@
 
 import os
 import uuid
-import pickle
+from six.moves import cPickle
 import numpy as np
 import scipy.sparse
 import PIL
@@ -73,7 +73,7 @@ class PascalVOCDet(PascalVOC):
         cache_file = os.path.join(self.cache_path, self.name + '_gt_roidb.pkl')
         if os.path.exists(cache_file):
             with open(cache_file, 'rb') as fid:
-                roidb = pickle.load(fid, encoding='bytes')
+                roidb = cPickle.load(fid)
             print('{} gt roidb loaded from {}'.format(self.name, cache_file))
             return roidb
 
@@ -83,7 +83,7 @@ class PascalVOCDet(PascalVOC):
         else:
             gt_roidb = [self._load_pascal_annotations(index) for index in range(num_image)]
         with open(cache_file, 'wb') as fid:
-            pickle.dump(gt_roidb, fid, pickle.HIGHEST_PROTOCOL)
+            cPickle.dump(gt_roidb, fid, cPickle.HIGHEST_PROTOCOL)
         print('wrote gt roidb to {}'.format(cache_file))
         return gt_roidb
 
@@ -112,7 +112,7 @@ class PascalVOCDet(PascalVOC):
         cache_file = os.path.join(self.cache_path, self.name + '_' + cfg.TRAIN.PROPOSAL_METHOD + '_roidb_flip.pkl')
         if os.path.exists(cache_file):
             with open(cache_file, 'rb') as fid:
-                flip_roidb = pickle.load(fid, encoding='bytes')
+                flip_roidb = cPickle.load(fid)
             print('{} gt flipped roidb loaded from {}'.format(self.name, cache_file))
         else:
             num_images = self.num_images
@@ -132,7 +132,7 @@ class PascalVOCDet(PascalVOC):
                          'flipped': True}
                 flip_roidb.append(entry)
             with open(cache_file, 'wb') as fid:
-                pickle.dump(flip_roidb, fid, pickle.HIGHEST_PROTOCOL)
+                cPickle.dump(flip_roidb, fid, cPickle.HIGHEST_PROTOCOL)
             print('wrote gt flipped roidb to {}'.format(cache_file))
 
         self.roidb.extend(flip_roidb)
@@ -307,7 +307,7 @@ class PascalVOCDet(PascalVOC):
             aps += [ap]
             print('AP for {} = {:.4f}'.format(cls, ap))
             with open(os.path.join(output_dir, cls + '_pr.pkl'), 'w') as f:
-                pickle.dump({'rec': rec, 'prec': prec, 'ap': ap}, f)
+                cPickle.dump({'rec': rec, 'prec': prec, 'ap': ap}, f)
         print('Mean AP = {:.4f}'.format(np.mean(aps)))
         print('~~~~~~~~')
         print('Results:')

@@ -6,7 +6,7 @@
 # --------------------------------------------------------
 
 import os
-import pickle
+from six.moves import cPickle
 import scipy
 import numpy as np
 import cv2
@@ -54,29 +54,29 @@ class TesterWrapper(object):
         elif self.task_name == 'seg':
             if os.path.isfile(det_file) and os.path.isfile(seg_file):
                 with open(det_file, 'rb') as f:
-                    seg_box = pickle.load(f, encoding='bytes')
+                    seg_box = cPickle.load(f)
                 with open(seg_file, 'rb') as f:
-                    seg_mask = pickle.load(f, encoding='bytes')
+                    seg_mask = cPickle.load(f)
             else:
                 seg_box, seg_mask = self.get_segmentation_result()
                 with open(det_file, 'wb') as f:
-                    pickle.dump(seg_box, f, pickle.HIGHEST_PROTOCOL)
+                    cPickle.dump(seg_box, f, cPickle.HIGHEST_PROTOCOL)
                 with open(seg_file, 'wb') as f:
-                    pickle.dump(seg_mask, f, pickle.HIGHEST_PROTOCOL)
+                    cPickle.dump(seg_mask, f, cPickle.HIGHEST_PROTOCOL)
             print('Evaluating segmentation using MNC 5 stage inference')
             self.imdb.evaluate_segmentation(seg_box, seg_mask, output_dir)
         elif self.task_name == 'cfm':
             if os.path.isfile(det_file) and os.path.isfile(seg_file):
                 with open(det_file, 'rb') as f:
-                    cfm_boxes = pickle.load(f, encoding='bytes')
+                    cfm_boxes = cPickle.load(f)
                 with open(seg_file, 'rb') as f:
-                    cfm_masks = pickle.load(f, encoding='bytes')
+                    cfm_masks = cPickle.load(f)
             else:
                 cfm_boxes, cfm_masks = self.get_cfm_result()
                 with open(det_file, 'wb') as f:
-                    pickle.dump(cfm_boxes, f, pickle.HIGHEST_PROTOCOL)
+                    cPickle.dump(cfm_boxes, f, cPickle.HIGHEST_PROTOCOL)
                 with open(seg_file, 'wb') as f:
-                    pickle.dump(cfm_masks, f, pickle.HIGHEST_PROTOCOL)
+                    cPickle.dump(cfm_masks, f, cPickle.HIGHEST_PROTOCOL)
             print('Evaluating segmentation using convolutional feature masking')
             self.imdb.evaluate_segmentation(cfm_boxes, cfm_masks, output_dir)
         else:
@@ -135,7 +135,7 @@ class TesterWrapper(object):
 
         det_file = os.path.join(output_dir, 'detections.pkl')
         with open(det_file, 'wb') as f:
-            pickle.dump(all_boxes, f, pickle.HIGHEST_PROTOCOL)
+            cPickle.dump(all_boxes, f, cPickle.HIGHEST_PROTOCOL)
 
         print('Applying NMS to all detections')
         nms_dets = apply_nms(all_boxes, cfg.TEST.NMS)
