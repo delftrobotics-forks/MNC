@@ -9,8 +9,8 @@ import numpy as np
 from six.moves import cPickle
 import os
 import cv2
-from PIL import Image
-from mnc_config import cfg
+import Image
+from multitask_network_cascades.mnc_config import cfg
 
 
 def vis_seg(img_names, cls_names, output_dir, gt_dir):

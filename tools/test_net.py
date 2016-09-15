@@ -16,9 +16,9 @@ import pprint
 # User-defined module
 import _init_paths
 import caffe
-from mnc_config import cfg, cfg_from_file
-from db.imdb import get_imdb
-from caffeWrapper.TesterWrapper import TesterWrapper
+from multitask_network_cascades.mnc_config import cfg, cfg_from_file
+from multitask_network_cascades.db.imdb import get_imdb
+from multitask_network_cascades.caffeWrapper.TesterWrapper import TesterWrapper
 
 
 def parse_args():

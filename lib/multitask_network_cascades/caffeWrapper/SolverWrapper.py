@@ -9,9 +9,9 @@
 import os
 import numpy as np
 
-from utils.timer import Timer
-from mnc_config import cfg
-from db.roidb import add_bbox_regression_targets, compute_mcg_mean_std
+from multitask_network_cascades.utils.timer import Timer
+from multitask_network_cascades.mnc_config import cfg
+from multitask_network_cascades.db.roidb import add_bbox_regression_targets, compute_mcg_mean_std
 import caffe
 from caffe.proto import caffe_pb2
 import google.protobuf as pb2

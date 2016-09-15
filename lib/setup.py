@@ -8,14 +8,14 @@
 import os
 import six
 from os.path import join as pjoin
-from setuptools import setup
+from setuptools import setup, find_packages
 from distutils.extension import Extension
 from Cython.Distutils import build_ext
 import numpy as np
 
 
 def find_in_path(name, path):
-    "Find a file in a search path"
+    'Find a file in a search path'
     # Adapted fom
     # http://code.activestate.com/recipes/52224-find-a-file-given-a-search-path/
     for dir in path.split(os.pathsep):
@@ -26,14 +26,14 @@ def find_in_path(name, path):
 
 
 def locate_cuda():
-    """Locate the CUDA environment on the system
+    '''Locate the CUDA environment on the system
 
     Returns a dict with keys 'home', 'nvcc', 'include', and 'lib64'
     and values giving the absolute path to each directory.
 
     Starts by looking for the CUDAHOME env variable. If not found, everything
     is based on finding 'nvcc' in the PATH.
-    """
+    '''
 
     # first check if the CUDAHOME env variable is in use
     if 'CUDAHOME' in os.environ:
@@ -67,14 +67,14 @@ except AttributeError:
 
 
 def customize_compiler_for_nvcc(self):
-    """inject deep into distutils to customize how the dispatch
+    '''inject deep into distutils to customize how the dispatch
     to gcc/nvcc works.
 
     If you subclass UnixCCompiler, it's not trivial to get your subclass
     injected in, and still have the right customizations (i.e.
     distutils.sysconfig.customize_compiler) run on it. So instead of going
     the OO route, I have this. Note, it's kindof like a wierd functional
-    subclassing going on."""
+    subclassing going on.'''
 
     # tell the compiler it can processes .cu
     self.src_extensions.append('.cu')
@@ -113,19 +113,19 @@ class custom_build_ext(build_ext):
 
 ext_modules = [
     Extension(
-        "utils.cython_bbox",
-        ["utils/bbox.pyx"],
-        extra_compile_args={'gcc': ["-Wno-cpp", "-Wno-unused-function"]},
+        'multitask_network_cascades.utils.cython_bbox',
+        ['multitask_network_cascades/utils/bbox.pyx'],
+        extra_compile_args={'gcc': ['-Wno-cpp', '-Wno-unused-function']},
         include_dirs = [numpy_include]
     ),
     Extension(
-        "nms.cpu_nms",
-        ["nms/cpu_nms.pyx"],
-        extra_compile_args={'gcc': ["-Wno-cpp", "-Wno-unused-function"]},
+        'multitask_network_cascades.nms.cpu_nms',
+        ['multitask_network_cascades/nms/cpu_nms.pyx'],
+        extra_compile_args={'gcc': ['-Wno-cpp', '-Wno-unused-function']},
         include_dirs = [numpy_include]
     ),
-    Extension('nms.gpu_nms',
-        ['nms/nms_kernel.cu', 'nms/gpu_nms.pyx'],
+    Extension('multitask_network_cascades.nms.gpu_nms',
+        ['multitask_network_cascades/nms/nms_kernel.cu', 'multitask_network_cascades/nms/gpu_nms.pyx'],
         library_dirs=[CUDA['lib64']],
         libraries=['cudart'],
         language='c++',
@@ -133,16 +133,16 @@ ext_modules = [
         # this syntax is specific to this build system
         # we're only going to use certain compiler args with nvcc and not with
         # gcc the implementation of this trick is in customize_compiler() below
-        extra_compile_args={'gcc': ["-Wno-unused-function"],
+        extra_compile_args={'gcc': ['-Wno-unused-function'],
                             'nvcc': ['-arch=sm_35',
                                      '--ptxas-options=-v',
                                      '-c',
                                      '--compiler-options',
-                                     "'-fPIC'"]},
+                                     '"-fPIC"']},
         include_dirs = [numpy_include, CUDA['include']]
     ),
-    Extension('nms.mv',
-        ['nms/mv_kernel.cu', 'nms/gpu_mv.pyx'],
+    Extension('multitask_network_cascades.nms.mv',
+        ['multitask_network_cascades/nms/mv_kernel.cu', 'multitask_network_cascades/nms/gpu_mv.pyx'],
         library_dirs=[CUDA['lib64']],
         libraries=['cudart'],
         language='c++',
@@ -150,19 +150,21 @@ ext_modules = [
         # this syntax is specific to this build system
         # we're only going to use certain compiler args with nvcc and not with
         # gcc the implementation of this trick is in customize_compiler() below
-        extra_compile_args={'gcc': ["-Wno-unused-function"],
+        extra_compile_args={'gcc': ['-Wno-unused-function'],
                             'nvcc': ['-arch=sm_35',
                                      '--ptxas-options=-v',
                                      '-c',
                                      '--compiler-options',
-                                     "'-fPIC'"]},
+                                     '"-fPIC"']},
         include_dirs = [numpy_include, CUDA['include']]
     ),
 ]
 
 setup(
-    name='MNC',
+    name='multitask_network_cascades',
     ext_modules=ext_modules,
+    py_modules=['multitask_network_cascades.mnc_config'],
     # inject our custom trigger
     cmdclass={'build_ext': custom_build_ext},
+    packages=['multitask_network_cascades.' + p for p in find_packages("multitask_network_cascades")],
 )

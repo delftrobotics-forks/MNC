@@ -9,8 +9,8 @@ import caffe
 import cv2
 import numpy as np
 import six
-from transform.mask_transform import mask_overlap
-from mnc_config import cfg
+from multitask_network_cascades.transform.mask_transform import mask_overlap
+from multitask_network_cascades.mnc_config import cfg
 
 
 class MaskLayer(caffe.Layer):

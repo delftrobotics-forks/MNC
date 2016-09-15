@@ -11,8 +11,8 @@ import yaml
 import six
 
 import caffe
-from mnc_config import cfg
-from utils.blob import prep_im_for_blob, im_list_to_blob
+from multitask_network_cascades.mnc_config import cfg
+from multitask_network_cascades.utils.blob import prep_im_for_blob, im_list_to_blob
 
 
 class MNCDataLayer(caffe.Layer):

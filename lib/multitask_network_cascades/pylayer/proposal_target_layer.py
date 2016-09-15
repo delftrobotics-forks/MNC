@@ -10,13 +10,13 @@ import yaml
 import numpy as np
 import numpy.random as npr
 import six
-from mnc_config import cfg
-from transform.bbox_transform import \
+from multitask_network_cascades.mnc_config import cfg
+from multitask_network_cascades.transform.bbox_transform import \
     bbox_transform, bbox_compute_targets, \
     scale_boxes, get_bbox_regression_label
-from transform.anchors import generate_anchors
-from transform.mask_transform import intersect_mask
-from utils.cython_bbox import bbox_overlaps
+from multitask_network_cascades.transform.anchors import generate_anchors
+from multitask_network_cascades.transform.mask_transform import intersect_mask
+from multitask_network_cascades.utils.cython_bbox import bbox_overlaps
 
 
 class ProposalTargetLayer(caffe.Layer):

@@ -12,9 +12,9 @@ import numpy as np
 import numpy.random as npr
 import caffe
 import six
-from mnc_config import cfg
-from utils.blob import prep_im_for_blob, im_list_to_blob
-from transform.bbox_transform import get_bbox_regression_label, bbox_compute_targets
+from multitask_network_cascades.mnc_config import cfg
+from multitask_network_cascades.utils.blob import prep_im_for_blob, im_list_to_blob
+from multitask_network_cascades.transform.bbox_transform import get_bbox_regression_label, bbox_compute_targets
 
 
 class CFMDataLayer(caffe.Layer):

@@ -9,12 +9,12 @@ import caffe
 import numpy as np
 import yaml
 import six
-from transform.bbox_transform import \
+from multitask_network_cascades.transform.bbox_transform import \
     bbox_transform_inv, bbox_compute_targets, \
     clip_boxes, get_bbox_regression_label
-from transform.mask_transform import intersect_mask
-from mnc_config import cfg
-from utils.cython_bbox import bbox_overlaps
+from multitask_network_cascades.transform.mask_transform import intersect_mask
+from multitask_network_cascades.mnc_config import cfg
+from multitask_network_cascades.utils.cython_bbox import bbox_overlaps
 
 
 class StageBridgeLayer(caffe.Layer):
