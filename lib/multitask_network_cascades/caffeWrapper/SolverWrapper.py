@@ -111,7 +111,7 @@ class SolverWrapper(object):
             net.save(str(filename))
         else:
             filename = os.path.join(self.output_dir, filename + '.h5')
-            net.save_to_hdf5(str(filename))
+            net.save_hdf5(str(filename))
         print('Wrote snapshot to: {:s}'.format(filename))
 
         if scale_bbox_params:
