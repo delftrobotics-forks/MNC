@@ -9,7 +9,7 @@ import numpy as np
 from six.moves import cPickle
 import os
 import cv2
-import Image
+from PIL import Image
 from multitask_network_cascades.mnc_config import cfg
 
 
