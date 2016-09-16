@@ -125,7 +125,7 @@ if __name__ == '__main__':
 
     caffe.set_mode_gpu()
     caffe.set_device(args.gpu_id)
-    net = caffe.Net(test_prototxt, test_model, caffe.TEST)
+    net = caffe.Net(test_prototxt, caffe.TEST, weights=test_model)
 
     # Warm up for the first two images
     im = 128 * np.ones((300, 500, 3), dtype=np.float32)
