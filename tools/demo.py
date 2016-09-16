@@ -132,9 +132,8 @@ if __name__ == '__main__':
     for i in range(2):
         _, _, _ = im_detect(im, net)
 
-    im_names = ['2008_000533.jpg', '2008_000910.jpg', '2008_001602.jpg',
-                '2008_001717.jpg', '2008_008093.jpg']
     demo_dir = './data/demo'
+    im_names = [f for f in os.listdir(demo_dir) if f.endswith(".png") or f.endswith(".jpg")]
     for im_name in im_names:
         print('~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~')
         print('Demo for data/demo/{}'.format(im_name))
@@ -185,6 +184,6 @@ if __name__ == '__main__':
         plt.tight_layout()
         plt.draw()
 
-        fig.savefig(os.path.join(demo_dir, im_name[:-4]+'.png'))
+        fig.savefig(os.path.join(demo_dir, 'processed', im_name[:-4]+'.png'))
         os.remove(superimpose_name)
         os.remove(target_cls_file)
