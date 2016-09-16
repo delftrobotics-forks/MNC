@@ -20,7 +20,7 @@ __C.RNG_SEED = 3
 __C.EPS = 1e-14
 __C.PIXEL_MEANS = np.array([[[102.9801, 115.9465, 122.7717]]])
 # Root directory of project
-__C.ROOT_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
+__C.ROOT_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..'))
 # Data directory
 __C.DATA_DIR = os.path.abspath(os.path.join(__C.ROOT_DIR, 'data'))
 # Related to mask resizing and binarize predicted masks
