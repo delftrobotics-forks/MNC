@@ -249,7 +249,7 @@ layer {
   bottom: 'im_info'
   top: 'rois'
   python_param {
-    module: 'pylayer.proposal_layer'
+    module: 'multitask_network_cascades.pylayer.proposal_layer'
     layer: 'ProposalLayer'
     param_str: "{'feat_stride': 16, 'gradient_scale': 1}"
   }
@@ -316,7 +316,7 @@ layer {
   bottom: 'mask_output'
   top: 'mask_proposal'
   python_param {
-    module: 'pylayer.mask_layer'
+    module: 'multitask_network_cascades.pylayer.mask_layer'
     layer: 'MaskLayer'
   }
 }
