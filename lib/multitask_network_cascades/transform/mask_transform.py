@@ -207,7 +207,7 @@ def cpu_mask_voting(masks, boxes, scores, num_classes, max_per_image, im_width, 
         boxes_scored_ar = np.hstack((boxes_ar, cls_score[keep, np.newaxis]))
         result_box.append(boxes_scored_ar)
         result_mask.append(masks_ar)
-    return result_box, result_mask
+    return result_mask, result_box
 
 
 def gpu_mask_voting(masks, boxes, scores, num_classes, max_per_image, im_width, im_height):
