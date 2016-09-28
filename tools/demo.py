@@ -78,21 +78,21 @@ def prepare_mnc_args(im, net):
 
 def im_detect(im, net):
     forward_kwargs, im_scales = prepare_mnc_args(im, net)
-    blobs_out = self.net.forward(**forward_kwargs)
+    blobs_out = net.forward(**forward_kwargs)
     # output we need to collect:
     # 1. output from phase1'
-    rois = self.net.blobs['rois'].data.copy()
-    masks = self.net.blobs['mask_proposal'].data[...]
-    scores = self.net.blobs['seg_cls_prob'].data[...]
+    rois = net.blobs['rois'].data.copy()
+    masks = net.blobs['mask_proposal'].data[...]
+    scores = net.blobs['seg_cls_prob'].data[...]
     # 2. output from phase2
-    if "rois_ext" in self.net.blobs:
-        rois_phase2 = self.net.blobs['rois_ext'].data[...]
+    if "rois_ext" in net.blobs:
+        rois_phase2 = net.blobs['rois_ext'].data[...]
         rois = np.concatenate((rois, rois_phase2), axis=0)
-    if "mask_proposal_ext" in self.net.blobs:
-        masks_phase2 = self.net.blobs['mask_proposal_ext'].data[...]
+    if "mask_proposal_ext" in net.blobs:
+        masks_phase2 = net.blobs['mask_proposal_ext'].data[...]
         masks = np.concatenate((masks, masks_phase2), axis=0)
-    if "seg_cls_prob_ext" in self.net.blobs:
-        scores_phase2 = self.net.blobs['seg_cls_prob_ext'].data[...]
+    if "seg_cls_prob_ext" in net.blobs:
+        scores_phase2 = net.blobs['seg_cls_prob_ext'].data[...]
         scores = np.concatenate((scores, scores_phase2), axis=0)
     # Boxes are in resized space, we un-scale them back
     rois = rois[:, 1:5] / im_scales[0]
@@ -141,7 +141,7 @@ if __name__ == '__main__':
         gt_image = os.path.join(demo_dir, im_name)
         im = cv2.imread(gt_image)
         start = time.time()
-        boxes, masks, seg_scores = im_detect(im, net)
+        masks, boxes, scores = im_detect(im, net)
         end = time.time()
         print('forward time {}'.format(end-start))
         result_mask, result_box = gpu_mask_voting(masks, boxes, seg_scores, len(CLASSES) + 1,
