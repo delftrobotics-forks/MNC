@@ -241,23 +241,24 @@ class TesterWrapper(object):
         blobs_out = self.net.forward(**forward_kwargs)
         # output we need to collect:
         # 1. output from phase1'
-        rois_phase1 = self.net.blobs['rois'].data.copy()
-        masks_phase1 = self.net.blobs['mask_proposal'].data[...]
-        scores_phase1 = self.net.blobs['seg_cls_prob'].data[...]
+        rois = self.net.blobs['rois'].data.copy()
+        masks = self.net.blobs['mask_proposal'].data[...]
+        scores = self.net.blobs['seg_cls_prob'].data[...]
         # 2. output from phase2
-        rois_phase2 = self.net.blobs['rois_ext'].data[...]
-        masks_phase2 = self.net.blobs['mask_proposal_ext'].data[...]
-        scores_phase2 = self.net.blobs['seg_cls_prob_ext'].data[...]
+        if "rois_ext" in self.net.blobs:
+            rois_phase2 = self.net.blobs['rois_ext'].data[...]
+            rois = np.concatenate((rois, rois_phase2), axis=0)
+        if "mask_proposal_ext" in self.net.blobs:
+            masks_phase2 = self.net.blobs['mask_proposal_ext'].data[...]
+            masks = np.concatenate((masks, masks_phase2), axis=0)
+        if "seg_cls_prob_ext" in self.net.blobs:
+            scores_phase2 = self.net.blobs['seg_cls_prob_ext'].data[...]
+            scores = np.concatenate((scores, scores_phase2), axis=0)
         # Boxes are in resized space, we un-scale them back
-        rois_phase1 = rois_phase1[:, 1:5] / im_scales[0]
-        rois_phase2 = rois_phase2[:, 1:5] / im_scales[0]
-        rois_phase1, _ = clip_boxes(rois_phase1, im.shape)
-        rois_phase2, _ = clip_boxes(rois_phase2, im.shape)
+        rois = rois[:, 1:5] / im_scales[0]
+        rois, _ = clip_boxes(rois, im.shape)
         # concatenate two stages to get final network output
-        masks = np.concatenate((masks_phase1, masks_phase2), axis=0)
-        boxes = np.concatenate((rois_phase1, rois_phase2), axis=0)
-        scores = np.concatenate((scores_phase1, scores_phase2), axis=0)
-        return masks, boxes, scores
+        return masks, rois, scores
 
     def _prepare_mnc_args(self, im):
         # Prepare image data blob
