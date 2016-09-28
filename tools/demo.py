@@ -153,38 +153,41 @@ if __name__ == '__main__':
         
         inst_img, cls_img = _convert_pred_to_image(img_width, img_height, pred_dict)
         color_map = _get_voc_color_map()
-        target_cls_file = os.path.join(demo_dir, 'cls_' + im_name)
+        target_cls_file = os.path.join(demo_dir, 'processed', im_name)
         cls_out_img = np.zeros((img_height, img_width, 3))
         for i in range(img_height):
             for j in range(img_width):
                 cls_out_img[i][j] = color_map[cls_img[i][j]][::-1]
-        cv2.imwrite(target_cls_file, cls_out_img)
-        
-        background = Image.open(gt_image)
-        mask = Image.open(target_cls_file)
-        background = background.convert('RGBA')
-        mask = mask.convert('RGBA')
-        superimpose_image = Image.blend(background, mask, 0.8)
-        superimpose_name = os.path.join(demo_dir, 'final_' + im_name)
-        superimpose_image.save(superimpose_name, 'JPEG')
-        im = cv2.imread(superimpose_name)
 
-        im = im[:, :, (2, 1, 0)]
-        fig, ax = plt.subplots(figsize=(12, 12))
-        ax.imshow(im, aspect='equal')
-        classes = pred_dict['cls_name']
-        for i in range(len(classes)):
-            score = pred_dict['boxes'][i][-1]
-            bbox = pred_dict['boxes'][i][:4]
-            cls_ind = classes[i] - 1
-            ax.text(bbox[0], bbox[1] - 8,
-                '{:s} {:.4f}'.format(CLASSES[cls_ind], score),
-                bbox=dict(facecolor='blue', alpha=0.5),
-                fontsize=14, color='white')
-        plt.axis('off')
-        plt.tight_layout()
-        plt.draw()
+        visualization = im * 0.5 + cls_out_img * 0.5
+        cv2.imwrite(target_cls_file, visualization)
+        #cv2.imwrite(target_cls_file, cls_out_img)
+        #
+        #background = Image.open(gt_image)
+        #mask = Image.open(target_cls_file)
+        #background = background.convert('RGBA')
+        #mask = mask.convert('RGBA')
+        #superimpose_image = Image.blend(background, mask, 0.5)
+        #superimpose_name = os.path.join(demo_dir, 'final_' + im_name)
+        #superimpose_image.save(superimpose_name, 'JPEG')
+        #im = cv2.imread(superimpose_name)
 
-        fig.savefig(os.path.join(demo_dir, 'processed', im_name[:-4]+'.png'))
-        os.remove(superimpose_name)
-        os.remove(target_cls_file)
+        #im = im[:, :, (2, 1, 0)]
+        #fig, ax = plt.subplots(figsize=(12, 12))
+        #ax.imshow(im, aspect='equal')
+        #classes = pred_dict['cls_name']
+        #for i in range(len(classes)):
+        #    score = pred_dict['boxes'][i][-1]
+        #    bbox = pred_dict['boxes'][i][:4]
+        #    cls_ind = classes[i] - 1
+        #    ax.text(bbox[0], bbox[1] - 8,
+        #        '{:s} {:.4f}'.format(CLASSES[cls_ind], score),
+        #        bbox=dict(facecolor='blue', alpha=0.5),
+        #        fontsize=14, color='white')
+        #plt.axis('off')
+        #plt.tight_layout()
+        #plt.draw()
+
+        #fig.savefig(os.path.join(demo_dir, 'processed', im_name[:-4]+'.png'))
+        #os.remove(superimpose_name)
+        #os.remove(target_cls_file)
