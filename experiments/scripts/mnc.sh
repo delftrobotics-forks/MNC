@@ -33,6 +33,9 @@ case $NET in
 	ResNet50)
 		NET_INIT=data/imagenet_models/ResNet-50-model.caffemodel
 		;;
+	ResNet101)
+		NET_INIT=data/imagenet_models/ResNet-101-model.caffemodel
+		;;
 	*)
 		NET_INIT=data/imagenet_models/${NET}.mask.caffemodel
 		;;
