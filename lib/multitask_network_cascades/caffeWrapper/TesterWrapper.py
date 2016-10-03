@@ -195,7 +195,7 @@ class TesterWrapper(object):
                     result_mask, result_box = gpu_mask_voting(masks, boxes, seg_scores, self.num_classes,
                                                               self.max_per_image, im.shape[1], im.shape[0])
                 else:
-                    result_box, result_mask = cpu_mask_voting(masks, boxes, seg_scores, self.num_classes,
+                    result_mask, result_box = cpu_mask_voting(masks, boxes, seg_scores, self.num_classes,
                                                               self.max_per_image, im.shape[1], im.shape[0])
                 # no need to create a min heap since the output will not exceed max number of detection
                 for j in range(1, self.num_classes):
