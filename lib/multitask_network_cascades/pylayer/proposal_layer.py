@@ -28,7 +28,9 @@ class ProposalLayer(caffe.Layer):
     def setup(self, bottom, top):
         layer_params = yaml.load(self.param_str_)
         self._feat_stride = layer_params['feat_stride']
-        self._anchors = generate_anchors()
+        anchor_ratios = layer_params['anchor_ratios'] if 'anchor_ratios' in layer_params else [0.5, 1, 2]
+        anchor_scales = layer_params['anchor_scales'] if 'anchor_scales' in layer_params else 2**np.arange(3, 6)
+        self._anchors = generate_anchors(ratios=anchor_ratios, scales=anchor_scales)
         self._num_anchors = self._anchors.shape[0]
         self._use_clip = layer_params.get('use_clip', 0)
         self._clip_denominator = float(layer_params.get('clip_base', 256))
