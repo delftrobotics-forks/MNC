@@ -134,7 +134,7 @@ if __name__ == '__main__':
         _, _, _ = im_detect(im, net)
 
     demo_dir = './data/demo'
-    im_names = [f for f in os.listdir(demo_dir) if f.endswith(".png") or f.endswith(".jpg")]
+    im_names = [f for f in os.listdir(demo_dir) if f.endswith(".png") or f.endswith(".png")]
     for im_name in im_names:
         print('~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~')
         print('Demo for data/demo/{}'.format(im_name))

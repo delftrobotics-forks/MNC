@@ -33,10 +33,10 @@ def vis_seg(img_names, cls_names, output_dir, gt_dir):
 
     res_list = _prepare_dict(img_names, cls_names, output_dir)
     for img_ind, image_name in enumerate(img_names):
-        target_inst_file = os.path.join(inst_dir, image_name + '.jpg')
-        target_cls_file = os.path.join(cls_dir, image_name + '.jpg')
+        target_inst_file = os.path.join(inst_dir, image_name + '.png')
+        target_cls_file = os.path.join(cls_dir, image_name + '.png')
         print(image_name)
-        gt_image = gt_dir + '/img/' + image_name + '.jpg'
+        gt_image = gt_dir + '/img/' + image_name + '.png'
         img_data = cv2.imread(gt_image)
         img_width = img_data.shape[1]
         img_height = img_data.shape[0]
