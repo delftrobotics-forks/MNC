@@ -10,9 +10,9 @@ set -e
 
 export PYTHONUNBUFFERED="True"
 
-GPU_ID=$1
-NET=$2
-STAGES=$3
+GPU_ID=0
+NET=ResNet50
+STAGES=3
 NET_lc=${NET,,}
 ITERS=25000
 DATASET_TRAIN=voc_2012_seg_train
@@ -37,7 +37,7 @@ case $NET in
 		NET_INIT=data/imagenet_models/ResNet-101-model.caffemodel
 		;;
 	*)
-		NET_INIT=data/imagenet_models/${NET}.mask.caffemodel
+		NET_INIT=data/imagenet_models/${NET}.v2.caffemodel
 		;;
 esac
 
