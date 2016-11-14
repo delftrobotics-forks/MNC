@@ -2182,13 +2182,23 @@ layer {
 	}
 }
 
-#------------ Box Features ------------
+#------------ Mask Features ------------
 
 layer {
-	name: "roi_interpolate_conv5_box"
-	type: "Pooling"
+	name: "mask_pooling"
+	type: "MaskPooling"
+	propagate_down: 1
+	propagate_down: 1
 	bottom: "roi_interpolate_conv5"
-	top: "roi_interpolate_conv5_box"
+	bottom: "mask_proposal_resize"
+	top: "roi_mask_conv5"
+}
+
+layer {
+	name: "roi_interpolate_conv5_mask"
+	type: "Pooling"
+	bottom: "roi_mask_conv5"
+	top: "roi_interpolate_conv5_mask"
 	pooling_param {
 		kernel_size: 2
 		stride: 1
@@ -2198,7 +2208,7 @@ layer {
 }
 
 layer {
-	bottom: "roi_interpolate_conv5_box"
+	bottom: "roi_interpolate_conv5_mask"
 	top: "res5a_branch1"
 	name: "res5a_branch1"
 	type: "Convolution"
@@ -2232,7 +2242,7 @@ layer {
 }
 
 layer {
-	bottom: "roi_interpolate_conv5_box"
+	bottom: "roi_interpolate_conv5_mask"
 	top: "res5a_branch2a"
 	name: "res5a_branch2a"
 	type: "Convolution"
@@ -2636,532 +2646,12 @@ layer {
 	}
 }
 
-#------------ Mask Features ------------
-
-layer {
-	name: "mask_pooling"
-	type: "MaskPooling"
-	propagate_down: 1
-	propagate_down: 1
-	bottom: "roi_interpolate_conv5"
-	bottom: "mask_proposal_resize"
-	top: "roi_mask_conv5"
-}
-
-layer {
-	name: "roi_interpolate_conv5_mask"
-	type: "Pooling"
-	bottom: "roi_mask_conv5"
-	top: "roi_interpolate_conv5_mask"
-	pooling_param {
-		kernel_size: 2
-		stride: 1
-		pad: 0
-		pool: MAX
-	}
-}
-
-layer {
-	bottom: "roi_interpolate_conv5_mask"
-	top: "res5a_branch1_mask"
-	name: "res5a_branch1_mask"
-	type: "Convolution"
-	convolution_param {
-		num_output: 2048
-		kernel_size: 1
-		pad: 0
-		stride: 2
-		bias_term: false
-	}
-}
-
-layer {
-	bottom: "res5a_branch1_mask"
-	top: "res5a_branch1_mask"
-	name: "bn5a_branch1_mask"
-	type: "BatchNorm"
-	batch_norm_param {
-		use_global_stats: true
-	}
-}
-
-layer {
-	bottom: "res5a_branch1_mask"
-	top: "res5a_branch1_mask"
-	name: "scale5a_branch1_mask"
-	type: "Scale"
-	scale_param {
-		bias_term: true
-	}
-}
-
-layer {
-	bottom: "roi_interpolate_conv5_mask"
-	top: "res5a_branch2a_mask"
-	name: "res5a_branch2a_mask"
-	type: "Convolution"
-	convolution_param {
-		num_output: 512
-		kernel_size: 1
-		pad: 0
-		stride: 2
-		bias_term: false
-	}
-}
-
-layer {
-	bottom: "res5a_branch2a_mask"
-	top: "res5a_branch2a_mask"
-	name: "bn5a_branch2a_mask"
-	type: "BatchNorm"
-	batch_norm_param {
-		use_global_stats: true
-	}
-}
-
-layer {
-	bottom: "res5a_branch2a_mask"
-	top: "res5a_branch2a_mask"
-	name: "scale5a_branch2a_mask"
-	type: "Scale"
-	scale_param {
-		bias_term: true
-	}
-}
-
-layer {
-	bottom: "res5a_branch2a_mask"
-	top: "res5a_branch2a_mask"
-	name: "res5a_branch2a_relu_mask"
-	type: "ReLU"
-}
-
-layer {
-	bottom: "res5a_branch2a_mask"
-	top: "res5a_branch2b_mask"
-	name: "res5a_branch2b_mask"
-	type: "Convolution"
-	convolution_param {
-		num_output: 512
-		kernel_size: 3
-		pad: 1
-		stride: 1
-		bias_term: false
-	}
-}
-
-layer {
-	bottom: "res5a_branch2b_mask"
-	top: "res5a_branch2b_mask"
-	name: "bn5a_branch2b_mask"
-	type: "BatchNorm"
-	batch_norm_param {
-		use_global_stats: true
-	}
-}
-
-layer {
-	bottom: "res5a_branch2b_mask"
-	top: "res5a_branch2b_mask"
-	name: "scale5a_branch2b_mask"
-	type: "Scale"
-	scale_param {
-		bias_term: true
-	}
-}
-
-layer {
-	bottom: "res5a_branch2b_mask"
-	top: "res5a_branch2b_mask"
-	name: "res5a_branch2b_relu_mask"
-	type: "ReLU"
-}
-
-layer {
-	bottom: "res5a_branch2b_mask"
-	top: "res5a_branch2c_mask"
-	name: "res5a_branch2c_mask"
-	type: "Convolution"
-	convolution_param {
-		num_output: 2048
-		kernel_size: 1
-		pad: 0
-		stride: 1
-		bias_term: false
-	}
-}
-
-layer {
-	bottom: "res5a_branch2c_mask"
-	top: "res5a_branch2c_mask"
-	name: "bn5a_branch2c_mask"
-	type: "BatchNorm"
-	batch_norm_param {
-		use_global_stats: true
-	}
-}
-
-layer {
-	bottom: "res5a_branch2c_mask"
-	top: "res5a_branch2c_mask"
-	name: "scale5a_branch2c_mask"
-	type: "Scale"
-	scale_param {
-		bias_term: true
-	}
-}
-
-layer {
-	bottom: "res5a_branch1_mask"
-	bottom: "res5a_branch2c_mask"
-	top: "res5a_mask"
-	name: "res5a_mask"
-	type: "Eltwise"
-}
-
-layer {
-	bottom: "res5a_mask"
-	top: "res5a_mask"
-	name: "res5a_relu_mask"
-	type: "ReLU"
-}
-
-layer {
-	bottom: "res5a_mask"
-	top: "res5b_branch2a_mask"
-	name: "res5b_branch2a_mask"
-	type: "Convolution"
-	convolution_param {
-		num_output: 512
-		kernel_size: 1
-		pad: 0
-		stride: 1
-		bias_term: false
-	}
-}
-
-layer {
-	bottom: "res5b_branch2a_mask"
-	top: "res5b_branch2a_mask"
-	name: "bn5b_branch2a_mask"
-	type: "BatchNorm"
-	batch_norm_param {
-		use_global_stats: true
-	}
-}
-
-layer {
-	bottom: "res5b_branch2a_mask"
-	top: "res5b_branch2a_mask"
-	name: "scale5b_branch2a_mask"
-	type: "Scale"
-	scale_param {
-		bias_term: true
-	}
-}
-
-layer {
-	bottom: "res5b_branch2a_mask"
-	top: "res5b_branch2a_mask"
-	name: "res5b_branch2a_relu_mask"
-	type: "ReLU"
-}
-
-layer {
-	bottom: "res5b_branch2a_mask"
-	top: "res5b_branch2b_mask"
-	name: "res5b_branch2b_mask"
-	type: "Convolution"
-	convolution_param {
-		num_output: 512
-		kernel_size: 3
-		pad: 1
-		stride: 1
-		bias_term: false
-	}
-}
-
-layer {
-	bottom: "res5b_branch2b_mask"
-	top: "res5b_branch2b_mask"
-	name: "bn5b_branch2b_mask"
-	type: "BatchNorm"
-	batch_norm_param {
-		use_global_stats: true
-	}
-}
-
-layer {
-	bottom: "res5b_branch2b_mask"
-	top: "res5b_branch2b_mask"
-	name: "scale5b_branch2b_mask"
-	type: "Scale"
-	scale_param {
-		bias_term: true
-	}
-}
-
-layer {
-	bottom: "res5b_branch2b_mask"
-	top: "res5b_branch2b_mask"
-	name: "res5b_branch2b_relu_mask"
-	type: "ReLU"
-}
-
-layer {
-	bottom: "res5b_branch2b_mask"
-	top: "res5b_branch2c_mask"
-	name: "res5b_branch2c_mask"
-	type: "Convolution"
-	convolution_param {
-		num_output: 2048
-		kernel_size: 1
-		pad: 0
-		stride: 1
-		bias_term: false
-	}
-}
-
-layer {
-	bottom: "res5b_branch2c_mask"
-	top: "res5b_branch2c_mask"
-	name: "bn5b_branch2c_mask"
-	type: "BatchNorm"
-	batch_norm_param {
-		use_global_stats: true
-	}
-}
-
-layer {
-	bottom: "res5b_branch2c_mask"
-	top: "res5b_branch2c_mask"
-	name: "scale5b_branch2c_mask"
-	type: "Scale"
-	scale_param {
-		bias_term: true
-	}
-}
-
-layer {
-	bottom: "res5a_mask"
-	bottom: "res5b_branch2c_mask"
-	top: "res5b_mask"
-	name: "res5b_mask"
-	type: "Eltwise"
-}
-
-layer {
-	bottom: "res5b_mask"
-	top: "res5b_mask"
-	name: "res5b_relu_mask"
-	type: "ReLU"
-}
-
-layer {
-	bottom: "res5b_mask"
-	top: "res5c_branch2a_mask"
-	name: "res5c_branch2a_mask"
-	type: "Convolution"
-	convolution_param {
-		num_output: 512
-		kernel_size: 1
-		pad: 0
-		stride: 1
-		bias_term: false
-	}
-}
-
-layer {
-	bottom: "res5c_branch2a_mask"
-	top: "res5c_branch2a_mask"
-	name: "bn5c_branch2a_mask"
-	type: "BatchNorm"
-	batch_norm_param {
-		use_global_stats: true
-	}
-}
-
-layer {
-	bottom: "res5c_branch2a_mask"
-	top: "res5c_branch2a_mask"
-	name: "scale5c_branch2a_mask"
-	type: "Scale"
-	scale_param {
-		bias_term: true
-	}
-}
-
-layer {
-	bottom: "res5c_branch2a_mask"
-	top: "res5c_branch2a_mask"
-	name: "res5c_branch2a_relu_mask"
-	type: "ReLU"
-}
-
-layer {
-	bottom: "res5c_branch2a_mask"
-	top: "res5c_branch2b_mask"
-	name: "res5c_branch2b_mask"
-	type: "Convolution"
-	convolution_param {
-		num_output: 512
-		kernel_size: 3
-		pad: 1
-		stride: 1
-		bias_term: false
-	}
-}
-
-layer {
-	bottom: "res5c_branch2b_mask"
-	top: "res5c_branch2b_mask"
-	name: "bn5c_branch2b_mask"
-	type: "BatchNorm"
-	batch_norm_param {
-		use_global_stats: true
-	}
-}
-
-layer {
-	bottom: "res5c_branch2b_mask"
-	top: "res5c_branch2b_mask"
-	name: "scale5c_branch2b_mask"
-	type: "Scale"
-	scale_param {
-		bias_term: true
-	}
-}
-
-layer {
-	bottom: "res5c_branch2b_mask"
-	top: "res5c_branch2b_mask"
-	name: "res5c_branch2b_relu_mask"
-	type: "ReLU"
-}
-
-layer {
-	bottom: "res5c_branch2b_mask"
-	top: "res5c_branch2c_mask"
-	name: "res5c_branch2c_mask"
-	type: "Convolution"
-	convolution_param {
-		num_output: 2048
-		kernel_size: 1
-		pad: 0
-		stride: 1
-		bias_term: false
-	}
-}
-
-layer {
-	bottom: "res5c_branch2c_mask"
-	top: "res5c_branch2c_mask"
-	name: "bn5c_branch2c_mask"
-	type: "BatchNorm"
-	batch_norm_param {
-		use_global_stats: true
-	}
-}
-
-layer {
-	bottom: "res5c_branch2c_mask"
-	top: "res5c_branch2c_mask"
-	name: "scale5c_branch2c_mask"
-	type: "Scale"
-	scale_param {
-		bias_term: true
-	}
-}
-
-layer {
-	bottom: "res5b_mask"
-	bottom: "res5c_branch2c_mask"
-	top: "res5c_mask"
-	name: "res5c_mask"
-	type: "Eltwise"
-}
-
-layer {
-	bottom: "res5c_mask"
-	top: "res5c_mask"
-	name: "res5c_relu_mask"
-	type: "ReLU"
-}
-
-layer {
-	bottom: "res5c_mask"
-	top: "pool5_mask"
-	name: "pool5_mask"
-	type: "Pooling"
-	pooling_param {
-		kernel_size: 7
-		stride: 1
-		pool: AVE
-	}
-}
-
-#----- Concat Box-Mask Feature -----
-
-layer {
-	name: "join_box_mask"
-	type: "Concat"
-	bottom: "pool5_mask"
-	bottom: "pool5"
-	top: "join_box_mask"
-	concat_param {
-		axis: 1
-	}
-}
-
-#----- Box-level Classification -----
-
-layer {
-	name: "cls_score"
-	type: "InnerProduct"
-	bottom: "join_box_mask"
-	top: "cls_score"
-	param {
-		name: "cls_score_w" 
-		lr_mult: 1.0 
-	}
-	param {
-		name: "cls_score_b" 
-		lr_mult: 2.0 
-	}
-	inner_product_param {
-		num_output: 2
-		weight_filler {
-			type: "gaussian"
-			std: 0.01
-		}
-		bias_filler {
-			type: "constant"
-			value: 0
-		}
-	}
-}
-
-layer {
-	name: "loss_cls"
-	type: "SoftmaxWithLoss"
-	bottom: "cls_score"
-	bottom: "labels"
-	propagate_down: 1
-	propagate_down: 0
-	top: "cls_loss"
-	loss_weight: 1
-	loss_param {
-		ignore_label: -1
-		normalize: true
-	}
-}
-
 #----- Mask-level Classification -----
 
 layer {
 	name: "seg_cls_score"
 	type: "InnerProduct"
-	bottom: "join_box_mask"
+	bottom: "pool5"
 	top: "seg_cls_score"
 	param {
 		name: "seg_cls_score_w" 
@@ -3172,7 +2662,7 @@ layer {
 		lr_mult: 2.0 
 	}
 	inner_product_param {
-		num_output: 2
+		num_output: 3
 		weight_filler {
 			type: "gaussian"
 			std: 0.01
@@ -3199,12 +2689,14 @@ layer {
 	}
 }
 
+
+
 #----- Bounding-box Regression -----
 
 layer {
 	name: "bbox_pred"
 	type: "InnerProduct"
-	bottom: "join_box_mask"
+	bottom: "pool5"
 	top: "bbox_pred"
 	param {
 		name: "bbox_pred_w" 
@@ -3215,7 +2707,7 @@ layer {
 		lr_mult: 2.0 
 	}
 	inner_product_param {
-		num_output: 8
+		num_output: 12
 		weight_filler {
 			type: "gaussian"
 			std: 0.001
@@ -3246,13 +2738,6 @@ layer {
 	top: "accuracy_seg"
 }
 
-layer {
-	name: "accuracy_det"
-	type: "Accuracy"
-	bottom: "cls_score"
-	bottom: "labels"
-	top: "accuracy_det"
-}
 
 # --------- Next Stage ----------
 # We extend 3 stage mnc to 5 stage
@@ -3260,137 +2745,135 @@ layer {
 # name are suffixed by _ext (extend)
 
 layer {
-	name: "seg_cls_prob"
-	type: "Softmax"
-	bottom: "seg_cls_score"
-	top: "seg_cls_prob"
-	loss_param {
-		ignore_label: -1
-		normalize: true
-	}
+  name: "seg_cls_prob"
+  type: "Softmax"
+  bottom: "seg_cls_score"
+  top: "seg_cls_prob"
+  loss_param {
+    ignore_label: -1
+    normalize: true
+  }
 }
 
 layer {
-	name: "stage_bridge"
-	type: 'Python'
-	bottom: 'rois'
-	bottom: 'bbox_pred'
-	bottom: 'seg_cls_prob'
-	bottom: 'gt_boxes'
-	bottom: 'gt_masks'
-	bottom: 'im_info'
-	bottom: 'mask_info'
-	propagate_down: 1
-	propagate_down: 1
-	propagate_down: 0
-	propagate_down: 0
-	propagate_down: 0
-	propagate_down: 0
-	propagate_down: 0
-	top: 'rois_ext'
-	top: 'labels_ext'
-	top: 'mask_targets_ext'
-	top: 'mask_weight_ext'
-	top: 'gt_masks_info_ext'
-	top: 'bbox_targets_ext'
-	top: 'bbox_inside_weights_ext'
-	top: 'bbox_outside_weights_ext'
-	python_param {
-		module: 'multitask_network_cascades.pylayer.stage_bridge_layer'
-		layer: 'StageBridgeLayer'
-		param_str: "{ 'feat_stride': 16, 'use_clip': 1, 'clip_base': 512 }"
-	}
+  name: "stage_bridge"
+  type: 'Python'
+  bottom: 'rois'
+  bottom: 'bbox_pred'
+  bottom: 'seg_cls_prob'
+  bottom: 'gt_boxes'
+  bottom: 'gt_masks'
+  bottom: 'im_info'
+  bottom: 'mask_info'
+  propagate_down: 1
+  propagate_down: 1
+  propagate_down: 0
+  propagate_down: 0
+  propagate_down: 0
+  propagate_down: 0
+  propagate_down: 0
+  top: 'rois_ext'
+  top: 'labels_ext'
+  top: 'mask_targets_ext'
+  top: 'mask_weight_ext'
+  top: 'gt_masks_info_ext'
+  top: 'bbox_targets_ext'
+  top: 'bbox_inside_weights_ext'
+  top: 'bbox_outside_weights_ext'
+  python_param {
+    module: 'multitask_network_cascades.pylayer.stage_bridge_layer'
+    layer: 'StageBridgeLayer'
+    param_str: "{ 'feat_stride': 16,  'use_clip': 1,  'clip_base': 512 }"
+  }
 }
 
 #------------ Roi Warping Ext ------------
 
 layer {
-	name: "roi_interpolate_conv5_ext"
-	type: "ROIWarping"
-	bottom: "res4f"
-	bottom: "rois_ext"
-	propagate_down: 1
-	propagate_down: 1
-	top: "roi_interpolate_conv5_ext"
-	roi_warping_param {
-		pooled_w: 14
-		pooled_h: 14
-		spatial_scale: 0.0625 # 1/16
-	}
+  name: "roi_interpolate_conv5_ext"
+  type: "ROIWarping"
+  bottom: "res4f"
+  bottom: "rois_ext"
+  top: "roi_interpolate_conv5_ext"
+  roi_warping_param {
+    pooled_w: 14
+    pooled_h: 14
+    spatial_scale: 0.0625 # 1/16
+  }
 }
 
 #------------ Mask Estimation Ext ------------
 
 layer {
-	name: "fc6_maskest_ext"
-	type: "InnerProduct"
-	bottom: "roi_interpolate_conv5_ext"
-	top: "fc6_maskest_ext"
-	param {
-		name: "fc6_maskest_w" 
-		lr_mult: 1.0 
-	}
-	param {
-		name: "fc6_maskest_b" 
-		lr_mult: 2.0 
-	}
-	inner_product_param {
-		num_output: 256
-		weight_filler {
-			type: "gaussian"
-			std: 0.001
-		}
-		bias_filler {
-			type: "constant"
-			value: 0
-		}
-	}
+  name: "fc6_maskest_ext"
+  type: "InnerProduct"
+  bottom: "roi_interpolate_conv5_ext"
+  top: "fc6_maskest_ext"
+  param {
+    name: "fc6_maskest_w" 
+    lr_mult: 1.0 
+  }
+  param {
+    name: "fc6_maskest_b" 
+    lr_mult: 2.0 
+  }
+  inner_product_param {
+    num_output: 256
+    weight_filler {
+      type: "gaussian"
+      std: 0.001
+    }
+    bias_filler {
+      type: "constant"
+      value: 0
+    }
+  }
 }
 
 layer {
-	name: "relu6_maskest_ext"
-	type: "ReLU"
-	bottom: "fc6_maskest_ext"
-	top: "fc6_maskest_ext"
+  name: "relu6_maskest_ext"
+  type: "ReLU"
+  bottom: "fc6_maskest_ext"
+  top: "fc6_maskest_ext"
 }
 
 layer {
-	name: "mask_pred_ext"
-	type: "InnerProduct"
-	bottom: "fc6_maskest_ext"
-	top: "mask_pred_ext"
-	param {
-		name: "mask_pred_w" 
-		lr_mult: 1.0 
-	}
-	param {
-		name: "mask_pred_b" 
-		lr_mult: 2.0 
-	}
-	inner_product_param {
-		num_output: 441 # 21 * 21
-		weight_filler {
-			type: "gaussian"
-			std: 0.001
-		}
-		bias_filler {
-			type: "constant"
-			value: 0
-		}
-	}
+  name: "mask_pred_ext"
+  type: "InnerProduct"
+  bottom: "fc6_maskest_ext"
+  top: "mask_pred_ext"
+  param {
+    name: "mask_pred_w" 
+    lr_mult: 1.0 
+  }
+  param {
+    name: "mask_pred_b" 
+    lr_mult: 2.0 
+  }
+  inner_product_param {
+    num_output: 441 # 21 * 21
+    weight_filler {
+      type: "gaussian"
+      std: 0.001
+    }
+    bias_filler {
+      type: "constant"
+      value: 0
+    }
+  }
 }
 
 layer {
-	name: "loss_mask_ext"
-	type: "SigmoidCrossEntropyLoss"
-	bottom: "mask_pred_ext"
-	bottom: "mask_targets_ext"
-	bottom: "mask_weight_ext"
-	propagate_down: 1
-	propagate_down: 0
-	propagate_down: 0
-	top: "loss_mask_ext"
-	loss_weight: 2
+  name: "loss_mask_ext"
+  type: "SigmoidCrossEntropyLoss"
+  bottom: "mask_pred_ext"
+  bottom: "mask_targets_ext"
+  bottom: "mask_weight_ext"
+  propagate_down: 1
+  propagate_down: 0
+  propagate_down: 0
+  top: "loss_mask_ext"
+  loss_weight: 2
 }
 
 #------------ Mask Resize ------------
@@ -3398,57 +2881,66 @@ layer {
 # and use it for mask pooling
 
 layer {
-	name: "mask_output_ext"
-	type: "Sigmoid"
-	bottom: "mask_pred_ext"
-	top: "mask_output_ext"
+  name: "mask_output_ext"
+  type: "Sigmoid"
+  bottom: "mask_pred_ext"
+  top: "mask_output_ext"
 }
 
 layer {
-	name: "mask_proposal_ext"
-	type: 'Python'
-	bottom: 'mask_output_ext'
-	bottom: 'gt_masks'
-	bottom: 'gt_masks_info_ext'
-	propagate_down: 1
-	propagate_down: 0
-	propagate_down: 0
-	top: 'mask_proposal_ext'
-	top: 'mask_proposal_label_ext'
-	python_param {
-		module: 'multitask_network_cascades.pylayer.mask_layer'
-		layer: 'MaskLayer'
-	}
+  name: "mask_proposal_ext"
+  type: 'Python'
+  bottom: 'mask_output_ext'
+  bottom: 'gt_masks'
+  bottom: 'gt_masks_info_ext'
+  propagate_down: 1
+  propagate_down: 0
+  propagate_down: 0
+  top: 'mask_proposal_ext'
+  top: 'mask_proposal_label_ext'
+  python_param {
+    module: 'multitask_network_cascades.pylayer.mask_layer'
+    layer: 'MaskLayer'
+  }
 }
 
 layer {
-	name: "mask_resize_ext"
-	type: "MaskResize"
-	bottom: "mask_proposal_ext"
-	top: "mask_proposal_resize_ext"
-	mask_resize_param {
-		output_height: 14
-		output_width: 14
-	}
+  name: "mask_resize_ext"
+  type: "MaskResize"
+  bottom: "mask_proposal_ext"
+  top: "mask_proposal_resize_ext"
+  mask_resize_param {
+    output_height: 14
+    output_width: 14
+  }
 }
 
-#------------ Box Features Ext ------------
+
+# ------ Mask Feature Ext ---------
 
 layer {
-	name: "roi_interpolate_conv5_box_ext"
-	type: "Pooling"
-	bottom: "roi_interpolate_conv5_ext"
-	top: "roi_interpolate_conv5_box_ext"
-	pooling_param {
-		kernel_size: 2
-		stride: 1
-		pad: 0
-		pool: MAX
-	}
+  name: "mask_pooling_ext"
+  type: "MaskPooling"
+  bottom: "roi_interpolate_conv5_ext"
+  bottom: "mask_proposal_resize_ext"
+  top: "roi_mask_conv5_ext"
 }
 
 layer {
-	bottom: "roi_interpolate_conv5_box_ext"
+  name: "roi_interpolate_conv5_mask_ext"
+  type: "Pooling"
+  bottom: "roi_mask_conv5_ext"
+  top: "roi_interpolate_conv5_mask_ext"
+  pooling_param {
+    kernel_size: 2
+    stride: 1
+    pad: 0
+    pool: MAX
+  }
+}
+
+layer {
+	bottom: "roi_interpolate_conv5_mask_ext"
 	top: "res5a_branch1_ext"
 	name: "res5a_branch1_ext"
 	type: "Convolution"
@@ -3482,7 +2974,7 @@ layer {
 }
 
 layer {
-	bottom: "roi_interpolate_conv5_box_ext"
+	bottom: "roi_interpolate_conv5_mask_ext"
 	top: "res5a_branch2a_ext"
 	name: "res5a_branch2a_ext"
 	type: "Convolution"
@@ -3886,622 +3378,93 @@ layer {
 	}
 }
 
-# ------ Mask Feature Ext ---------
-
-layer {
-	name: "mask_pooling_ext"
-	type: "MaskPooling"
-	propagate_down: 1
-	propagate_down: 1
-	bottom: "roi_interpolate_conv5_ext"
-	bottom: "mask_proposal_resize_ext"
-	top: "roi_mask_conv5_ext"
-}
-
-layer {
-	name: "roi_interpolate_conv5_mask_ext"
-	type: "Pooling"
-	bottom: "roi_mask_conv5_ext"
-	top: "roi_interpolate_conv5_mask_ext"
-	pooling_param {
-		kernel_size: 2
-		stride: 1
-		pad: 0
-		pool: MAX
-	}
-}
-
-layer {
-	bottom: "roi_interpolate_conv5_mask_ext"
-	top: "res5a_branch1_mask_ext"
-	name: "res5a_branch1_mask_ext"
-	type: "Convolution"
-	convolution_param {
-		num_output: 2048
-		kernel_size: 1
-		pad: 0
-		stride: 2
-		bias_term: false
-	}
-}
-
-layer {
-	bottom: "res5a_branch1_mask_ext"
-	top: "res5a_branch1_mask_ext"
-	name: "bn5a_branch1_mask_ext"
-	type: "BatchNorm"
-	batch_norm_param {
-		use_global_stats: true
-	}
-}
-
-layer {
-	bottom: "res5a_branch1_mask_ext"
-	top: "res5a_branch1_mask_ext"
-	name: "scale5a_branch1_mask_ext"
-	type: "Scale"
-	scale_param {
-		bias_term: true
-	}
-}
-
-layer {
-	bottom: "roi_interpolate_conv5_mask_ext"
-	top: "res5a_branch2a_mask_ext"
-	name: "res5a_branch2a_mask_ext"
-	type: "Convolution"
-	convolution_param {
-		num_output: 512
-		kernel_size: 1
-		pad: 0
-		stride: 2
-		bias_term: false
-	}
-}
-
-layer {
-	bottom: "res5a_branch2a_mask_ext"
-	top: "res5a_branch2a_mask_ext"
-	name: "bn5a_branch2a_mask_ext"
-	type: "BatchNorm"
-	batch_norm_param {
-		use_global_stats: true
-	}
-}
-
-layer {
-	bottom: "res5a_branch2a_mask_ext"
-	top: "res5a_branch2a_mask_ext"
-	name: "scale5a_branch2a_mask_ext"
-	type: "Scale"
-	scale_param {
-		bias_term: true
-	}
-}
-
-layer {
-	bottom: "res5a_branch2a_mask_ext"
-	top: "res5a_branch2a_mask_ext"
-	name: "res5a_branch2a_relu_mask_ext"
-	type: "ReLU"
-}
-
-layer {
-	bottom: "res5a_branch2a_mask_ext"
-	top: "res5a_branch2b_mask_ext"
-	name: "res5a_branch2b_mask_ext"
-	type: "Convolution"
-	convolution_param {
-		num_output: 512
-		kernel_size: 3
-		pad: 1
-		stride: 1
-		bias_term: false
-	}
-}
-
-layer {
-	bottom: "res5a_branch2b_mask_ext"
-	top: "res5a_branch2b_mask_ext"
-	name: "bn5a_branch2b_mask_ext"
-	type: "BatchNorm"
-	batch_norm_param {
-		use_global_stats: true
-	}
-}
-
-layer {
-	bottom: "res5a_branch2b_mask_ext"
-	top: "res5a_branch2b_mask_ext"
-	name: "scale5a_branch2b_mask_ext"
-	type: "Scale"
-	scale_param {
-		bias_term: true
-	}
-}
-
-layer {
-	bottom: "res5a_branch2b_mask_ext"
-	top: "res5a_branch2b_mask_ext"
-	name: "res5a_branch2b_relu_mask_ext"
-	type: "ReLU"
-}
-
-layer {
-	bottom: "res5a_branch2b_mask_ext"
-	top: "res5a_branch2c_mask_ext"
-	name: "res5a_branch2c_mask_ext"
-	type: "Convolution"
-	convolution_param {
-		num_output: 2048
-		kernel_size: 1
-		pad: 0
-		stride: 1
-		bias_term: false
-	}
-}
-
-layer {
-	bottom: "res5a_branch2c_mask_ext"
-	top: "res5a_branch2c_mask_ext"
-	name: "bn5a_branch2c_mask_ext"
-	type: "BatchNorm"
-	batch_norm_param {
-		use_global_stats: true
-	}
-}
-
-layer {
-	bottom: "res5a_branch2c_mask_ext"
-	top: "res5a_branch2c_mask_ext"
-	name: "scale5a_branch2c_mask_ext"
-	type: "Scale"
-	scale_param {
-		bias_term: true
-	}
-}
-
-layer {
-	bottom: "res5a_branch1_mask_ext"
-	bottom: "res5a_branch2c_mask_ext"
-	top: "res5a_mask_ext"
-	name: "res5a_mask_ext"
-	type: "Eltwise"
-}
-
-layer {
-	bottom: "res5a_mask_ext"
-	top: "res5a_mask_ext"
-	name: "res5a_relu_mask_ext"
-	type: "ReLU"
-}
-
-layer {
-	bottom: "res5a_mask_ext"
-	top: "res5b_branch2a_mask_ext"
-	name: "res5b_branch2a_mask_ext"
-	type: "Convolution"
-	convolution_param {
-		num_output: 512
-		kernel_size: 1
-		pad: 0
-		stride: 1
-		bias_term: false
-	}
-}
-
-layer {
-	bottom: "res5b_branch2a_mask_ext"
-	top: "res5b_branch2a_mask_ext"
-	name: "bn5b_branch2a_mask_ext"
-	type: "BatchNorm"
-	batch_norm_param {
-		use_global_stats: true
-	}
-}
-
-layer {
-	bottom: "res5b_branch2a_mask_ext"
-	top: "res5b_branch2a_mask_ext"
-	name: "scale5b_branch2a_mask_ext"
-	type: "Scale"
-	scale_param {
-		bias_term: true
-	}
-}
-
-layer {
-	bottom: "res5b_branch2a_mask_ext"
-	top: "res5b_branch2a_mask_ext"
-	name: "res5b_branch2a_relu_mask_ext"
-	type: "ReLU"
-}
-
-layer {
-	bottom: "res5b_branch2a_mask_ext"
-	top: "res5b_branch2b_mask_ext"
-	name: "res5b_branch2b_mask_ext"
-	type: "Convolution"
-	convolution_param {
-		num_output: 512
-		kernel_size: 3
-		pad: 1
-		stride: 1
-		bias_term: false
-	}
-}
-
-layer {
-	bottom: "res5b_branch2b_mask_ext"
-	top: "res5b_branch2b_mask_ext"
-	name: "bn5b_branch2b_mask_ext"
-	type: "BatchNorm"
-	batch_norm_param {
-		use_global_stats: true
-	}
-}
-
-layer {
-	bottom: "res5b_branch2b_mask_ext"
-	top: "res5b_branch2b_mask_ext"
-	name: "scale5b_branch2b_mask_ext"
-	type: "Scale"
-	scale_param {
-		bias_term: true
-	}
-}
-
-layer {
-	bottom: "res5b_branch2b_mask_ext"
-	top: "res5b_branch2b_mask_ext"
-	name: "res5b_branch2b_relu_mask_ext"
-	type: "ReLU"
-}
-
-layer {
-	bottom: "res5b_branch2b_mask_ext"
-	top: "res5b_branch2c_mask_ext"
-	name: "res5b_branch2c_mask_ext"
-	type: "Convolution"
-	convolution_param {
-		num_output: 2048
-		kernel_size: 1
-		pad: 0
-		stride: 1
-		bias_term: false
-	}
-}
-
-layer {
-	bottom: "res5b_branch2c_mask_ext"
-	top: "res5b_branch2c_mask_ext"
-	name: "bn5b_branch2c_mask_ext"
-	type: "BatchNorm"
-	batch_norm_param {
-		use_global_stats: true
-	}
-}
-
-layer {
-	bottom: "res5b_branch2c_mask_ext"
-	top: "res5b_branch2c_mask_ext"
-	name: "scale5b_branch2c_mask_ext"
-	type: "Scale"
-	scale_param {
-		bias_term: true
-	}
-}
-
-layer {
-	bottom: "res5a_mask_ext"
-	bottom: "res5b_branch2c_mask_ext"
-	top: "res5b_mask_ext"
-	name: "res5b_mask_ext"
-	type: "Eltwise"
-}
-
-layer {
-	bottom: "res5b_mask_ext"
-	top: "res5b_mask_ext"
-	name: "res5b_relu_mask_ext"
-	type: "ReLU"
-}
-
-layer {
-	bottom: "res5b_mask_ext"
-	top: "res5c_branch2a_mask_ext"
-	name: "res5c_branch2a_mask_ext"
-	type: "Convolution"
-	convolution_param {
-		num_output: 512
-		kernel_size: 1
-		pad: 0
-		stride: 1
-		bias_term: false
-	}
-}
-
-layer {
-	bottom: "res5c_branch2a_mask_ext"
-	top: "res5c_branch2a_mask_ext"
-	name: "bn5c_branch2a_mask_ext"
-	type: "BatchNorm"
-	batch_norm_param {
-		use_global_stats: true
-	}
-}
-
-layer {
-	bottom: "res5c_branch2a_mask_ext"
-	top: "res5c_branch2a_mask_ext"
-	name: "scale5c_branch2a_mask_ext"
-	type: "Scale"
-	scale_param {
-		bias_term: true
-	}
-}
-
-layer {
-	bottom: "res5c_branch2a_mask_ext"
-	top: "res5c_branch2a_mask_ext"
-	name: "res5c_branch2a_relu_mask_ext"
-	type: "ReLU"
-}
-
-layer {
-	bottom: "res5c_branch2a_mask_ext"
-	top: "res5c_branch2b_mask_ext"
-	name: "res5c_branch2b_mask_ext"
-	type: "Convolution"
-	convolution_param {
-		num_output: 512
-		kernel_size: 3
-		pad: 1
-		stride: 1
-		bias_term: false
-	}
-}
-
-layer {
-	bottom: "res5c_branch2b_mask_ext"
-	top: "res5c_branch2b_mask_ext"
-	name: "bn5c_branch2b_mask_ext"
-	type: "BatchNorm"
-	batch_norm_param {
-		use_global_stats: true
-	}
-}
-
-layer {
-	bottom: "res5c_branch2b_mask_ext"
-	top: "res5c_branch2b_mask_ext"
-	name: "scale5c_branch2b_mask_ext"
-	type: "Scale"
-	scale_param {
-		bias_term: true
-	}
-}
-
-layer {
-	bottom: "res5c_branch2b_mask_ext"
-	top: "res5c_branch2b_mask_ext"
-	name: "res5c_branch2b_relu_mask_ext"
-	type: "ReLU"
-}
-
-layer {
-	bottom: "res5c_branch2b_mask_ext"
-	top: "res5c_branch2c_mask_ext"
-	name: "res5c_branch2c_mask_ext"
-	type: "Convolution"
-	convolution_param {
-		num_output: 2048
-		kernel_size: 1
-		pad: 0
-		stride: 1
-		bias_term: false
-	}
-}
-
-layer {
-	bottom: "res5c_branch2c_mask_ext"
-	top: "res5c_branch2c_mask_ext"
-	name: "bn5c_branch2c_mask_ext"
-	type: "BatchNorm"
-	batch_norm_param {
-		use_global_stats: true
-	}
-}
-
-layer {
-	bottom: "res5c_branch2c_mask_ext"
-	top: "res5c_branch2c_mask_ext"
-	name: "scale5c_branch2c_mask_ext"
-	type: "Scale"
-	scale_param {
-		bias_term: true
-	}
-}
-
-layer {
-	bottom: "res5b_mask_ext"
-	bottom: "res5c_branch2c_mask_ext"
-	top: "res5c_mask_ext"
-	name: "res5c_mask_ext"
-	type: "Eltwise"
-}
-
-layer {
-	bottom: "res5c_mask_ext"
-	top: "res5c_mask_ext"
-	name: "res5c_relu_mask_ext"
-	type: "ReLU"
-}
-
-layer {
-	bottom: "res5c_mask_ext"
-	top: "pool5_mask_ext"
-	name: "pool5_mask_ext"
-	type: "Pooling"
-	pooling_param {
-		kernel_size: 7
-		stride: 1
-		pool: AVE
-	}
-}
-
-#----- Concat Box-Mask Feature -----
-
-layer {
-	name: "join_box_mask_ext"
-	type: "Concat"
-	bottom: "pool5_mask_ext"
-	bottom: "pool5_ext"
-	top: "join_box_mask_ext"
-	concat_param {
-		axis: 1
-	}
-}
-
-#----- Box-level Classification -----
-
-layer {
-	name: "cls_score_ext"
-	type: "InnerProduct"
-	bottom: "join_box_mask_ext"
-	top: "cls_score_ext"
-	param {
-		name: "cls_score_w" 
-		lr_mult: 1.0 
-	}
-	param {
-		name: "cls_score_b" 
-		lr_mult: 2.0 
-	}
-	inner_product_param {
-		num_output: 2
-		weight_filler {
-			type: "gaussian"
-			std: 0.01
-		}
-		bias_filler {
-			type: "constant"
-			value: 0
-		}
-	}
-}
-
-layer {
-	name: "loss_cls_ext"
-	type: "SoftmaxWithLoss"
-	bottom: "cls_score_ext"
-	bottom: "labels_ext"
-	propagate_down: 1
-	propagate_down: 0
-	top: "cls_loss_ext"
-	loss_weight: 1
-	loss_param {
-		ignore_label: -1
-		normalize: true
-	}
-}
-
 #----- Mask-level Classification -----
 
 layer {
-	name: "seg_cls_score_ext"
-	type: "InnerProduct"
-	bottom: "join_box_mask_ext"
-	top: "seg_cls_score_ext"
-	param {
-		name: "seg_cls_score_w" 
-		lr_mult: 1.0 
-	}
-	param {
-		name: "seg_cls_score_b" 
-		lr_mult: 2.0 
-	}
-	inner_product_param {
-		num_output: 2
-		weight_filler {
-			type: "gaussian"
-			std: 0.01
-		}
-		bias_filler {
-			type: "constant"
-			value: 0
-		}
-	}
+  name: "seg_cls_score_ext"
+  type: "InnerProduct"
+  bottom: "pool5_ext"
+  top: "seg_cls_score_ext"
+  param {
+    name: "seg_cls_score_w" 
+    lr_mult: 1.0 
+  }
+  param {
+    name: "seg_cls_score_b" 
+    lr_mult: 2.0 
+  }
+  inner_product_param {
+    num_output: 3
+    weight_filler {
+      type: "gaussian"
+      std: 0.01
+    }
+    bias_filler {
+      type: "constant"
+      value: 0
+    }
+  }
 }
 
 layer {
-	name: "loss_seg_cls_ext"
-	type: "SoftmaxWithLoss"
-	bottom: "seg_cls_score_ext"
-	bottom: "mask_proposal_label_ext"
-	propagate_down: 1
-	propagate_down: 0
-	top: "seg_cls_loss_ext"
-	loss_weight: 1
-	loss_param {
-		ignore_label: -1
-		normalize: true
-	}
+  name: "loss_seg_cls_ext"
+  type: "SoftmaxWithLoss"
+  bottom: "seg_cls_score_ext"
+  bottom: "mask_proposal_label_ext"
+  propagate_down: 1
+  propagate_down: 0
+  top: "seg_cls_loss_ext"
+  loss_weight: 1
+  loss_param {
+    ignore_label: -1
+    normalize: true
+  }
 }
 
 #----- Bounding-box Regression -----
 
 layer {
-	name: "bbox_pred_ext"
-	type: "InnerProduct"
-	bottom: "join_box_mask_ext"
-	top: "bbox_pred_ext"
-	param {
-		name: "bbox_pred_w" 
-		lr_mult: 1.0 
-	}
-	param {
-		name: "bbox_pred_b" 
-		lr_mult: 2.0 
-	}
-	inner_product_param {
-		num_output: 8
-		weight_filler {
-			type: "gaussian"
-			std: 0.001
-		}
-		bias_filler {
-			type: "constant"
-			value: 0
-		}
-	}
+  name: "bbox_pred_ext"
+  type: "InnerProduct"
+  bottom: "pool5_ext"
+  top: "bbox_pred_ext"
+  param {
+    name: "bbox_pred_w" 
+    lr_mult: 1.0 
+  }
+  param {
+    name: "bbox_pred_b" 
+    lr_mult: 2.0 
+  }
+  inner_product_param {
+    num_output: 12
+    weight_filler {
+      type: "gaussian"
+      std: 0.001
+    }
+    bias_filler {
+      type: "constant"
+      value: 0
+    }
+  }
 }
 
 layer {
-	name: "loss_bbox_ext"
-	type: "SmoothL1Loss"
-	bottom: "bbox_pred_ext"
-	bottom: "bbox_targets_ext"
-	bottom: 'bbox_inside_weights_ext'
-	bottom: 'bbox_outside_weights_ext'
-	top: "bbox_loss_ext"
-	loss_weight: 1
+  name: "loss_bbox_ext"
+  type: "SmoothL1Loss"
+  bottom: "bbox_pred_ext"
+  bottom: "bbox_targets_ext"
+  bottom: 'bbox_inside_weights_ext'
+  bottom: 'bbox_outside_weights_ext'
+  top: "bbox_loss_ext"
+  loss_weight: 1
 }
 
 
 layer {
-	name: "accuracy_seg_ext"
-	type: "Accuracy"
-	bottom: "seg_cls_score_ext"
-	bottom: "mask_proposal_label_ext"
-	top: "accuracy_seg_ext"
+  name: "accuracy_seg_ext"
+  type: "Accuracy"
+  bottom: "seg_cls_score_ext"
+  bottom: "mask_proposal_label_ext"
+  top: "accuracy_seg_ext"
 }
-
-layer {
-	name: "accuracy_det_ext"
-	type: "Accuracy"
-	bottom: "cls_score_ext"
-	bottom: "labels_ext"
-	top: "accuracy_det_ext"
-}
-

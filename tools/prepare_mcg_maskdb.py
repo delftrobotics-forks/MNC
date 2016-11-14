@@ -170,7 +170,9 @@ def process_flip_masks(image_names, im_start, im_end):
         os.makedirs(cache_dir)
 
     for index in xrange(im_start, im_end):
-        output_cache = os.path.join(cache_dir, image_names[index] + '_flip.mat')
+        output_cache_x  = os.path.join(cache_dir, image_names[index] + '_flip_x.mat')
+        output_cache_y  = os.path.join(cache_dir, image_names[index] + '_flip_y.mat')
+        output_cache_xy = os.path.join(cache_dir, image_names[index] + '_flip_xy.mat')
         if os.path.exists(output_cache):
             continue
         image_cache = os.path.join(cache_dir, image_names[index] + '.mat')
@@ -178,8 +180,12 @@ def process_flip_masks(image_names, im_start, im_end):
         # Flip mask and mask regression targets
         masks = orig_maskdb['masks']
         mask_targets = orig_maskdb['mask_targets']
-        mask_flip = masks[:, :, ::-1]
-        mask_target_flip = mask_targets[:, :, ::-1]
+        mask_flip_x =  masks[:, :, ::-1]
+        mask_flip_y =  masks[:, ::-1, :]
+        mask_flip_xy = masks[:, ::-1, ::-1]
+        mask_target_flip_x =  mask_targets[:, :, ::-1]
+        mask_target_flip_y =  mask_targets[:, ::-1, :]
+        mask_target_flip_xy = mask_targets[:, ::-1, ::-1]
         # Flip boxes
         boxes = orig_maskdb['boxes']
         oldx1 = boxes[:, 0].copy()
@@ -188,8 +194,8 @@ def process_flip_masks(image_names, im_start, im_end):
         boxes[:, 2] = widths[index] - oldx1 - 1
         assert (boxes[:, 2] >= boxes[:, 0]).all()
         # Other maskdb values are identical with original maskdb
-        flip_maskdb = {
-            'masks': (mask_flip >= cfg.BINARIZE_THRESH).astype(bool),
+        flip_x_maskdb = {
+            'masks': (mask_flip_x >= cfg.BINARIZE_THRESH).astype(bool),
             'boxes': boxes,
             'det_overlap': orig_maskdb['det_overlap'],
             'seg_overlap': orig_maskdb['seg_overlap'],
@@ -199,7 +205,31 @@ def process_flip_masks(image_names, im_start, im_end):
             'Flip': True,
             'output_label': orig_maskdb['output_label']
         }
-        sio.savemat(output_cache, flip_maskdb)
+        sio.savemat(output_cache, flip_x_maskdb)
+        flip_y_maskdb = {
+            'masks': (mask_flip_y >= cfg.BINARIZE_THRESH).astype(bool),
+            'boxes': boxes,
+            'det_overlap': orig_maskdb['det_overlap'],
+            'seg_overlap': orig_maskdb['seg_overlap'],
+            'mask_targets': (mask_target_flip >= cfg.BINARIZE_THRESH).astype(bool),
+            'gt_classes': orig_maskdb['gt_classes'],
+            'gt_assignment': orig_maskdb['gt_assignment'],
+            'Flip': True,
+            'output_label': orig_maskdb['output_label']
+        }
+        sio.savemat(output_cache, flip_y_maskdb)
+        flip_xy_maskdb = {
+            'masks': (mask_flip_xy >= cfg.BINARIZE_THRESH).astype(bool),
+            'boxes': boxes,
+            'det_overlap': orig_maskdb['det_overlap'],
+            'seg_overlap': orig_maskdb['seg_overlap'],
+            'mask_targets': (mask_target_flip >= cfg.BINARIZE_THRESH).astype(bool),
+            'gt_classes': orig_maskdb['gt_classes'],
+            'gt_assignment': orig_maskdb['gt_assignment'],
+            'Flip': True,
+            'output_label': orig_maskdb['output_label']
+        }
+        sio.savemat(output_cache, flip_xy_maskdb)
 
 
 if __name__ == '__main__':

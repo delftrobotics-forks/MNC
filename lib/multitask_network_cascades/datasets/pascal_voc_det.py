@@ -125,7 +125,9 @@ class PascalVOCDet(PascalVOC):
                 entry = {'boxes': boxes,
                          'gt_overlaps': self.roidb[i]['gt_overlaps'],
                          'gt_classes': self.roidb[i]['gt_classes'],
-                         'flipped': True}
+                         'flipped_x': True,
+                         'flipped_y': True,
+                         'flipped_xy': True}
                 flip_roidb.append(entry)
             with open(cache_file, 'wb') as fid:
                 cPickle.dump(flip_roidb, fid, cPickle.HIGHEST_PROTOCOL)
@@ -182,7 +184,9 @@ class PascalVOCDet(PascalVOC):
         return {'boxes': boxes,
                 'gt_classes': gt_classes,
                 'gt_overlaps': overlaps,
-                'flipped': False}
+                'flipped_x': False,
+                'flipped_y': False,
+                'flipped_xy': False}
 
     def _load_sbd_annotations(self, index):
         if index % 1000 == 0: print('%d / %d' % (index, len(self._image_index)))
@@ -220,7 +224,9 @@ class PascalVOCDet(PascalVOC):
         return {'boxes': boxes,
                 'gt_classes': gt_classes,
                 'gt_overlaps': overlaps,
-                'flipped': False}
+                'flipped_x': False,
+                'flipped_y': False,
+                'flipped_xy': False}
 
     """-----------------Evaluation--------------------"""
     def evaluate_detections(self, all_boxes, output_dir):

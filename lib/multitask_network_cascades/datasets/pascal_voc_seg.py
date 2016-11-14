@@ -108,7 +108,9 @@ class PascalVOCSeg(PascalVOCDet):
         return {
             'gt_masks': gt_masks,
             'mask_max': [mask_max_x, mask_max_y],
-            'flipped': False
+            'flipped_x': False,
+            'flipped_y': False,
+            'flipped_xy': False
         }
 
     def append_flipped_masks(self):
@@ -139,7 +141,9 @@ class PascalVOCSeg(PascalVOCDet):
                     masks_flip.append(mask_flip)
                 entry = {'gt_masks': masks_flip,
                          'mask_max': self.maskdb[i]['mask_max'],
-                         'flipped': True}
+                         'flipped_x': True,
+                         'flipped_y': True,
+                         'flipped_xy': True}
                 flip_maskdb.append(entry)
             with open(cache_file, 'wb') as fid:
                 cPickle.dump(flip_maskdb, fid, cPickle.HIGHEST_PROTOCOL)

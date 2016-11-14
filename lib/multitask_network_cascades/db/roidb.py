@@ -29,6 +29,10 @@ def prepare_roidb(imdb):
         roidb[i]['image'] = imdb.image_path_at(i)
         roidb[i]['width'] = sizes[i][0]
         roidb[i]['height'] = sizes[i][1]
+        roidb[i]['flipped_x'] = True
+        roidb[i]['flipped_y'] = True
+        roidb[i]['flipped_xy'] = True
+
         # need gt_overlaps as a dense array for argmax
         gt_overlaps = roidb[i]['gt_overlaps'].toarray()
         # max overlap with gt over classes (columns)

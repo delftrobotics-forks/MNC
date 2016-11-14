@@ -18,7 +18,7 @@ __C.USE_GPU_NMS = True
 __C.GPU_ID = 0
 __C.RNG_SEED = 3
 __C.EPS = 1e-14
-__C.PIXEL_MEANS = np.array([[[102.9801, 115.9465, 122.7717]]])
+__C.PIXEL_MEANS = np.array([[[0, 0, 0]]])
 # Root directory of project
 __C.ROOT_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..'))
 # Data directory
@@ -42,8 +42,8 @@ __C.TRAIN.ASPECT_GROUPING = True
 # Use flipped image for augmentation
 __C.TRAIN.USE_FLIPPED = True
 # Resize shortest side to 600
-__C.TRAIN.SCALES = (600,)
-__C.TRAIN.MAX_SIZE = 1000
+__C.TRAIN.SCALES = (1024,)
+__C.TRAIN.MAX_SIZE = 1100
 __C.TRAIN.SNAPSHOT_ITERS = 5000
 __C.TRAIN.SNAPSHOT_INFIX = ''
 # Sample FG
