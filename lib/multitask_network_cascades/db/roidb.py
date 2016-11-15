@@ -122,7 +122,9 @@ def get_roidb(imdb_name):
     print('Set proposal method: {:s}'.format(cfg.TRAIN.PROPOSAL_METHOD))
     if cfg.TRAIN.USE_FLIPPED:
         print('Appending horizontally-flipped training examples...')
-        imdb.append_flipped_rois()
+        imdb.append_x_flipped_rois()
+        print('Appending vertically-flipped training examples...')
+        imdb.append_y_flipped_rois()
         print('done')
     print('Preparing training data...')
     prepare_roidb(imdb)

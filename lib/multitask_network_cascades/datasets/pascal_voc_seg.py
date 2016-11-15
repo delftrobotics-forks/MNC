@@ -42,9 +42,15 @@ class PascalVOCSeg(PascalVOCDet):
         return image_path
 
     def roidb_path_at(self, i):
+        if i >= 3*self._ori_image_num:
+            return os.path.join(self._roidb_path,
+                                self.image_index[i % self._ori_image_num] + '_flip_xy.mat')
+        if i >= 2*self._ori_image_num:
+            return os.path.join(self._roidb_path,
+                                self.image_index[i % self._ori_image_num] + '_flip_y.mat')
         if i >= self._ori_image_num:
             return os.path.join(self._roidb_path,
-                                self.image_index[i % self._ori_image_num] + '_flip.mat')
+                                self.image_index[i % self._ori_image_num] + '_flip_x.mat')
         else:
             return os.path.join(self._roidb_path,
                                 self.image_index[i] + '.mat')
@@ -142,8 +148,29 @@ class PascalVOCSeg(PascalVOCDet):
                 entry = {'gt_masks': masks_flip,
                          'mask_max': self.maskdb[i]['mask_max'],
                          'flipped_x': True,
-                         'flipped_y': True,
-                         'flipped_xy': True}
+                         'flipped_y': False}
+                flip_maskdb.append(entry)
+            for i in range(num_images):
+                masks = self.maskdb[i]['gt_masks']
+                masks_flip = []
+                for mask_ind in range(len(masks)):
+                    mask_flip = np.flipud(masks[mask_ind])
+                    masks_flip.append(mask_flip)
+                entry = {'gt_masks': masks_flip,
+                         'mask_max': self.maskdb[i]['mask_max'],
+                         'flipped_x': False,
+                         'flipped_y': True}
+                flip_maskdb.append(entry)
+            for i in range(num_images):
+                masks = self.maskdb[i]['gt_masks']
+                masks_flip = []
+                for mask_ind in range(len(masks)):
+                    mask_flip = np.flipud(np.fliplr(masks[mask_ind]))
+                    masks_flip.append(mask_flip)
+                entry = {'gt_masks': masks_flip,
+                         'mask_max': self.maskdb[i]['mask_max'],
+                         'flipped_x': True,
+                         'flipped_y': True}
                 flip_maskdb.append(entry)
             with open(cache_file, 'wb') as fid:
                 cPickle.dump(flip_maskdb, fid, cPickle.HIGHEST_PROTOCOL)

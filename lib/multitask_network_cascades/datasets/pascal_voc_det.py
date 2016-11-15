@@ -98,14 +98,14 @@ class PascalVOCDet(PascalVOC):
             image_index = [x.strip() for x in f.readlines()]
         return image_index
 
-    def append_flipped_rois(self):
+    def append_x_flipped_rois(self):
         """
         This method is irrelevant with database, so implement here
         Append flipped images to ROI database
         Note this method doesn't actually flip the 'image', it flip
         boxes instead
         """
-        cache_file = os.path.join(self.cache_path, self.name + '_' + cfg.TRAIN.PROPOSAL_METHOD + '_roidb_flip.pkl')
+        cache_file = os.path.join(self.cache_path, self.name + '_' + cfg.TRAIN.PROPOSAL_METHOD + '_roidb_x_flip.pkl')
         if os.path.exists(cache_file):
             with open(cache_file, 'rb') as fid:
                 flip_roidb = cPickle.load(fid)
@@ -126,8 +126,45 @@ class PascalVOCDet(PascalVOC):
                          'gt_overlaps': self.roidb[i]['gt_overlaps'],
                          'gt_classes': self.roidb[i]['gt_classes'],
                          'flipped_x': True,
-                         'flipped_y': True,
-                         'flipped_xy': True}
+                         'flipped_y': False}
+                flip_roidb.append(entry)
+            with open(cache_file, 'wb') as fid:
+                cPickle.dump(flip_roidb, fid, cPickle.HIGHEST_PROTOCOL)
+            print('wrote gt flipped roidb to {}'.format(cache_file))
+
+        self.roidb.extend(flip_roidb)
+        self._image_index *= 2
+
+    def append_y_flipped_rois(self):
+        """
+        This method is irrelevant with database, so implement here
+        Append flipped images to ROI database
+        Note this method doesn't actually flip the 'image', it flip
+        boxes instead
+        """
+        cache_file = os.path.join(self.cache_path, self.name + '_' + cfg.TRAIN.PROPOSAL_METHOD + '_roidb_y_flip.pkl')
+        if os.path.exists(cache_file):
+            with open(cache_file, 'rb') as fid:
+                flip_roidb = cPickle.load(fid)
+            print('{} gt flipped roidb loaded from {}'.format(self.name, cache_file))
+        else:
+            num_images = self.num_images
+            heights = [PIL.Image.open(self.image_path_at(i)).size[1]
+                      for i in range(num_images)]
+            print('number of items: ', len(heights))
+            flip_roidb = []
+            for i in range(num_images):
+                boxes = self.roidb[i]['boxes'].copy()
+                oldy1 = boxes[:, 1].copy()
+                oldy2 = boxes[:, 3].copy()
+                boxes[:, 1] = heights[i] - oldy2 - 1
+                boxes[:, 3] = heights[i] - oldy1 - 1
+                assert (boxes[:, 3] >= boxes[:, 1]).all()
+                entry = {'boxes': boxes,
+                         'gt_overlaps': self.roidb[i]['gt_overlaps'],
+                         'gt_classes': self.roidb[i]['gt_classes'],
+                         'flipped_x': self.roidb[i]['flipped_x'],
+                         'flipped_y': True}
                 flip_roidb.append(entry)
             with open(cache_file, 'wb') as fid:
                 cPickle.dump(flip_roidb, fid, cPickle.HIGHEST_PROTOCOL)
@@ -185,8 +222,7 @@ class PascalVOCDet(PascalVOC):
                 'gt_classes': gt_classes,
                 'gt_overlaps': overlaps,
                 'flipped_x': False,
-                'flipped_y': False,
-                'flipped_xy': False}
+                'flipped_y': False}
 
     def _load_sbd_annotations(self, index):
         if index % 1000 == 0: print('%d / %d' % (index, len(self._image_index)))

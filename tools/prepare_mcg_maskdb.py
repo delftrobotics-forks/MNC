@@ -164,7 +164,8 @@ def process_roidb(file_start, file_end, db):
 
 def process_flip_masks(image_names, im_start, im_end):
 
-    widths = [PIL.Image.open('data/VOCdevkitSDS/img/' + im_name + '.png').size[0] for im_name in image_names]
+    widths  = [PIL.Image.open('data/VOCdevkitSDS/img/' + im_name + '.png').size[0] for im_name in image_names]
+    heights = [PIL.Image.open('data/VOCdevkitSDS/img/' + im_name + '.png').size[1] for im_name in image_names]
     cache_dir = output_dir
     if not os.path.isdir(cache_dir):
         os.makedirs(cache_dir)
@@ -186,17 +187,37 @@ def process_flip_masks(image_names, im_start, im_end):
         mask_target_flip_x =  mask_targets[:, :, ::-1]
         mask_target_flip_y =  mask_targets[:, ::-1, :]
         mask_target_flip_xy = mask_targets[:, ::-1, ::-1]
-        # Flip boxes
+
         boxes = orig_maskdb['boxes']
+        # Flip x boxes
         oldx1 = boxes[:, 0].copy()
         oldx2 = boxes[:, 2].copy()
-        boxes[:, 0] = widths[index] - oldx2 - 1
-        boxes[:, 2] = widths[index] - oldx1 - 1
-        assert (boxes[:, 2] >= boxes[:, 0]).all()
+        boxes_x = boxes
+        boxes_x[:, 0] = widths[index] - oldx2 - 1
+        boxes_x[:, 2] = widths[index] - oldx1 - 1
+        assert (boxes_x[:, 2] >= boxes_x[:, 0]).all()
+
+        # Flip y boxes
+        oldy1 = boxes[:, 1].copy()
+        oldy2 = boxes[:, 3].copy()
+        boxes_y = boxes
+        boxes_y[:, 1] = heights[index] - oldy2 - 1
+        boxes_y[:, 3] = heights[index] - oldy1 - 1
+        assert (boxes_y[:, 3] >= boxes_y[:, 1]).all()
+
+        # Flip xy boxes
+        boxes_xy = boxes
+        boxes_xy[:, 0] = widths[index] - oldx2 - 1
+        boxes_xy[:, 2] = widths[index] - oldx1 - 1
+        boxes_xy[:, 1] = heights[index] - oldy2 - 1
+        boxes_xy[:, 3] = heights[index] - oldy1 - 1
+        assert (boxes_xy[:, 2] >= boxes_xy[:, 0]).all()
+        assert (boxes_xy[:, 3] >= boxes_xy[:, 1]).all()
+
         # Other maskdb values are identical with original maskdb
         flip_x_maskdb = {
             'masks': (mask_flip_x >= cfg.BINARIZE_THRESH).astype(bool),
-            'boxes': boxes,
+            'boxes': boxes_x,
             'det_overlap': orig_maskdb['det_overlap'],
             'seg_overlap': orig_maskdb['seg_overlap'],
             'mask_targets': (mask_target_flip >= cfg.BINARIZE_THRESH).astype(bool),
@@ -205,10 +226,10 @@ def process_flip_masks(image_names, im_start, im_end):
             'Flip': True,
             'output_label': orig_maskdb['output_label']
         }
-        sio.savemat(output_cache, flip_x_maskdb)
+        sio.savemat(output_cache_x, flip_x_maskdb)
         flip_y_maskdb = {
             'masks': (mask_flip_y >= cfg.BINARIZE_THRESH).astype(bool),
-            'boxes': boxes,
+            'boxes': boxes_y,
             'det_overlap': orig_maskdb['det_overlap'],
             'seg_overlap': orig_maskdb['seg_overlap'],
             'mask_targets': (mask_target_flip >= cfg.BINARIZE_THRESH).astype(bool),
@@ -217,10 +238,10 @@ def process_flip_masks(image_names, im_start, im_end):
             'Flip': True,
             'output_label': orig_maskdb['output_label']
         }
-        sio.savemat(output_cache, flip_y_maskdb)
+        sio.savemat(output_cache_y, flip_y_maskdb)
         flip_xy_maskdb = {
             'masks': (mask_flip_xy >= cfg.BINARIZE_THRESH).astype(bool),
-            'boxes': boxes,
+            'boxes': boxes_xy,
             'det_overlap': orig_maskdb['det_overlap'],
             'seg_overlap': orig_maskdb['seg_overlap'],
             'mask_targets': (mask_target_flip >= cfg.BINARIZE_THRESH).astype(bool),
@@ -229,7 +250,7 @@ def process_flip_masks(image_names, im_start, im_end):
             'Flip': True,
             'output_label': orig_maskdb['output_label']
         }
-        sio.savemat(output_cache, flip_xy_maskdb)
+        sio.savemat(output_cache_xy, flip_xy_maskdb)
 
 
 if __name__ == '__main__':
