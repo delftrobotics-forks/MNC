@@ -261,8 +261,7 @@ class PascalVOCDet(PascalVOC):
                 'gt_classes': gt_classes,
                 'gt_overlaps': overlaps,
                 'flipped_x': False,
-                'flipped_y': False,
-                'flipped_xy': False}
+                'flipped_y': False}
 
     """-----------------Evaluation--------------------"""
     def evaluate_detections(self, all_boxes, output_dir):

@@ -17,9 +17,9 @@ def get_maskdb(imdb_name):
     imdb.set_roi_handler(cfg.TRAIN.PROPOSAL_METHOD)
     imdb.set_mask_handler(cfg.TRAIN.PROPOSAL_METHOD)
     print('Set proposal method: {:s}'.format(cfg.TRAIN.PROPOSAL_METHOD))
-    if cfg.TRAIN.USE_FLIPPED:
+    if cfg.TRAIN.USE_X_FLIPPED | cfg.TRAIN.USE_Y_FLIPPED:
         print('Appending horizontally-flipped training examples...')
-        imdb.append_flipped_masks()
+        imdb.append_flipped_masks(cfg.TRAIN.USE_X_FLIPPED, cfg.TRAIN.USE_Y_FLIPPED)
         print('done')
     return imdb.maskdb
 

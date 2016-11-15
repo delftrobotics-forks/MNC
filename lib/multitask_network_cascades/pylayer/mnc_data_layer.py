@@ -100,7 +100,7 @@ class MNCDataLayer(caffe.Layer):
                 im = im[:, ::-1, :]
             if roidb['flipped_y']:
                 im = im[::-1, :, :]
-            if roidb['flipped_xy']:
+            if roidb['flipped_x'] & roidb['flipped_y']:
                 im = im[::-1, ::-1, :]
             target_size = cfg.TRAIN.SCALES[scale_inds[i]]
             im, im_scale = prep_im_for_blob(im, cfg.PIXEL_MEANS, target_size,

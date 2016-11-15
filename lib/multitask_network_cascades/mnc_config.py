@@ -40,7 +40,8 @@ __C.TRAIN.BATCH_SIZE = 64
 # on zero-padding.
 __C.TRAIN.ASPECT_GROUPING = True
 # Use flipped image for augmentation
-__C.TRAIN.USE_FLIPPED = True
+__C.TRAIN.USE_X_FLIPPED = True
+__C.TRAIN.USE_Y_FLIPPED = True
 # Resize shortest side to 600
 __C.TRAIN.SCALES = (1024,)
 __C.TRAIN.MAX_SIZE = 1100

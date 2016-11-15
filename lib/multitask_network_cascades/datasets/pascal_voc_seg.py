@@ -116,10 +116,9 @@ class PascalVOCSeg(PascalVOCDet):
             'mask_max': [mask_max_x, mask_max_y],
             'flipped_x': False,
             'flipped_y': False,
-            'flipped_xy': False
         }
 
-    def append_flipped_masks(self):
+    def append_flipped_masks(self, flipx, flipy):
         """
         This method is only accessed when we use maskdb, so implement here
         Append flipped images to mask database
@@ -139,39 +138,42 @@ class PascalVOCSeg(PascalVOCDet):
             # this is useless since append flip mask will only be called once
             num_images = self._ori_image_num
             flip_maskdb = []
-            for i in range(num_images):
-                masks = self.maskdb[i]['gt_masks']
-                masks_flip = []
-                for mask_ind in range(len(masks)):
-                    mask_flip = np.fliplr(masks[mask_ind])
-                    masks_flip.append(mask_flip)
-                entry = {'gt_masks': masks_flip,
-                         'mask_max': self.maskdb[i]['mask_max'],
-                         'flipped_x': True,
-                         'flipped_y': False}
-                flip_maskdb.append(entry)
-            for i in range(num_images):
-                masks = self.maskdb[i]['gt_masks']
-                masks_flip = []
-                for mask_ind in range(len(masks)):
-                    mask_flip = np.flipud(masks[mask_ind])
-                    masks_flip.append(mask_flip)
-                entry = {'gt_masks': masks_flip,
-                         'mask_max': self.maskdb[i]['mask_max'],
-                         'flipped_x': False,
-                         'flipped_y': True}
-                flip_maskdb.append(entry)
-            for i in range(num_images):
-                masks = self.maskdb[i]['gt_masks']
-                masks_flip = []
-                for mask_ind in range(len(masks)):
-                    mask_flip = np.flipud(np.fliplr(masks[mask_ind]))
-                    masks_flip.append(mask_flip)
-                entry = {'gt_masks': masks_flip,
-                         'mask_max': self.maskdb[i]['mask_max'],
-                         'flipped_x': True,
-                         'flipped_y': True}
-                flip_maskdb.append(entry)
+            if flipx:
+                for i in range(num_images):
+                    masks = self.maskdb[i]['gt_masks']
+                    masks_flip = []
+                    for mask_ind in range(len(masks)):
+                        mask_flip = np.fliplr(masks[mask_ind])
+                        masks_flip.append(mask_flip)
+                    entry = {'gt_masks': masks_flip,
+                             'mask_max': self.maskdb[i]['mask_max'],
+                             'flipped_x': True,
+                             'flipped_y': False}
+                    flip_maskdb.append(entry)
+            if flipy:
+                for i in range(num_images):
+                    masks = self.maskdb[i]['gt_masks']
+                    masks_flip = []
+                    for mask_ind in range(len(masks)):
+                        mask_flip = np.flipud(masks[mask_ind])
+                        masks_flip.append(mask_flip)
+                    entry = {'gt_masks': masks_flip,
+                             'mask_max': self.maskdb[i]['mask_max'],
+                             'flipped_x': False,
+                             'flipped_y': True}
+                    flip_maskdb.append(entry)
+            if flipx & flipy:
+                for i in range(num_images):
+                    masks = self.maskdb[i]['gt_masks']
+                    masks_flip = []
+                    for mask_ind in range(len(masks)):
+                        mask_flip = np.flipud(np.fliplr(masks[mask_ind]))
+                        masks_flip.append(mask_flip)
+                    entry = {'gt_masks': masks_flip,
+                             'mask_max': self.maskdb[i]['mask_max'],
+                             'flipped_x': True,
+                             'flipped_y': True}
+                    flip_maskdb.append(entry)
             with open(cache_file, 'wb') as fid:
                 cPickle.dump(flip_maskdb, fid, cPickle.HIGHEST_PROTOCOL)
             print('wrote gt flipped maskdb to {}'.format(cache_file))

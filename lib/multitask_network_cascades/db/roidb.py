@@ -31,7 +31,6 @@ def prepare_roidb(imdb):
         roidb[i]['height'] = sizes[i][1]
         roidb[i]['flipped_x'] = True
         roidb[i]['flipped_y'] = True
-        roidb[i]['flipped_xy'] = True
 
         # need gt_overlaps as a dense array for argmax
         gt_overlaps = roidb[i]['gt_overlaps'].toarray()
@@ -120,9 +119,10 @@ def get_roidb(imdb_name):
     # Here set handler function. (e.g. gt_roidb in faster RCNN)
     imdb.set_roi_handler(cfg.TRAIN.PROPOSAL_METHOD)
     print('Set proposal method: {:s}'.format(cfg.TRAIN.PROPOSAL_METHOD))
-    if cfg.TRAIN.USE_FLIPPED:
+    if cfg.TRAIN.USE_X_FLIPPED:
         print('Appending horizontally-flipped training examples...')
         imdb.append_x_flipped_rois()
+    if cfg.TRAIN.USE_Y_FLIPPED:
         print('Appending vertically-flipped training examples...')
         imdb.append_y_flipped_rois()
         print('done')
