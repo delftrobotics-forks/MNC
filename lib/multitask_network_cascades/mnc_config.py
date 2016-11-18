@@ -18,7 +18,7 @@ __C.USE_GPU_NMS = True
 __C.GPU_ID = 0
 __C.RNG_SEED = 3
 __C.EPS = 1e-14
-__C.PIXEL_MEANS = np.array([[[102.9801, 115.9465, 122.7717]]])
+__C.PIXEL_MEANS = np.array([[[0, 0, 0]]])
 # Root directory of project
 __C.ROOT_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..'))
 # Data directory
@@ -113,10 +113,10 @@ __C.TRAIN.THRESH_HI_SAMPLE = [1.0, 0.5, 0.1]
 __C.TEST = edict()
 # Scales to use during testing (can list multiple scales)
 # Each scale is the pixel size of an image's shortest side
-__C.TEST.SCALES = (600,)
+__C.TEST.SCALES = (900,)
 
 # Max pixel size of the longest side of a scaled input image
-__C.TEST.MAX_SIZE = 1000
+__C.TEST.MAX_SIZE = 1280
 
 # Overlap threshold used for non-maximum suppression (suppress boxes with
 # IoU >= this threshold)

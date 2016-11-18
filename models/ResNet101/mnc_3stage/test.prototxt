@@ -4190,7 +4190,7 @@ layer {
 	python_param {
 		module: 'multitask_network_cascades.pylayer.proposal_layer'
 		layer: 'ProposalLayer'
-		param_str: "{'feat_stride': 16, 'gradient_scale': 1}"
+		param_str: "{'feat_stride': 16, 'gradient_scale': 1, 'anchor_ratios': [0.14, 1, 7]}"
 	}
 }
 

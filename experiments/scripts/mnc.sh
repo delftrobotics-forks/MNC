@@ -37,7 +37,7 @@ case $NET in
 		NET_INIT=data/imagenet_models/ResNet-101-model.caffemodel
 		;;
 	*)
-		NET_INIT=data/imagenet_models/${NET}.mask.caffemodel
+		NET_INIT=data/imagenet_models/${NET}.v2.caffemodel
 		;;
 esac
 

@@ -8,6 +8,7 @@
 from multitask_network_cascades.mnc_config import cfg
 from multitask_network_cascades.nms.gpu_nms import gpu_nms
 from multitask_network_cascades.nms.cpu_nms import cpu_nms
+from multitask_network_cascades.nms.py_cpu_nms import py_cpu_nms
 
 
 def nms(dets, thresh):

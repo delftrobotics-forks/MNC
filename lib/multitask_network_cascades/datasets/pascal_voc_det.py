@@ -29,13 +29,9 @@ class PascalVOCDet(PascalVOC):
         self._devkit_path = self._get_default_path() if devkit_path is None else devkit_path
         self._data_path = os.path.join(self._devkit_path, 'VOC' + self._year) if 'SDS' not in self._devkit_path else self._devkit_path
         self._classes = ('__background__',  # always index 0
-                         'aeroplane', 'bicycle', 'bird', 'boat',
-                         'bottle', 'bus', 'car', 'cat', 'chair',
-                         'cow', 'diningtable', 'dog', 'horse',
-                         'motorbike', 'person', 'pottedplant',
-                         'sheep', 'sofa', 'train', 'tvmonitor')
+                         'o',)
         self._class_to_ind = dict(zip(self.classes, range(self.num_classes)))
-        self._image_ext = '.jpg'
+        self._image_ext = '.png'
         self._image_index = self._load_image_set_index()
         # Default to roidb handler
         # self._roidb_handler = self.selective_search_roidb
@@ -192,6 +188,7 @@ class PascalVOCDet(PascalVOC):
         if index % 1000 == 0: print('%d / %d' % (index, len(self._image_index)))
         image_name = self._image_index[index]
         inst_file_name = os.path.join(self._data_path, 'inst', image_name + '.mat')
+        print(inst_file_name)
         gt_inst_mat = scipy.io.loadmat(inst_file_name)
         gt_inst_data = gt_inst_mat['GTinst']['Segmentation'][0][0]
         unique_inst = np.unique(gt_inst_data)

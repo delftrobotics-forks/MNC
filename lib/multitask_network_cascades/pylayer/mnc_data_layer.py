@@ -95,12 +95,15 @@ class MNCDataLayer(caffe.Layer):
         processed_ims = []
         im_scales = []
         for i in range(num_images):
-            im = cv2.imread(roidb['image'])
-            if roidb['flipped']:
-                im = im[:, ::-1, :]
+            #im = np.load(roidb['image'])
+            im = cv2.imread(roidb['image'], cv2.IMREAD_UNCHANGED)
+            im = im.astype(np.int16)
+            im[im < -5000] = -500
             target_size = cfg.TRAIN.SCALES[scale_inds[i]]
             im, im_scale = prep_im_for_blob(im, cfg.PIXEL_MEANS, target_size,
                                             cfg.TRAIN.MAX_SIZE)
+            if roidb['flipped']:
+                im = im[:, ::-1, :]
             im_scales.append(im_scale)
             processed_ims.append(im)
         # Create a blob to hold the input images
