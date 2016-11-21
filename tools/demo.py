@@ -19,7 +19,7 @@ import caffe
 from multitask_network_cascades.mnc_config import cfg
 from multitask_network_cascades.transform.bbox_transform import clip_boxes
 from multitask_network_cascades.utils.blob import prep_im_for_blob, im_list_to_blob
-from multitask_network_cascades.transform.mask_transform import gpu_mask_voting
+from multitask_network_cascades.transform.mask_transform import cpu_mask_voting, gpu_mask_voting
 import matplotlib.pyplot as plt
 from multitask_network_cascades.utils.vis_seg import _convert_pred_to_image, _get_voc_color_map
 from PIL import Image
@@ -40,12 +40,22 @@ def parse_args():
     parser.add_argument('--cpu', dest='cpu_mode',
                         help='Use CPU mode (overrides --gpu)',
                         action='store_true')
-    parser.add_argument('--def', dest='prototxt',
-                        help='prototxt file defining the network',
-                        default='./models/VGG16/mnc_5stage/test.prototxt', type=str)
-    parser.add_argument('--net', dest='caffemodel',
-                        help='model to test',
-                        default='./data/mnc_model/mnc_model.caffemodel.h5', type=str)
+    parser.add_argument('--disparity', action='store_true',
+                        help='set to true when processing disparity')
+    parser.add_argument('--visualize', action='store_true',
+                        help='set to true to visualize detection result')
+    parser.add_argument('--output-directory', dest='output',
+                        help='pass the output directory to write processed images to disk',
+                        type=str)
+    parser.add_argument('--model', dest='model',
+                        help='prototxt file defining the network model',
+                        type=str)
+    parser.add_argument('--weights', dest='weights',
+                        help='caffemodel weights to test',
+                        type=str)
+    parser.add_argument('--image', dest='image',
+                        help='input image to process',
+                        type=str)
 
     args = parser.parse_args()
     return args
@@ -120,74 +130,57 @@ def get_vis_dict(result_box, result_mask, img_name, cls_names, vis_thresh=0.5):
     return res_dict
 
 if __name__ == '__main__':
+
     args = parse_args()
-    test_prototxt = args.prototxt
-    test_model = args.caffemodel
 
     caffe.set_mode_gpu()
     caffe.set_device(args.gpu_id)
-    net = caffe.Net(test_prototxt, caffe.TEST, weights=test_model)
+    net = caffe.Net(args.model, caffe.TEST, weights=args.weights)
 
-    # Warm up for the first two images
+    # Allocate memory to speed things up
     im = 128 * np.ones((300, 500, 3), dtype=np.float32)
     for i in range(2):
         _, _, _ = im_detect(im, net)
 
-    demo_dir = './data/demo'
-    im_names = [f for f in os.listdir(demo_dir) if f.endswith(".png") or f.endswith(".jpg")]
-    for im_name in im_names:
-        print('~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~')
-        print('Demo for data/demo/{}'.format(im_name))
-        gt_image = os.path.join(demo_dir, im_name)
-        im = cv2.imread(gt_image)
-        start = time.time()
-        masks, boxes, scores = im_detect(im, net)
-        end = time.time()
-        print('forward time {}'.format(end-start))
-        result_mask, result_box = gpu_mask_voting(masks, boxes, seg_scores, len(CLASSES) + 1,
-                                                  100, im.shape[1], im.shape[0])
-        pred_dict = get_vis_dict(result_box, result_mask, 'data/demo/' + im_name, CLASSES)
+    print('~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~')
+    if args.disparity:
+        print("Using the 'disparity' setting for reading the image.")
+        im = cv2.imread(args.image, cv2.IMREAD_UNCHANGED)
+        visualization = cv2.imread(args.image)
+        im = im.astype(np.int16)
+        im[im < -5000] = -500
+        im = im.astype(np.float32, copy=False)
+        im = cv2.cvtColor(im, cv2.COLOR_GRAY2BGR)
+    else:
+        im = cv2.imread(args.image)
 
-        img_width = im.shape[1]
-        img_height = im.shape[0]
-        
-        inst_img, cls_img = _convert_pred_to_image(img_width, img_height, pred_dict)
-        color_map = _get_voc_color_map()
-        target_cls_file = os.path.join(demo_dir, 'processed', im_name)
-        cls_out_img = np.zeros((img_height, img_width, 3))
-        for i in range(img_height):
-            for j in range(img_width):
-                cls_out_img[i][j] = color_map[cls_img[i][j]][::-1]
+    start = time.time()
+    masks, boxes, scores = im_detect(im, net)
+    end = time.time()
+    print('forward time {}'.format(end-start))
+    result_mask, result_box = cpu_mask_voting(masks, boxes, scores, len(CLASSES) + 1,
+                                              100, im.shape[1], im.shape[0])
+    pred_dict = get_vis_dict(result_box, result_mask, args.image, CLASSES)
 
-        visualization = im * 0.5 + cls_out_img * 0.5
-        cv2.imwrite(target_cls_file, visualization)
-        #cv2.imwrite(target_cls_file, cls_out_img)
-        #
-        #background = Image.open(gt_image)
-        #mask = Image.open(target_cls_file)
-        #background = background.convert('RGBA')
-        #mask = mask.convert('RGBA')
-        #superimpose_image = Image.blend(background, mask, 0.5)
-        #superimpose_name = os.path.join(demo_dir, 'final_' + im_name)
-        #superimpose_image.save(superimpose_name, 'JPEG')
-        #im = cv2.imread(superimpose_name)
+    img_width = im.shape[1]
+    img_height = im.shape[0]
+    inst_img, cls_img = _convert_pred_to_image(img_width, img_height, pred_dict)
+    color_map = _get_voc_color_map()
+    cls_out_img = np.zeros((img_height, img_width, 3))
+    for i in range(img_height):
+        for j in range(img_width):
+            cls_out_img[i][j] = color_map[cls_img[i][j]][::-1]
+    visualization = visualization * 0.5 + cls_out_img * 0.5
 
-        #im = im[:, :, (2, 1, 0)]
-        #fig, ax = plt.subplots(figsize=(12, 12))
-        #ax.imshow(im, aspect='equal')
-        #classes = pred_dict['cls_name']
-        #for i in range(len(classes)):
-        #    score = pred_dict['boxes'][i][-1]
-        #    bbox = pred_dict['boxes'][i][:4]
-        #    cls_ind = classes[i] - 1
-        #    ax.text(bbox[0], bbox[1] - 8,
-        #        '{:s} {:.4f}'.format(CLASSES[cls_ind], score),
-        #        bbox=dict(facecolor='blue', alpha=0.5),
-        #        fontsize=14, color='white')
-        #plt.axis('off')
-        #plt.tight_layout()
-        #plt.draw()
+    if args.visualize:
+        gray = cv2.cvtColor(visualization.astype(np.uint16), cv2.COLOR_BGR2GRAY)
+        min_val, max_val = cv2.minMaxLoc(gray)[0:2]
+        cv2.imshow("processed", (visualization - min_val) / max_val)
+        cv2.waitKey(0)
 
-        #fig.savefig(os.path.join(demo_dir, 'processed', im_name[:-4]+'.png'))
-        #os.remove(superimpose_name)
-        #os.remove(target_cls_file)
+    if args.output:
+        tail = os.path.split(args.image)[1]
+        output_file = os.path.join(args.output, tail + 'processed.png')
+        print("Writing output to: '", output_file, "'.")
+        cv2.imwrite(output_file, visualization)
+
