@@ -56,6 +56,9 @@ def parse_args():
     parser.add_argument('--image', dest='image',
                         help='input image to process',
                         type=str)
+    parser.add_argument('--background', dest='background', help='Optionally choose another background for processed result',
+                        default="",
+                        type=str)
 
     args = parser.parse_args()
     return args
@@ -147,6 +150,8 @@ if __name__ == '__main__':
         print("Using the 'disparity' setting for reading the image.")
         im = cv2.imread(args.image, cv2.IMREAD_UNCHANGED)
         visualization = cv2.imread(args.image)
+        if args.background:
+            visualization = cv2.imread(args.background)
         im = im.astype(np.int16)
         im[im < -5000] = -500
         im = im.astype(np.float32, copy=False)
