@@ -32,7 +32,7 @@ class TesterWrapper(object):
         self.imdb = imdb
         self.output_dir = get_output_dir(imdb, self.net)
         self.task_name = task_name
-        self.disparity = False
+        self.disparity = disparity
         # We define some class variables here to avoid defining them many times in every method
         self.num_images = len(self.imdb.image_index)
         self.num_classes = self.imdb.num_classes
