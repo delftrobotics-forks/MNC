@@ -25,13 +25,14 @@ class TesterWrapper(object):
     """
     A simple wrapper around Caffe's test forward
     """
-    def __init__(self, test_prototxt, imdb, test_model, task_name):
+    def __init__(self, test_prototxt, imdb, test_model, task_name, disparity = False):
         # Pre-processing, test whether model stored in binary file or npy files
         self.net = caffe.Net(test_prototxt, test_model, caffe.TEST)
         self.net.name = os.path.splitext(os.path.basename(test_model))[0]
         self.imdb = imdb
         self.output_dir = get_output_dir(imdb, self.net)
         self.task_name = task_name
+        self.disparity = False
         # We define some class variables here to avoid defining them many times in every method
         self.num_images = len(self.imdb.image_index)
         self.num_classes = self.imdb.num_classes
@@ -102,7 +103,13 @@ class TesterWrapper(object):
                      for _ in range(self.num_classes)]
         _t = {'im_detect': Timer(), 'misc': Timer()}
         for i in range(self.num_images):
-            im = cv2.imread(self.imdb.image_path_at(i))
+
+            if disparity:
+                im = cv2.imread(self.imdb.image_path_at(i), cv2.IMREAD_UNCHANGED)
+                im = im.astype(np.int16)
+                im[im < -5000] = -500
+            else:
+                im = cv2.imread(self.imdb.image_path_at(i))
             _t['im_detect'].tic()
             scores, boxes = self._detection_forward(im)
             _t['im_detect'].toc()
@@ -162,7 +169,12 @@ class TesterWrapper(object):
 
         _t = {'im_detect': Timer(), 'misc': Timer()}
         for i in range(self.num_images):
-            im = cv2.imread(self.imdb.image_path_at(i))
+            if self.disparity:
+                im = cv2.imread(self.imdb.image_path_at(i), cv2.IMREAD_UNCHANGED)
+                im = im.astype(np.int16)
+                im[im < -5000] = -500
+            else:
+                im = cv2.imread(self.imdb.image_path_at(i))
             _t['im_detect'].tic()
             masks, boxes, seg_scores = self._segmentation_forward(im)
             _t['im_detect'].toc()
@@ -335,7 +347,12 @@ class TesterWrapper(object):
         return all_boxes, all_masks
 
     def cfm_network_forward(self, im_i):
-        im = cv2.imread(self.imdb.image_path_at(im_i))
+        if self.disparity:
+            im = cv2.imread(self.imdb.image_path_at(im_i), cv2.IMREAD_UNCHANGED)
+            im = im.astype(np.int16)
+            im[im < -5000] = -500
+        else:
+            im = cv2.imread(self.imdb.image_path_at(im_i))
         roidb_cache = os.path.join('data/cache/voc_2012_val_mcg_maskdb/', self.imdb._image_index[im_i] + '.mat')
         roidb = scipy.io.loadmat(roidb_cache)
         boxes = roidb['boxes']

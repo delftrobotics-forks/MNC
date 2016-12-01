@@ -103,6 +103,8 @@ class PascalVOCSeg(PascalVOCDet):
             gt_masks.append(mask)
 
         # Also record the maximum dimension to create fixed dimension array when do forwarding
+        if len(gt_masks) == 0:
+            raise Exception('Empty annotation')
         mask_max_x = max(gt_masks[i].shape[1] for i in range(len(gt_masks)))
         mask_max_y = max(gt_masks[i].shape[0] for i in range(len(gt_masks)))
         return {

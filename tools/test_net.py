@@ -44,6 +44,8 @@ def parse_args():
                         default=True, type=bool)
     parser.add_argument('--comp', dest='comp_mode', help='competition mode',
                         action='store_true')
+    parser.add_argument('--disparity', dest='disparity', help='use disparity images',
+                        action='store_true')
     parser.add_argument('--set', dest='set_cfgs',
                         help='set config keys', default=None,
                         nargs=argparse.REMAINDER)
@@ -80,5 +82,5 @@ if __name__ == '__main__':
     caffe.set_device(args.gpu_id)
 
     imdb = get_imdb(args.imdb_name)
-    _tester = TesterWrapper(args.prototxt, imdb, args.caffemodel, args.task_name)
+    _tester = TesterWrapper(args.prototxt, imdb, args.caffemodel, args.task_name, args.disparity)
     _tester.get_result()
