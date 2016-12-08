@@ -4,6 +4,7 @@
 # Example:
 # ./experiments/scripts/mnc.sh 0 VGG16 \
 #   --set EXP_DIR foobar RNG_SEED 42 TRAIN.SCALES "[400,500,600,700]"
+rm data/cache/*;
 
 set -x
 set -e
