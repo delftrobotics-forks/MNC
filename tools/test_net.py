@@ -11,6 +11,7 @@
 import argparse
 import sys
 import os
+os.environ['GLOG_minloglevel'] = '2'
 import time
 import pprint
 # User-defined module
@@ -80,6 +81,8 @@ if __name__ == '__main__':
 
     caffe.set_mode_gpu()
     caffe.set_device(args.gpu_id)
+
+    print('Using disparity: ', args.disparity)
 
     imdb = get_imdb(args.imdb_name)
     _tester = TesterWrapper(args.prototxt, imdb, args.caffemodel, args.task_name, args.disparity)
