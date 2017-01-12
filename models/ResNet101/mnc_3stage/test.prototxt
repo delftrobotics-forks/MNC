@@ -4747,7 +4747,7 @@ layer {
 		name: "seg_cls_score_b" 
 	}
 	inner_product_param {
-		num_output: 3
+		num_output: 2
 	}
 }
 
