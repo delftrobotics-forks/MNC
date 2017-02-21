@@ -144,7 +144,7 @@ if __name__ == '__main__':
         masks, boxes, scores = im_detect(im, net)
         end = time.time()
         print('forward time {}'.format(end-start))
-        result_mask, result_box = gpu_mask_voting(masks, boxes, seg_scores, len(CLASSES) + 1,
+        result_mask, result_box = gpu_mask_voting(masks, boxes, scores, len(CLASSES) + 1,
                                                   100, im.shape[1], im.shape[0])
         pred_dict = get_vis_dict(result_box, result_mask, 'data/demo/' + im_name, CLASSES)
 

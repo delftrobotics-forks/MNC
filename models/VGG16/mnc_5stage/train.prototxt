@@ -566,30 +566,34 @@ layer {
 
 layer {
   name: "rpn_loss_bbox"
-  type: "SmoothL1Loss"
+  type: "Module"
   bottom: "rpn_bbox_pred"
   bottom: "rpn_bbox_targets"
   bottom: 'rpn_bbox_inside_weights'
   bottom: 'rpn_bbox_outside_weights'
   top: "rpn_loss_bbox"
   loss_weight: 1
-  smooth_l1_loss_param { sigma: 3.0 }
+  module_param {
+    module: "mnc"
+    type: "SmoothL1Loss"
+    param_str: "{ 'sigma': 3 }"
+  }
 }
 
 #------------ Roi Warping ------------
 
 layer {
   name: "roi_interpolate_conv5"
-  type: "ROIWarping"
+  type: "Module"
   bottom: "conv5_3"
   bottom: "rois"
   propagate_down: 1
   propagate_down: 1
   top: "roi_interpolate_conv5"
-  roi_warping_param {
-    pooled_w: 14
-    pooled_h: 14
-    spatial_scale: 0.0625 # 1/16
+  module_param {
+    module: "mnc"
+    type: "ROIWarping"
+    param_str: "{ 'pooled_w': 14, 'pooled_h': 14, 'spatial_scale': 0.0625 }"
   }
 }
 
@@ -697,12 +701,13 @@ layer {
 
 layer {
   name: "mask_resize"
-  type: "MaskResize"
+  type: "Module"
   bottom: "mask_proposal"
   top: "mask_proposal_resize"
-  mask_resize_param {
-    output_height: 14
-    output_width: 14
+  module_param {
+    module: "mnc"
+    type: "MaskResize"
+    param_str: "{ 'output_width': 14, 'output_height': 14 }"
   }
 }
 
@@ -975,13 +980,18 @@ layer {
 
 layer {
   name: "loss_bbox"
-  type: "SmoothL1Loss"
+  type: "Module"
   bottom: "bbox_pred"
   bottom: "bbox_targets"
   bottom: 'bbox_inside_weights'
   bottom: 'bbox_outside_weights'
   top: "bbox_loss"
   loss_weight: 1
+  module_param {
+    module: "mnc"
+    type: "SmoothL1Loss"
+    param_str: "{ 'sigma': 1 }"
+  }
 }
 
 layer {
@@ -1052,16 +1062,16 @@ layer {
 
 layer {
   name: "roi_interpolate_conv5_ext"
-  type: "ROIWarping"
+  type: "Module"
   bottom: "conv5_3"
   bottom: "rois_ext"
   propagate_down: 1
   propagate_down: 1
   top: "roi_interpolate_conv5_ext"
-  roi_warping_param {
-    pooled_w: 14
-    pooled_h: 14
-    spatial_scale: 0.0625 # 1/16
+  module_param {
+    module: "mnc"
+    type: "ROIWarping"
+    param_str: "{ 'pooled_w': 14, 'pooled_h': 14, 'spatial_scale': 0.0625 }"
   }
 }
 
@@ -1169,12 +1179,13 @@ layer {
 
 layer {
   name: "mask_resize_ext"
-  type: "MaskResize"
+  type: "Module"
   bottom: "mask_proposal_ext"
   top: "mask_proposal_resize_ext"
-  mask_resize_param {
-    output_height: 14
-    output_width: 14
+  module_param {
+    module: "mnc"
+    type: "MaskResize"
+    param_str: "{ 'output_width': 14, 'output_height': 14 }"
   }
 }
 
@@ -1447,13 +1458,18 @@ layer {
 
 layer {
   name: "loss_bbox_ext"
-  type: "SmoothL1Loss"
+  type: "Module"
   bottom: "bbox_pred_ext"
   bottom: "bbox_targets_ext"
   bottom: 'bbox_inside_weights_ext'
   bottom: 'bbox_outside_weights_ext'
   top: "bbox_loss_ext"
   loss_weight: 1
+  module_param {
+    module: "mnc"
+    type: "SmoothL1Loss"
+    param_str: "{ 'sigma': 1 }"
+  }
 }
 
 
