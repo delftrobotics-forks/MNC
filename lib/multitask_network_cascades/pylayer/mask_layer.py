@@ -21,7 +21,7 @@ class MaskLayer(caffe.Layer):
     """
 
     def setup(self, bottom, top):
-        self._phase = 'TEST' if self.phase == 1 else 'TRAIN'
+        self._phase = str(self.phase)
         self._top_name_map = {}
         top[0].reshape(1, 1, cfg.MASK_SIZE, cfg.MASK_SIZE)
         self._top_name_map['mask_proposal'] = 0
@@ -36,9 +36,9 @@ class MaskLayer(caffe.Layer):
         pass
 
     def forward(self, bottom, top):
-        if self._phase == 'TRAIN':
+        if str(self.phase) == 'TRAIN':
             blobs = self.forward_train(bottom, top)
-        elif self._phase == 'TEST':
+        elif str(self.phase) == 'TEST':
             blobs = self.forward_test(bottom, top)
         else:
             print('Unrecognized phase')

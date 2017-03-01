@@ -23,7 +23,7 @@ class CFMDataLayer(caffe.Layer):
     """
 
     def setup(self, bottom, top):
-        layer_params = yaml.load(self.param_str)
+        layer_params = yaml.load(self.param_str_)
         self._num_classes = layer_params['num_classes']
         self._name_to_top_map = {}
         self.input_mz = cfg.TEST.CFM_INPUT_MASK_SIZE

@@ -1965,14 +1965,14 @@ layer {
 
 layer {
   name: "roi_interpolate_conv5"
-  type: "Module"
+  type: "ROIWarping"
   bottom: "res4f"
   bottom: "rois"
   top: "roi_interpolate_conv5"
-  module_param {
-    module: "mnc"
-    type: "ROIWarping"
-    param_str: "{ 'pooled_w': 14, 'pooled_h': 14, 'spatial_scale': 0.0625 }"
+  roi_warping_param {
+    pooled_w: 14
+    pooled_h: 14
+    spatial_scale: 0.0625 # 1/16
   }
 }
 
@@ -2029,13 +2029,12 @@ layer {
 
 layer {
   name: "mask_resize"
-  type: "Module"
+  type: "MaskResize"
   bottom: "mask_proposal"
   top: "mask_proposal_resize"
-  module_param {
-    module: "mnc"
-    type: "MaskResize"
-    param_str: "{ 'output_width': 14, 'output_height': 14 }"
+  mask_resize_param {
+    output_height: 14
+    output_width: 14
   }
 }
 
@@ -2103,14 +2102,10 @@ layer {
 
 layer {
   name: "mask_pooling"
-  type: "Module"
+  type: "MaskPooling"
   bottom: "roi_interpolate_conv5"
   bottom: "mask_proposal_resize"
   top: "roi_mask_conv5"
-  module_param {
-    module: "mnc"
-    type: "MaskPooling"
-  }
 }
 
 layer {
@@ -2285,14 +2280,14 @@ layer {
 
 layer {
   name: "roi_interpolate_conv5_ext"
-  type: "Module"
+  type: "ROIWarping"
   bottom: "res4f"
   bottom: "rois_ext"
   top: "roi_interpolate_conv5_ext"
-  module_param {
-    module: "mnc"
-    type: "ROIWarping"
-    param_str: "{ 'pooled_w': 14, 'pooled_h': 14, 'spatial_scale': 0.0625 }"
+  roi_warping_param {
+    pooled_w: 14
+    pooled_h: 14
+    spatial_scale: 0.0625 # 1/16
   }
 }
 
@@ -2361,13 +2356,12 @@ layer {
 
 layer {
   name: "mask_resize_ext"
-  type: "Module"
+  type: "MaskResize"
   bottom: "mask_proposal_ext"
   top: "mask_proposal_resize_ext"
-  module_param {
-    module: "mnc"
-    type: "MaskResize"
-    param_str: "{ 'output_width': 14, 'output_height': 14 }"
+  mask_resize_param {
+    output_height: 14
+    output_width: 14
   }
 }
 
@@ -2435,14 +2429,10 @@ layer {
 
 layer {
   name: "mask_pooling_ext"
-  type: "Module"
+  type: "MaskPooling"
   bottom: "roi_interpolate_conv5_ext"
   bottom: "mask_proposal_resize_ext"
   top: "roi_mask_conv5_ext"
-  module_param {
-    module: "mnc"
-    type: "MaskPooling"
-  }
 }
 
 layer {

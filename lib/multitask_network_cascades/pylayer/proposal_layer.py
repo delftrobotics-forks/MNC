@@ -26,7 +26,7 @@ class ProposalLayer(caffe.Layer):
     """
 
     def setup(self, bottom, top):
-        layer_params = yaml.load(self.param_str)
+        layer_params = yaml.load(self.param_str_)
         self._feat_stride = layer_params['feat_stride']
         anchor_ratios = layer_params['anchor_ratios'] if 'anchor_ratios' in layer_params else [0.5, 1, 2]
         anchor_scales = layer_params['anchor_scales'] if 'anchor_scales' in layer_params else 2**np.arange(3, 6)
@@ -43,7 +43,7 @@ class ProposalLayer(caffe.Layer):
         self._top_name_map['rois'] = 0
         # For MNC, we force the output proposals will also be used to train RPN
         # this is achieved by passing proposal_index to anchor_target_layer
-        if self.phase == 0: # TRAIN
+        if str(self.phase) == 'TRAIN':
             if cfg.TRAIN.MIX_INDEX:
                 top[1].reshape(1, 1)
                 self._top_name_map['proposal_index'] = 1
@@ -67,7 +67,7 @@ class ProposalLayer(caffe.Layer):
         # return the top proposals (-> RoIs top, scores top)
         assert bottom[0].data.shape[0] == 1, 'Only single item batches are supported'
 
-        cfg_key = 'TEST' if self.phase == 1 else 'TRAIN' # either 'TRAIN' or 'TEST'
+        cfg_key = str(self.phase)  # either 'TRAIN' or 'TEST'
         pre_nms_topN = cfg[cfg_key].RPN_PRE_NMS_TOP_N
         post_nms_topN = cfg[cfg_key].RPN_POST_NMS_TOP_N
         nms_thresh = cfg[cfg_key].RPN_NMS_THRESH
@@ -167,7 +167,7 @@ class ProposalLayer(caffe.Layer):
             'rois': proposals
         }
 
-        if self.phase == 0: # TRAIN
+        if str(self.phase) == 'TRAIN':
             if cfg.TRAIN.MIX_INDEX:
                 all_rois_index = self._ind_after_filter[self._ind_after_sort[self._proposal_index]].reshape(1, len(keep))
                 blobs['proposal_index'] = all_rois_index

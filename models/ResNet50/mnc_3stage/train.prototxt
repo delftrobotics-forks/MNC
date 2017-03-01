@@ -2043,34 +2043,30 @@ layer {
 
 layer {
 	name: "rpn_loss_bbox"
-	type: "Module"
+	type: "SmoothL1Loss"
 	bottom: "rpn_bbox_pred"
 	bottom: "rpn_bbox_targets"
 	bottom: 'rpn_bbox_inside_weights'
 	bottom: 'rpn_bbox_outside_weights'
 	top: "rpn_loss_bbox"
 	loss_weight: 1
-	module_param {
-		module: "mnc"
-		type: "SmoothL1Loss"
-		param_str: "{ 'sigma': 3 }"
-	}
+	smooth_l1_loss_param { sigma: 3.0 }
 }
 
 #------------ Roi Warping ------------
 
 layer {
 	name: "roi_interpolate_conv5"
-	type: "Module"
+	type: "ROIWarping"
 	bottom: "res4f"
 	bottom: "rois"
 	propagate_down: 1
 	propagate_down: 1
 	top: "roi_interpolate_conv5"
-	module_param {
-		module: "mnc"
-		type: "ROIWarping"
-		param_str: "{ 'pooled_w': 14, 'pooled_h': 14, 'spatial_scale': 0.0625 }"
+	roi_warping_param {
+		pooled_w: 14
+		pooled_h: 14
+		spatial_scale: 0.0625 # 1/16
 	}
 }
 
@@ -2178,13 +2174,12 @@ layer {
 
 layer {
 	name: "mask_resize"
-	type: "Module"
+	type: "MaskResize"
 	bottom: "mask_proposal"
 	top: "mask_proposal_resize"
-	module_param {
-		module: "mnc"
-		type: "MaskResize"
-		param_str: "{ 'output_width': 14, 'output_height': 14 }"
+	mask_resize_param {
+		output_height: 14
+		output_width: 14
 	}
 }
 
@@ -2725,18 +2720,13 @@ layer {
 
 layer {
 	name: "loss_bbox"
-	type: "Module"
+	type: "SmoothL1Loss"
 	bottom: "bbox_pred"
 	bottom: "bbox_targets"
 	bottom: 'bbox_inside_weights'
 	bottom: 'bbox_outside_weights'
 	top: "bbox_loss"
 	loss_weight: 1
-	module_param {
-		module: "mnc"
-		type: "SmoothL1Loss"
-		param_str: "{ 'sigma': 1 }"
-	}
 }
 
 layer {
