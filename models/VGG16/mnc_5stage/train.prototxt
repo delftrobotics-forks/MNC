@@ -660,7 +660,7 @@ layer {
 
 layer {
   name: "loss_mask"
-  type: "SigmoidCrossEntropyLoss"
+  type: "Module"
   bottom: "mask_pred"
   bottom: "mask_targets"
   bottom: "mask_weight"
@@ -669,6 +669,10 @@ layer {
   propagate_down: 0
   top: "loss_mask"
   loss_weight: 2
+  module_param {
+    module: "mnc"
+    type: "SigmoidCrossEntropyLoss"
+  }
 }
 
 #------------ Mask resize ------------
@@ -1138,7 +1142,7 @@ layer {
 
 layer {
   name: "loss_mask_ext"
-  type: "SigmoidCrossEntropyLoss"
+  type: "Module"
   bottom: "mask_pred_ext"
   bottom: "mask_targets_ext"
   bottom: "mask_weight_ext"
@@ -1147,6 +1151,10 @@ layer {
   propagate_down: 0
   top: "loss_mask_ext"
   loss_weight: 2
+  module_param {
+    module: "mnc"
+    type: "SigmoidCrossEntropyLoss"
+  }
 }
 
 #------------ Mask Resize ------------
