@@ -25,11 +25,11 @@ class StageBridgeLayer(caffe.Layer):
     during training phase
     """
     def setup(self, bottom, top):
-        layer_params = yaml.load(self.param_str_)
+        layer_params = yaml.load(self.param_str)
         # bottom 0 is ~ n ROIs to train Fast RCNN
         # bottom 1 is ~ n * 4(1+c) bbox prediction
         # bottom 2 is ~ n * (1+c) bbox scores (seg classification)
-        self._phase = str(self.phase)
+        self._phase = 'TEST' if self.phase == 1 else 'TRAIN'
         if self._phase == 'TRAIN':
             self._use_clip = layer_params['use_clip']
             self._clip_denominator = float(layer_params.get('clip_base', 64))
@@ -67,9 +67,9 @@ class StageBridgeLayer(caffe.Layer):
         pass
 
     def forward(self, bottom, top):
-        if str(self.phase) == 'TRAIN':
+        if str(self._phase) == 'TRAIN':
             blobs = self.forward_train(bottom, top)
-        elif str(self.phase) == 'TEST':
+        elif str(self._phase) == 'TEST':
             blobs = self.forward_test(bottom, top)
         else:
             print('Unrecognized phase')

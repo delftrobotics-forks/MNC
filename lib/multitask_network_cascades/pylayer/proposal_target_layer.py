@@ -26,7 +26,7 @@ class ProposalTargetLayer(caffe.Layer):
     """
 
     def setup(self, bottom, top):
-        layer_params = yaml.load(self.param_str_)
+        layer_params = yaml.load(self.param_str)
         self._anchors = generate_anchors()
         self._num_anchors = self._anchors.shape[0]
         self._num_classes = layer_params['num_classes']
