@@ -553,12 +553,16 @@ layer {
 
 layer {
   name: "mask_pooling"
-  type: "MaskPooling"
+  type: "Module"
   propagate_down: 1
   propagate_down: 1
   bottom: "roi_interpolate_conv5"
   bottom: "mask_proposal_resize"
   top: "roi_mask_conv5"
+  module_param {
+    module: "mnc"
+    type: "MaskPooling"
+  }
 }
 
 layer {
@@ -1035,12 +1039,16 @@ layer {
 
 layer {
   name: "mask_pooling_ext"
-  type: "MaskPooling"
+  type: "Module"
   propagate_down: 1
   propagate_down: 1
   bottom: "roi_interpolate_conv5_ext"
   bottom: "mask_proposal_resize_ext"
   top: "roi_mask_conv5_ext"
+  module_param {
+    module: "mnc"
+    type: "MaskPooling"
+  }
 }
 
 layer {
