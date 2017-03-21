@@ -35,7 +35,6 @@ class PascalVOCDet(PascalVOC):
                          'motorbike', 'person', 'pottedplant',
                          'sheep', 'sofa', 'train', 'tvmonitor')
         self._class_to_ind = dict(zip(self.classes, range(self.num_classes)))
-        self._image_ext = '.jpg'
         self._image_index = self._load_image_set_index()
         # Default to roidb handler
         # self._roidb_handler = self.selective_search_roidb
@@ -59,8 +58,8 @@ class PascalVOCDet(PascalVOC):
         return self.image_path_from_index(self._image_index[i])
 
     def image_path_from_index(self, index):
-        image_path = os.path.join(self._data_path, 'JPEGImages',
-                                  index + self._image_ext)
+        image_path = os.path.join(self._data_path, 'Images',
+                                  index)
         assert os.path.exists(image_path), \
             'Path does not exist: {}'.format(image_path)
         return image_path
@@ -191,14 +190,14 @@ class PascalVOCDet(PascalVOC):
     def _load_sbd_annotations(self, index):
         if index % 1000 == 0: print('%d / %d' % (index, len(self._image_index)))
         image_name = self._image_index[index]
-        inst_file_name = os.path.join(self._data_path, 'inst', image_name + '.mat')
+        inst_file_name = os.path.join(self._data_path, 'inst', os.path.splitext(os.path.basename(image_name))[0] + '.mat')
         gt_inst_mat = scipy.io.loadmat(inst_file_name)
         gt_inst_data = gt_inst_mat['GTinst']['Segmentation'][0][0]
         unique_inst = np.unique(gt_inst_data)
         background_ind = np.where(unique_inst == 0)[0]
         unique_inst = np.delete(unique_inst, background_ind)
 
-        cls_file_name = os.path.join(self._data_path, 'cls', image_name + '.mat')
+        cls_file_name = os.path.join(self._data_path, 'cls', os.path.splitext(os.path.basename(image_name))[0] + '.mat')
         gt_cls_mat = scipy.io.loadmat(cls_file_name)
         gt_cls_data = gt_cls_mat['GTcls']['Segmentation'][0][0]
 
