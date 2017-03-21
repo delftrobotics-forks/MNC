@@ -76,8 +76,7 @@ class PascalVOCSeg(PascalVOCDet):
         """
         Load gt_masks information from SBD's additional data
         """
-        if index % 1000 == 0:
-            print('%d / %d' % (index, len(self._image_index)))
+        print('%d / %d' % (index, len(self._image_index)), end='\r')
         image_name = self._image_index[index]
         inst_file_name = os.path.join(self._data_path, 'inst', os.path.splitext(os.path.basename(image_name))[0] + '.mat')
         gt_inst_mat = scipy.io.loadmat(inst_file_name)
