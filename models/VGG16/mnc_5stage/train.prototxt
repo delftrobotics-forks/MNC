@@ -1,4 +1,4 @@
-name: "VGG16"
+name: "VGG16_21_class"
 layer {
   name: 'input-data'
   type: 'Python'
