@@ -15,9 +15,11 @@ import numpy as np
 # User-defined module
 import _init_paths
 from multitask_network_cascades.mnc_config import cfg, cfg_from_file, get_output_dir  # config mnc
-from multitask_network_cascades.db.roidb import attach_roidb
+from multitask_network_cascades.db.roidb import attach_roidb, prepare_roidb
 from multitask_network_cascades.db.maskdb import attach_maskdb
 from multitask_network_cascades.caffeWrapper.SolverWrapper import SolverWrapper
+from multitask_network_cascades.datasets.path_db import PathDb
+from multitask_network_cascades.mnc_config import cfg
 import caffe
 
 
@@ -42,13 +44,16 @@ def parse_args():
                         default=None, type=str)
     parser.add_argument('--imdb', dest='imdb_name',
                         help='dataset to train on',
-                        default='voc_2007_trainval', type=str)
+                        default='path_db', type=str)
+    parser.add_argument('--data-dir', dest='data_dir',
+                        help='path to dataset to train on',
+                        default='./data/VOCdevkitSDS', type=str)
+    parser.add_argument('--image-set', dest='image_set',
+                        help='image set to train on',
+                        default='train', type=str)
     parser.add_argument('--rand', dest='randomize',
                         help='randomize (do not use a fixed seed)',
                         action='store_true')
-    parser.add_argument('--set', dest='set_cfgs',
-                        help='set config keys', default=None,
-                        nargs=argparse.REMAINDER)
 
     if len(sys.argv) == 1:
         parser.print_help()
@@ -77,13 +82,28 @@ if __name__ == '__main__':
         np.random.seed(cfg.RNG_SEED)
         caffe.set_random_seed(cfg.RNG_SEED)
 
-    # get imdb and roidb from specified imdb_name
-    imdb, roidb = attach_roidb(args.imdb_name)
-    # Faster RCNN doesn't need
-    if cfg.MNC_MODE or cfg.CFM_MODE:
-        imdb, maskdb = attach_maskdb(args.imdb_name)
+    if args.imdb_name == 'path':
+        imdb   = PathDb(args.data_dir, args.image_set)
+        roidb  = imdb.roidb
+        maskdb = imdb.maskdb
+        if cfg.TRAIN.USE_FLIPPED:
+            print('Appending horizontally-flipped training examples...')
+            imdb.append_flipped_rois()
+            print('done')
+            print('Appending horizontally-flipped training examples...')
+            imdb.append_flipped_masks()
+            print('done')
+        prepare_roidb(imdb)
+
     else:
-        maskdb = None
+        # get imdb and roidb from specified imdb_name
+        imdb, roidb = attach_roidb(args.imdb_name, args.data_dir)
+
+        # Faster RCNN doesn't need
+        if cfg.MNC_MODE or cfg.CFM_MODE:
+            imdb, maskdb = attach_maskdb(args.imdb_name, args.data_dir)
+        else:
+            maskdb = None
     print('{:d} roidb entries'.format(len(roidb)))
 
     output_dir = get_output_dir(imdb, None)

@@ -193,12 +193,9 @@ def voc_eval(detpath,
     return rec, prec, ap
 
 
-def voc_eval_sds(det_file, seg_file, devkit_path, image_list, cls_name, cache_dir,
+def voc_eval_sds(det_file, seg_file, devkit_path, image_names, cls_name, cache_dir,
                  class_names, ov_thresh=0.5):
     # 1. Check whether ground truth cache file exists
-    with open(image_list, 'r') as f:
-        lines = f.readlines()
-    image_names = [x.strip() for x in lines]
     check_voc_sds_cache(cache_dir, devkit_path, image_names, class_names)
     gt_cache = cache_dir + '/' + cls_name + '_mask_gt.pkl'
     with open(gt_cache, 'rb') as f:

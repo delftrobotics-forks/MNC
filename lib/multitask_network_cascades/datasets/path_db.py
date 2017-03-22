@@ -1,40 +1,112 @@
 # --------------------------------------------------------
 # Multitask Network Cascade
-# Written by Haozhi Qi
+# Written by Ronald Ensing <r.m.ensing@delftrobotics.com>
+# Copyright (c) 2017, Delft Robotics
 # Copyright (c) 2016, Haozhi Qi
 # Licensed under The MIT License [see LICENSE for details]
 # --------------------------------------------------------
 
-from six.moves import cPickle
 import os
-import scipy.io as sio
 import numpy as np
-from multitask_network_cascades.datasets.pascal_voc_det import PascalVOCDet
+from multitask_network_cascades.datasets.pascal_voc import PascalVOC
 from multitask_network_cascades.mnc_config import cfg
 from multitask_network_cascades.utils.vis_seg import vis_seg
 from multitask_network_cascades.utils.voc_eval import voc_eval_sds
+from six.moves import cPickle
 import scipy
+import PIL
 
+def _lines_from_file(path):
+    assert os.path.exists(path), 'Path does not exist: {}'.format(path)
+    with open(path, 'r') as f:
+        return [x.strip() for x in f.readlines()]
 
-class PascalVOCSeg(PascalVOCDet):
+class PathDb(PascalVOC):
     """
     A subclass for datasets.imdb.imdb
     This class contains information of ROIDB and MaskDB
     This class implements roidb and maskdb related functions
     """
-    def __init__(self, image_set, year, devkit_path=None):
-        PascalVOCDet.__init__(self, image_set, year, devkit_path)
+    def __init__(self, data_dir, image_set, cache_dir = None):
+        PascalVOC.__init__(self, 'path_db')
+
+        if cache_dir is None: cache_dir = os.path.abspath(os.path.join(data_dir, 'cache'))
+
+        self._data_path  = data_dir
+        self._cache_dir = cache_dir
+        self._image_index = _lines_from_file(os.path.join(self._data_path, image_set + '.txt'))
         self._ori_image_num = len(self._image_index)
-        self._comp_id = 'comp6'
-        # PASCAL specific config options
-        self.config = {'cleanup': True,
-                       'use_salt': True,
-                       'top_k': 2000,
-                       'use_diff': False,
-                       'matlab_eval': False,
-                       'rpn_file': None}
-        self._data_path = os.path.join(self._devkit_path)
-        self._roidb_path = os.path.join(self.cache_path, 'voc_2012_' + image_set + '_mcg_maskdb')
+        self._roidb_path = os.path.join(self.cache_path, 'mcg_maskdb')
+
+        self._classes = ['__background__'] + _lines_from_file(os.path.join(self._data_path, 'classes.txt'))
+        self._class_to_ind = dict(zip(self.classes, range(self.num_classes)))
+
+        if not os.path.exists(self.cache_path):
+            os.makedirs(self.cache_path)
+
+        self._roidb  = self.gt_roidb()
+        self._maskdb = self.gt_maskdb()
+
+    @property
+    def cache_path(self):
+        return self._cache_dir
+
+    def gt_roidb(self):
+        """
+        Return the database of ground-truth regions of interest.
+        This function loads/saves from/to a cache file to speed up future calls.
+        """
+        cache_file = os.path.join(self.cache_path, 'gt_roidb.pkl')
+        if os.path.exists(cache_file):
+            with open(cache_file, 'rb') as fid:
+                roidb = cPickle.load(fid)
+            print('gt roidb loaded from {}'.format(cache_file))
+            return roidb
+
+        num_image = len(self.image_index)
+        gt_roidb = [self._load_sbd_annotations(index) for index in range(num_image)]
+        with open(cache_file, 'wb') as fid:
+            cPickle.dump(gt_roidb, fid, cPickle.HIGHEST_PROTOCOL)
+        print('wrote gt roidb to {}'.format(cache_file))
+        return gt_roidb
+
+    def append_flipped_rois(self):
+        """
+        This method is irrelevant with database, so implement here
+        Append flipped images to ROI database
+        Note this method doesn't actually flip the 'image', it flip
+        boxes instead
+        """
+        cache_file = os.path.join(self.cache_path, 'roidb_flip.pkl')
+        if os.path.exists(cache_file):
+            with open(cache_file, 'rb') as fid:
+                flip_roidb = cPickle.load(fid)
+            print('gt flipped roidb loaded from {}'.format(cache_file))
+        else:
+            num_images = self.num_images
+            widths = [PIL.Image.open(self.image_path_at(i)).size[0]
+                      for i in range(num_images)]
+            flip_roidb = []
+            for i in range(num_images):
+                boxes = self.roidb[i]['boxes'].copy()
+                oldx1 = boxes[:, 0].copy()
+                oldx2 = boxes[:, 2].copy()
+                boxes[:, 0] = widths[i] - oldx2 - 1
+                boxes[:, 2] = widths[i] - oldx1 - 1
+                assert (boxes[:, 2] >= boxes[:, 0]).all()
+                entry = {'boxes': boxes,
+                         'gt_overlaps': self.roidb[i]['gt_overlaps'],
+                         'gt_classes': self.roidb[i]['gt_classes'],
+                         'flipped': True}
+                flip_roidb.append(entry)
+            with open(cache_file, 'wb') as fid:
+                cPickle.dump(flip_roidb, fid, cPickle.HIGHEST_PROTOCOL)
+            print('wrote gt flipped roidb to {}'.format(cache_file))
+
+        self.roidb.extend(flip_roidb)
+        self._image_index *= 2
+
+
 
     def image_path_at(self, i):
         image_path = os.path.join(self._data_path, 'img', self._image_index[i])
@@ -50,11 +122,11 @@ class PascalVOCSeg(PascalVOCDet):
                                 self.image_index[i] + '.mat')
 
     def gt_maskdb(self):
-        cache_file = os.path.join(self.cache_path, self.name + '_gt_maskdb.pkl')
+        cache_file = os.path.join(self.cache_path, 'gt_maskdb.pkl')
         if os.path.exists(cache_file):
             with open(cache_file, 'rb') as fid:
                 gt_maskdb = cPickle.load(fid)
-            print('{} gt maskdb loaded from {}'.format(self.name, cache_file))
+            print('gt maskdb loaded from {}'.format(cache_file))
         else:
             num_image = len(self.image_index)
             gt_roidbs = self.gt_roidb()
@@ -65,12 +137,43 @@ class PascalVOCSeg(PascalVOCDet):
             print('wrote gt roidb to {}'.format(cache_file))
         return gt_maskdb
 
-    def _load_image_set_index(self):
-        image_set_file = os.path.join(self._data_path, self._image_set + '.txt')
-        assert os.path.exists(image_set_file), 'Path does not exist: {}'.format(image_set_file)
-        with open(image_set_file) as f:
-            image_index = [x.strip() for x in f.readlines()]
-        return image_index
+    def _load_sbd_annotations(self, index):
+        print('%d / %d' % (index, len(self._image_index)), end='\r')
+        image_name = self._image_index[index]
+        inst_file_name = os.path.join(self._data_path, 'inst', os.path.splitext(os.path.basename(image_name))[0] + '.mat')
+        gt_inst_mat = scipy.io.loadmat(inst_file_name)
+        gt_inst_data = gt_inst_mat['GTinst']['Segmentation'][0][0]
+        unique_inst = np.unique(gt_inst_data)
+        background_ind = np.where(unique_inst == 0)[0]
+        unique_inst = np.delete(unique_inst, background_ind)
+
+        cls_file_name = os.path.join(self._data_path, 'cls', os.path.splitext(os.path.basename(image_name))[0] + '.mat')
+        gt_cls_mat = scipy.io.loadmat(cls_file_name)
+        gt_cls_data = gt_cls_mat['GTcls']['Segmentation'][0][0]
+
+        boxes = np.zeros((len(unique_inst), 4), dtype=np.uint16)
+        gt_classes = np.zeros(len(unique_inst), dtype=np.int32)
+        overlaps = np.zeros((len(unique_inst), self.num_classes), dtype=np.float32)
+        for ind, inst_mask in enumerate(unique_inst):
+            im_mask = (gt_inst_data == inst_mask)
+            im_cls_mask = np.multiply(gt_cls_data, im_mask)
+            unique_cls_inst = np.unique(im_cls_mask)
+            background_ind = np.where(unique_cls_inst == 0)[0]
+            unique_cls_inst = np.delete(unique_cls_inst, background_ind)
+            assert len(unique_cls_inst) == 1
+            gt_classes[ind] = unique_cls_inst[0]
+            [r, c] = np.where(im_mask > 0)
+            boxes[ind, 0] = np.min(c)
+            boxes[ind, 1] = np.min(r)
+            boxes[ind, 2] = np.max(c)
+            boxes[ind, 3] = np.max(r)
+            overlaps[ind, unique_cls_inst[0]] = 1.0
+
+        overlaps = scipy.sparse.csr_matrix(overlaps)
+        return {'boxes': boxes,
+                'gt_classes': gt_classes,
+                'gt_overlaps': overlaps,
+                'flipped': False}
 
     def _load_sbd_mask_annotations(self, index, gt_roidbs):
         """
@@ -116,11 +219,11 @@ class PascalVOCSeg(PascalVOCDet):
         Append flipped images to mask database
         Note this method doesn't actually flip the 'image', it flip masks instead
         """
-        cache_file = os.path.join(self.cache_path, self.name + '_' + cfg.TRAIN.PROPOSAL_METHOD + '_maskdb_flip.pkl')
+        cache_file = os.path.join(self.cache_path, 'maskdb_flip.pkl')
         if os.path.exists(cache_file):
             with open(cache_file, 'rb') as fid:
                 flip_maskdb = cPickle.load(fid)
-            print('{} gt flipped roidb loaded from {}'.format(self.name, cache_file))
+            print('gt flipped roidb loaded from {}'.format(cache_file))
             self.maskdb.extend(flip_maskdb)
             # Need to check this condition since otherwise we may occasionally *4
             if self._image_index == self.num_images:
@@ -193,8 +296,7 @@ class PascalVOCSeg(PascalVOCDet):
 
     def _py_evaluate_segmentation(self, output_dir):
         gt_dir = self._data_path
-        imageset_file = os.path.join(gt_dir, self._image_set + '.txt')
-        cache_dir = os.path.join(self._devkit_path, 'annotations_cache')
+        cache_dir = os.path.join(self._data_path, 'annotations_cache')
         aps = []
         # define this as true according to SDS's evaluation protocol
         use_07_metric = True
