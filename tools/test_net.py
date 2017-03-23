@@ -16,16 +16,16 @@ import pprint
 # User-defined module
 import _init_paths
 import caffe
-from multitask_network_cascades.mnc_config import cfg, cfg_from_file
-from multitask_network_cascades.db.imdb import get_imdb
 from multitask_network_cascades.caffeWrapper.TesterWrapper import TesterWrapper
+from multitask_network_cascades.mnc_config import cfg, cfg_from_file
+from multitask_network_cascades.utils.get_db import get_db
 
 
 def parse_args():
     """
     Parse input arguments
     """
-    parser = argparse.ArgumentParser(description='Test a Fast R-CNN network')
+    parser = argparse.ArgumentParser(description='Test an MNC network')
     parser.add_argument('--gpu', dest='gpu_id', help='GPU id to use',
                         default=0, type=int)
     parser.add_argument('--def', dest='prototxt',
@@ -38,7 +38,13 @@ def parse_args():
                         help='optional config file', default=None, type=str)
     parser.add_argument('--imdb', dest='imdb_name',
                         help='dataset to test',
-                        default='voc_2007_test', type=str)
+                        default='path', type=str)
+    parser.add_argument('--data-dir', dest='data_dir',
+                        help='path to dataset to train on',
+                        default='./data/VOCdevkitSDS', type=str)
+    parser.add_argument('--image-set', dest='image_set',
+                        help='image set to test on',
+                        default='val', type=str)
     parser.add_argument('--wait', dest='wait',
                         help='wait until net file exists',
                         default=True, type=bool)
@@ -48,7 +54,7 @@ def parse_args():
                         help='set config keys', default=None,
                         nargs=argparse.REMAINDER)
     parser.add_argument('--task', dest='task_name',
-                        help='set task name', default='sds',
+                        help='set task name', default='seg',
                         type=str)
 
     if len(sys.argv) == 1:
@@ -79,6 +85,7 @@ if __name__ == '__main__':
     caffe.set_mode_gpu()
     caffe.set_device(args.gpu_id)
 
-    imdb = get_imdb(args.imdb_name)
+    imdb, roidb, maskdb = get_db(args.imdb_name, args.data_dir, args.image_set)
+
     _tester = TesterWrapper(args.prototxt, imdb, args.caffemodel, args.task_name)
     _tester.get_result()
