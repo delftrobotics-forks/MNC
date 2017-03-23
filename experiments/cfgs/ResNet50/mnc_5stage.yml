@@ -1,4 +1,3 @@
-EXP_DIR: mnc_5stage
 MASK_SIZE: 21
 TRAIN:
   RPN_POST_NMS_TOP_N: 300

@@ -13,7 +13,6 @@ cfg = __C
 __C.MNC_MODE = True
 __C.CFM_MODE = False
 
-__C.EXP_DIR = 'default'
 __C.USE_GPU_NMS = True
 __C.GPU_ID = 0
 __C.RNG_SEED = 3
@@ -153,16 +152,12 @@ __C.TEST.USE_MASK_MERGE = True
 __C.TEST.USE_GPU_MASK_MERGE = True
 
 
-def get_output_dir(imdb, net):
+def get_output_dir(data_dir):
     """ Return the directory where experimental artifacts are placed.
-        A canonical path is built using the name from an imdb and a network
-        (if not None).
+        A canonical path is built using the name from an imdb name and
+        a data directory
     """
-    path = os.path.abspath(os.path.join(__C.ROOT_DIR, 'output', __C.EXP_DIR, imdb.name))
-    if net is None:
-        return path
-    else:
-        return os.path.join(path, net.name)
+    return os.path.abspath(os.path.join(__C.ROOT_DIR, 'output', os.path.split(data_dir)[-1]))
 
 
 def _merge_two_config(user_cfg, default_cfg):

@@ -83,7 +83,7 @@ if __name__ == '__main__':
     imdb, roidb, maskdb = get_db(args.imdb_name, args.data_dir, args.image_set)
     print('{:d} roidb entries'.format(len(roidb)))
 
-    output_dir = get_output_dir(imdb, None)
+    output_dir = get_output_dir(args.data_dir)
     print('Output will be saved to `{:s}`'.format(output_dir))
 
     _solver = SolverWrapper(args.solver, roidb, maskdb, output_dir, imdb,

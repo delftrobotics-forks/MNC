@@ -25,12 +25,12 @@ class TesterWrapper(object):
     """
     A simple wrapper around Caffe's test forward
     """
-    def __init__(self, test_prototxt, imdb, test_model, task_name):
+    def __init__(self, test_prototxt, imdb, test_model, task_name, data_dir):
         # Pre-processing, test whether model stored in binary file or npy files
         self.net = caffe.Net(test_prototxt, test_model, caffe.TEST)
         self.net.name = os.path.splitext(os.path.basename(test_model))[0]
         self.imdb = imdb
-        self.output_dir = get_output_dir(imdb, self.net)
+        self.output_dir = get_output_dir(data_dir)
         self.task_name = task_name
         # We define some class variables here to avoid defining them many times in every method
         self.num_images = len(self.imdb.image_index)

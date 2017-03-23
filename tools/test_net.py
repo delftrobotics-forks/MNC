@@ -87,5 +87,5 @@ if __name__ == '__main__':
 
     imdb, roidb, maskdb = get_db(args.imdb_name, args.data_dir, args.image_set)
 
-    _tester = TesterWrapper(args.prototxt, imdb, args.caffemodel, args.task_name)
+    _tester = TesterWrapper(args.prototxt, imdb, args.caffemodel, args.task_name, args.data_dir)
     _tester.get_result()
