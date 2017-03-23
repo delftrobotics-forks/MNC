@@ -64,6 +64,9 @@ class SolverWrapper(object):
         else:
             self.solver.net.layers[0].set_image_info(imdb, self.bbox_means, self.bbox_stds)
 
+        if imdb.num_classes == self.solver.net.layers[0].num_classes:
+            raise ValueError('Different number of classes in prototxt and imdb')
+
     def snapshot(self):
         """ Take a snapshot of the network after unnormalizing the learned
             bounding-box regression weights. This enables easy use at test-time.
