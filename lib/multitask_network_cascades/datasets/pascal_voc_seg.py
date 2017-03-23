@@ -37,7 +37,7 @@ class PascalVOCSeg(PascalVOCDet):
         self._roidb_path = os.path.join(self.cache_path, 'voc_2012_' + image_set + '_mcg_maskdb')
 
     def image_path_at(self, i):
-        image_path = os.path.join(self._data_path, 'img', self._image_index[i] + self._image_ext)
+        image_path = os.path.join(self._data_path, 'img', self._image_index[i])
         assert os.path.exists(image_path), 'Path does not exist: {}'.format(image_path)
         return image_path
 
@@ -76,17 +76,16 @@ class PascalVOCSeg(PascalVOCDet):
         """
         Load gt_masks information from SBD's additional data
         """
-        if index % 1000 == 0:
-            print('%d / %d' % (index, len(self._image_index)))
+        print('%d / %d' % (index, len(self._image_index)), end='\r')
         image_name = self._image_index[index]
-        inst_file_name = os.path.join(self._data_path, 'inst', image_name + '.mat')
+        inst_file_name = os.path.join(self._data_path, 'inst', os.path.splitext(os.path.basename(image_name))[0] + '.mat')
         gt_inst_mat = scipy.io.loadmat(inst_file_name)
         gt_inst_data = gt_inst_mat['GTinst']['Segmentation'][0][0]
         unique_inst = np.unique(gt_inst_data)
         background_ind = np.where(unique_inst == 0)[0]
         unique_inst = np.delete(unique_inst, background_ind)
         gt_roidb = gt_roidbs[index]
-        cls_file_name = os.path.join(self._data_path, 'cls', image_name + '.mat')
+        cls_file_name = os.path.join(self._data_path, 'cls', os.path.splitext(os.path.basename(image_name))[0] + '.mat')
         gt_cls_mat = scipy.io.loadmat(cls_file_name)
         gt_cls_data = gt_cls_mat['GTcls']['Segmentation'][0][0]
         gt_masks = []

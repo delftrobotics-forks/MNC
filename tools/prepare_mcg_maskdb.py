@@ -164,7 +164,7 @@ def process_roidb(file_start, file_end, db):
 
 def process_flip_masks(image_names, im_start, im_end):
 
-    widths = [PIL.Image.open('data/VOCdevkitSDS/img/' + im_name + '.jpg').size[0] for im_name in image_names]
+    widths = [PIL.Image.open('data/VOCdevkitSDS/img/' + im_name).size[0] for im_name in image_names]
     cache_dir = output_dir
     if not os.path.isdir(cache_dir):
         os.makedirs(cache_dir)
