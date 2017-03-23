@@ -30,7 +30,7 @@ class PathDb(PascalVOC):
     def __init__(self, data_dir, image_set, cache_dir = None):
         PascalVOC.__init__(self, 'path_db')
 
-        if cache_dir is None: cache_dir = os.path.abspath(os.path.join(data_dir, 'cache'))
+        if cache_dir is None: cache_dir = os.path.abspath(os.path.join(cfg.ROOT_DIR, 'cache', os.path.split(data_dir)[-1]))
 
         self._data_path  = data_dir
         self._cache_dir = cache_dir
