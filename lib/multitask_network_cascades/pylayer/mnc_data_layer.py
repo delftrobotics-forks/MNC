@@ -22,7 +22,7 @@ class MNCDataLayer(caffe.Layer):
 
     def setup(self, bottom, top):
         layer_params = yaml.load(self.param_str)
-        self._num_classes = layer_params['num_classes']
+        self.num_classes = layer_params['num_classes']
         self._name_to_top_map = {}
         # data blob: holds a batch of N images, each with 3 channels
         top[0].reshape(cfg.TRAIN.IMS_PER_BATCH, 3, max(cfg.TRAIN.SCALES), cfg.TRAIN.MAX_SIZE)

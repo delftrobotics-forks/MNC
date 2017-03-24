@@ -28,7 +28,11 @@
 *.app
 
 *.pyc
+*.mat
 *.png
 *.jpg
+*.pkl
+*.caffemodel.h5
+*.caffemodel
 *~
 .idea

@@ -13,13 +13,13 @@ export PYTHONUNBUFFERED="True"
 GPU_ID=$1
 NET=$2
 STAGES=$3
+DATA_DIR=$4
 NET_lc=${NET,,}
 ITERS=25000
-DATASET_TRAIN=voc_2012_seg_train
-DATASET_TEST=voc_2012_seg_val
+DATASET='path'
 array=( $@ )
 len=${#array[@]}
-EXTRA_ARGS=${array[@]:3:$len}
+EXTRA_ARGS=${array[@]:4:$len}
 EXTRA_ARGS_SLUG=${EXTRA_ARGS// /_}
 
 LOG="experiments/logs/mnc_${STAGES}stage_${NET}_${EXTRA_ARGS_SLUG}.txt.`date +'%Y-%m-%d_%H-%M-%S'`"
@@ -44,7 +44,8 @@ esac
 time ./tools/train_net.py --gpu ${GPU_ID} \
   --solver models/${NET}/mnc_${STAGES}stage/solver.prototxt \
   --weights ${NET_INIT} \
-  --imdb ${DATASET_TRAIN} \
+  --imdb ${DATASET} \
+  --data-dir ${DATA_DIR} \
   --iters ${ITERS} \
   --cfg experiments/cfgs/${NET}/mnc_${STAGES}stage.yml \
   ${EXTRA_ARGS}
@@ -56,7 +57,8 @@ set -x
 time ./tools/test_net.py --gpu ${GPU_ID} \
   --def models/${NET}/mnc_${STAGES}stage/test.prototxt \
   --net ${NET_FINAL} \
-  --imdb ${DATASET_TEST} \
+  --imdb ${DATASET} \
+  --data-dir ${DATA_DIR} \
   --cfg experiments/cfgs/${NET}/mnc_${STAGES}stage.yml \
   --task seg
 

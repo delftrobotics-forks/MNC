@@ -1,4 +1,3 @@
-EXP_DIR: cfm
 MASK_SIZE: 21
 CFM_MODE: True
 MNC_MODE: False

@@ -193,12 +193,9 @@ def voc_eval(detpath,
     return rec, prec, ap
 
 
-def voc_eval_sds(det_file, seg_file, devkit_path, image_list, cls_name, cache_dir,
+def voc_eval_sds(det_file, seg_file, devkit_path, image_names, cls_name, cache_dir,
                  class_names, ov_thresh=0.5):
     # 1. Check whether ground truth cache file exists
-    with open(image_list, 'r') as f:
-        lines = f.readlines()
-    image_names = [x.strip() for x in lines]
     check_voc_sds_cache(cache_dir, devkit_path, image_names, class_names)
     gt_cache = cache_dir + '/' + cls_name + '_mask_gt.pkl'
     with open(gt_cache, 'rb') as f:
@@ -314,11 +311,11 @@ def parse_inst(image_name, devkit_path):
         roi/mask dictionary of this image
     """
     gt_mask_im_name = os.path.join(devkit_path, 'inst',
-                                   image_name + '.mat')
+                                   os.path.splitext(os.path.basename(image_name))[0] + '.mat')
     gt_inst_mat = sio.loadmat(gt_mask_im_name)
     gt_inst_data = gt_inst_mat['GTinst']['Segmentation'][0][0]
     gt_mask_class_name = os.path.join(devkit_path, 'cls',
-                                      image_name + '.mat')
+                                      os.path.splitext(os.path.basename(image_name))[0] + '.mat')
     gt_cls_mat = sio.loadmat(gt_mask_class_name)
     gt_cls_data = gt_cls_mat['GTcls']['Segmentation'][0][0]
     unique_inst = np.unique(gt_inst_data)
@@ -328,7 +325,7 @@ def parse_inst(image_name, devkit_path):
     record = []
     for inst_ind in range(unique_inst.shape[0]):
         [r, c] = np.where(gt_inst_data == unique_inst[inst_ind])
-        mask_bound = np.zeros(4)
+        mask_bound = np.zeros(4).astype(int)
         mask_bound[0] = np.min(c)
         mask_bound[1] = np.min(r)
         mask_bound[2] = np.max(c)
