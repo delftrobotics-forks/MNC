@@ -64,7 +64,7 @@ class SolverWrapper(object):
         else:
             self.solver.net.layers[0].set_image_info(imdb, self.bbox_means, self.bbox_stds)
 
-        if imdb.num_classes + 1 != self.solver.net.layers[0].num_classes:
+        if imdb.num_classes != self.solver.net.layers[0].num_classes:
             raise ValueError('Incorrect number of classes, the file classes.txt ' \
                     'should contain number of classes of prototxt minus background.')
 
