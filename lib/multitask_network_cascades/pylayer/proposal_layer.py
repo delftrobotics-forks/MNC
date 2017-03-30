@@ -40,13 +40,15 @@ class ProposalLayer(caffe.Layer):
         # rectangle (x1, y1, x2, y2)
         self._top_name_map = {}
         top[0].reshape(1, 5)
+        top[1].reshape(1, 1)
         self._top_name_map['rois'] = 0
+        self._top_name_map['rpn_scores'] = 1
         # For MNC, we force the output proposals will also be used to train RPN
         # this is achieved by passing proposal_index to anchor_target_layer
         if self.phase == 0: # TRAIN
             if cfg.TRAIN.MIX_INDEX:
-                top[1].reshape(1, 1)
-                self._top_name_map['proposal_index'] = 1
+                top[2].reshape(1, 1)
+                self._top_name_map['proposal_index'] = 2
 
     def reshape(self, bottom, top):
         """Reshaping happens during the call to forward."""
@@ -164,7 +166,8 @@ class ProposalLayer(caffe.Layer):
         self._proposal_index = keep
 
         blobs = {
-            'rois': proposals
+            'rois': proposals,
+            'rpn_scores': scores
         }
 
         if self.phase == 0: # TRAIN
