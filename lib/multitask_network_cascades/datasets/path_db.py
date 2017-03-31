@@ -8,6 +8,7 @@
 
 import os
 import numpy as np
+import cv2
 from multitask_network_cascades.datasets.pascal_voc import PascalVOC
 from multitask_network_cascades.mnc_config import cfg
 from multitask_network_cascades.utils.vis_seg import vis_seg
@@ -141,15 +142,26 @@ class PathDb(PascalVOC):
         print('%d / %d' % (index, len(self._image_index)), end='\r')
         image_name = self._image_index[index]
         inst_file_name = os.path.join(self._data_path, 'inst', os.path.splitext(os.path.basename(image_name))[0] + '.mat')
-        gt_inst_mat = scipy.io.loadmat(inst_file_name)
-        gt_inst_data = gt_inst_mat['GTinst']['Segmentation'][0][0]
+        if not os.path.isfile(inst_file_name):
+            print('Warning: inst file ', inst_file_name, ' does not exist, will continue with empty annotation.')
+            image = cv2.imread(os.path.join(self._data_path, 'img', image_name))
+            gt_inst_data = np.zeros(image.shape[0:1])
+        else:
+            gt_inst_mat = scipy.io.loadmat(inst_file_name)
+            gt_inst_data = gt_inst_mat['GTinst']['Segmentation'][0][0]
+
         unique_inst = np.unique(gt_inst_data)
         background_ind = np.where(unique_inst == 0)[0]
         unique_inst = np.delete(unique_inst, background_ind)
 
         cls_file_name = os.path.join(self._data_path, 'cls', os.path.splitext(os.path.basename(image_name))[0] + '.mat')
-        gt_cls_mat = scipy.io.loadmat(cls_file_name)
-        gt_cls_data = gt_cls_mat['GTcls']['Segmentation'][0][0]
+        if not os.path.isfile(cls_file_name):
+            print('Warning: cls file ', cls_file_name, ' does not exist, will continue with empty annotation.')
+            image = cv2.imread(os.path.join(self._data_path, 'img', image_name))
+            gt_cls_data = np.zeros(image.shape[1:2])
+        else:
+            gt_cls_mat = scipy.io.loadmat(cls_file_name)
+            gt_cls_data = gt_cls_mat['GTcls']['Segmentation'][0][0]
 
         boxes = np.zeros((len(unique_inst), 4), dtype=np.uint16)
         gt_classes = np.zeros(len(unique_inst), dtype=np.int32)
@@ -182,15 +194,28 @@ class PathDb(PascalVOC):
         print('%d / %d' % (index, len(self._image_index)), end='\r')
         image_name = self._image_index[index]
         inst_file_name = os.path.join(self._data_path, 'inst', os.path.splitext(os.path.basename(image_name))[0] + '.mat')
-        gt_inst_mat = scipy.io.loadmat(inst_file_name)
-        gt_inst_data = gt_inst_mat['GTinst']['Segmentation'][0][0]
+        if not os.path.isfile(inst_file_name):
+            print('Warning: inst file ', inst_file_name, ' does not exist, will continue with empty annotation.')
+            image = cv2.imread(os.path.join(self._data_path, 'img', image_name))
+            gt_inst_data = np.zeros(image.shape[0:1])
+        else:
+            gt_inst_mat = scipy.io.loadmat(inst_file_name)
+            gt_inst_data = gt_inst_mat['GTinst']['Segmentation'][0][0]
+
         unique_inst = np.unique(gt_inst_data)
         background_ind = np.where(unique_inst == 0)[0]
         unique_inst = np.delete(unique_inst, background_ind)
         gt_roidb = gt_roidbs[index]
+
         cls_file_name = os.path.join(self._data_path, 'cls', os.path.splitext(os.path.basename(image_name))[0] + '.mat')
-        gt_cls_mat = scipy.io.loadmat(cls_file_name)
-        gt_cls_data = gt_cls_mat['GTcls']['Segmentation'][0][0]
+        if not os.path.isfile(cls_file_name):
+            print('Warning: cls file ', cls_file_name, ' does not exist, will continue with empty annotation.')
+            image = cv2.imread(os.path.join(self._data_path, 'img', image_name))
+            gt_cls_data = np.zeros(image.shape[1:2])
+        else:
+            gt_cls_mat = scipy.io.loadmat(cls_file_name)
+            gt_cls_data = gt_cls_mat['GTcls']['Segmentation'][0][0]
+
         gt_masks = []
         for ind, inst_mask in enumerate(unique_inst):
             box = gt_roidb['boxes'][ind]
