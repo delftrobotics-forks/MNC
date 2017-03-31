@@ -24,6 +24,10 @@ def compute_targets(rois, overlaps, labels):
         np.ascontiguousarray(rois[ex_inds, :], dtype=np.float),
         np.ascontiguousarray(rois[gt_inds, :], dtype=np.float))
 
+    # Continue if there is no annotation
+    if ex_gt_overlaps.size == 0:
+        return []
+
     # Find which gt ROI each ex ROI has max overlap with:
     # this will be the ex ROI's gt target
     gt_assignment = ex_gt_overlaps.argmax(axis=1)

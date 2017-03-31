@@ -98,6 +98,8 @@ def add_bbox_regression_targets(roidb):
         print("Normalizing targets")
         for im_i in range(num_images):
             targets = roidb[im_i]['bbox_targets']
+            if np.array(targets).size == 0:
+                continue
             for cls in range(1, num_classes):
                 cls_inds = np.where(targets[:, 0] == cls)[0]
                 roidb[im_i]['bbox_targets'][cls_inds, 1:] -= means[cls, :]

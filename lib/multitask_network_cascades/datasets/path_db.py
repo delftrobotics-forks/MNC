@@ -205,8 +205,13 @@ class PathDb(PascalVOC):
             gt_masks.append(mask)
 
         # Also record the maximum dimension to create fixed dimension array when do forwarding
-        mask_max_x = max(gt_masks[i].shape[1] for i in range(len(gt_masks)))
-        mask_max_y = max(gt_masks[i].shape[0] for i in range(len(gt_masks)))
+        if unique_inst != []:
+            mask_max_x = max(gt_masks[i].shape[1] for i in range(len(gt_masks)))
+            mask_max_y = max(gt_masks[i].shape[0] for i in range(len(gt_masks)))
+        else:
+            mask_max_x = []
+            mask_max_y = []
+
         return {
             'gt_masks': gt_masks,
             'mask_max': [mask_max_x, mask_max_y],
