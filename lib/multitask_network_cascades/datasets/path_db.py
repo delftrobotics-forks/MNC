@@ -326,7 +326,7 @@ class PathDb(PascalVOC):
 
     def _py_evaluate_segmentation(self, output_dir):
         gt_dir = self._data_path
-        cache_dir = os.path.join(self._data_path, 'annotations_cache')
+        cache_dir = os.path.join(self._cache_dir, 'annotations_cache')
         aps = []
         # define this as true according to SDS's evaluation protocol
         use_07_metric = True
