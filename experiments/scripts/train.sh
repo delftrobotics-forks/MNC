@@ -11,7 +11,7 @@ ITERS=${6:-25000}
 
 case $NET in
   ZF)
-    NET_INIT=data/imagenet_models/${NET}.caffemodel
+    NET_INIT=data/imagenet_models/${NET}.v2.caffemodel
     ;;
   ResNet50)
     NET_INIT=data/imagenet_models/ResNet-50-model.caffemodel
