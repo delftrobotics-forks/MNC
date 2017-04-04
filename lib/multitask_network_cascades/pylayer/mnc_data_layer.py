@@ -47,6 +47,13 @@ class MNCDataLayer(caffe.Layer):
     def forward(self, bottom, top):
         """Get blobs and copy them into this layer's top blob vector."""
         blobs = self._get_next_minibatch()
+        if cfg.MNC_MODE:
+            while np.array(blobs['gt_masks']).size == 0:
+                blobs = self._get_next_minibatch()
+        else:
+            while np.array(blobs['data']).size == 0:
+                blobs = self._get_next_minibatch()
+
         for blob_name, blob in six.iteritems(blobs):
             top_ind = self._name_to_top_map[blob_name]
             # Reshape net's input blobs
@@ -61,6 +68,9 @@ class MNCDataLayer(caffe.Layer):
     def set_roidb(self, roidb):
         """Set the roidb to be used by this layer during training."""
         self._roidb = roidb
+        for i in range(len(roidb)):
+            if np.array(roidb[i]['boxes']).size == 0:
+                print('Warning: roidb is empty for image ', roidb[i]['image'], ', image without annotations?')
         self._shuffle_roidb_inds()
 
     def set_maskdb(self, maskdb):
@@ -118,7 +128,14 @@ class MNCDataLayer(caffe.Layer):
         db_inds = self._perm[self._cur]
         self._cur += 1
         roidb = self._roidb[db_inds]
-        
+
+        # return if image without annotations
+        if roidb['boxes'].size == 0:
+            if cfg.MNC_MODE:
+                return {'data': [], 'gt_boxes': [], 'im_info': [], 'gt_masks': [], 'mask_info': []}
+            else:
+                return {'data': [], 'gt_boxes': [], 'im_info': []}
+
         random_scale_inds = np.random.randint(0, high=len(cfg.TRAIN.SCALES), size=1)
         im_blob, im_scales = self._get_image_blob(roidb, random_scale_inds)
 
@@ -136,16 +153,20 @@ class MNCDataLayer(caffe.Layer):
             mask_list = maskdb['gt_masks']
             mask_max_x = maskdb['mask_max'][0]
             mask_max_y = maskdb['mask_max'][1]
-            gt_masks = np.zeros((len(mask_list), mask_max_y, mask_max_x))
-            mask_info = np.zeros((len(mask_list), 2))
-            for j in range(len(mask_list)):
-                mask = mask_list[j]
-                mask_x = mask.shape[1]
-                mask_y = mask.shape[0]
-                gt_masks[j, 0:mask_y, 0:mask_x] = mask
-                mask_info[j, 0] = mask_y
-                mask_info[j, 1] = mask_x
-            blobs['gt_masks'] = gt_masks
-            blobs['mask_info'] = mask_info
+            if np.array(maskdb['mask_max']).size == 0:
+                blobs['gt_masks'] = []
+                blobs['mask_info'] = []
+            else:
+                gt_masks = np.zeros((len(mask_list), mask_max_y, mask_max_x))
+                mask_info = np.zeros((len(mask_list), 2))
+                for j in range(len(mask_list)):
+                    mask = mask_list[j]
+                    mask_x = mask.shape[1]
+                    mask_y = mask.shape[0]
+                    gt_masks[j, 0:mask_y, 0:mask_x] = mask
+                    mask_info[j, 0] = mask_y
+                    mask_info[j, 1] = mask_x
+                blobs['gt_masks'] = gt_masks
+                blobs['mask_info'] = mask_info
 
         return blobs
