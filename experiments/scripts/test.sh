@@ -5,8 +5,8 @@ GPU_ID=${2:-0}
 NET=${3:-"ZF"}
 STAGES=${4:-3}
 DATA_DIR=${5:-"/srv/caffe-data/datasets/boxes_family_gray"}
-ITERS=${6:-5000}
-MODEL=${7:-"output/boxes_family_gray/zf_mnc_3stage_iter_5000.caffemodel.h5"}
+ITERS=${6:-25000}
+MODEL=${7:-"output/boxes_family_gray/zf_mnc_3stage_iter_25000.caffemodel.h5"}
 TASK=${8:-"seg"}
 
 if [ "$DELETE_CACHE" = true ]; then
