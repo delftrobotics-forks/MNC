@@ -1,4 +1,4 @@
-name: "VGG_ILSVRC_16_layers"
+name: "VGG16"
 
 layer {
   name: 'input-data'

@@ -1,4 +1,4 @@
-name: "VGG16"
+name: "ZF"
 
 input: "data"
 input_shape {
@@ -16,154 +16,167 @@ input_shape {
 
 # ------------ Convolution -----------
 layer {
-	name: "conv1"
-	type: "Convolution"
-	bottom: "data"
-	top: "conv1"
-	param { lr_mult: 1.0 }
-	param { lr_mult: 2.0 }
-	convolution_param {
-		num_output: 96
-		kernel_size: 7
-		pad: 3
-		stride: 2
-	}
+  name: "conv1"
+  type: "Convolution"
+  bottom: "data"
+  top: "conv1"
+  param { lr_mult: 1.0 }
+  param { lr_mult: 2.0 }
+  convolution_param {
+    num_output: 96
+    kernel_size: 7
+    pad: 3
+    stride: 2
+  }
 }
+
 layer {
-	name: "relu1"
-	type: "ReLU"
-	bottom: "conv1"
-	top: "conv1"
+  name: "relu1"
+  type: "ReLU"
+  bottom: "conv1"
+  top: "conv1"
 }
+
 layer {
-	name: "norm1"
-	type: "LRN"
-	bottom: "conv1"
-	top: "norm1"
-	lrn_param {
-		local_size: 3
-		alpha: 0.00005
-		beta: 0.75
-		norm_region: WITHIN_CHANNEL
+  name: "norm1"
+  type: "LRN"
+  bottom: "conv1"
+  top: "norm1"
+  lrn_param {
+    local_size: 3
+    alpha: 0.00005
+    beta: 0.75
+    norm_region: WITHIN_CHANNEL
     engine: CAFFE
-	}
+  }
 }
+
 layer {
-	name: "pool1"
-	type: "Pooling"
-	bottom: "norm1"
-	top: "pool1"
-	pooling_param {
-		kernel_size: 3
-		stride: 2
-		pad: 1
-		pool: MAX
-	}
+  name: "pool1"
+  type: "Pooling"
+  bottom: "norm1"
+  top: "pool1"
+  pooling_param {
+    kernel_size: 3
+    stride: 2
+    pad: 1
+    pool: MAX
+  }
 }
+
 layer {
-	name: "conv2"
-	type: "Convolution"
-	bottom: "pool1"
-	top: "conv2"
-	param { lr_mult: 1.0 }
-	param { lr_mult: 2.0 }
-	convolution_param {
-		num_output: 256
-		kernel_size: 5
-		pad: 2
-		stride: 2
-	}
+  name: "conv2"
+  type: "Convolution"
+  bottom: "pool1"
+  top: "conv2"
+  param { lr_mult: 1.0 }
+  param { lr_mult: 2.0 }
+  convolution_param {
+    num_output: 256
+    kernel_size: 5
+    pad: 2
+    stride: 2
+  }
 }
+
 layer {
-	name: "relu2"
-	type: "ReLU"
-	bottom: "conv2"
-	top: "conv2"
+  name: "relu2"
+  type: "ReLU"
+  bottom: "conv2"
+  top: "conv2"
 }
+
 layer {
-	name: "norm2"
-	type: "LRN"
-	bottom: "conv2"
-	top: "norm2"
-	lrn_param {
-		local_size: 3
-		alpha: 0.00005
-		beta: 0.75
-		norm_region: WITHIN_CHANNEL
+  name: "norm2"
+  type: "LRN"
+  bottom: "conv2"
+  top: "norm2"
+  lrn_param {
+    local_size: 3
+    alpha: 0.00005
+    beta: 0.75
+    norm_region: WITHIN_CHANNEL
     engine: CAFFE
-	}
+  }
 }
+
 layer {
-	name: "pool2"
-	type: "Pooling"
-	bottom: "norm2"
-	top: "pool2"
-	pooling_param {
-		kernel_size: 3
-		stride: 2
-		pad: 1
-		pool: MAX
-	}
+  name: "pool2"
+  type: "Pooling"
+  bottom: "norm2"
+  top: "pool2"
+  pooling_param {
+    kernel_size: 3
+    stride: 2
+    pad: 1
+    pool: MAX
+  }
 }
+
 layer {
-	name: "conv3"
-	type: "Convolution"
-	bottom: "pool2"
-	top: "conv3"
-	param { lr_mult: 1.0 }
-	param { lr_mult: 2.0 }
-	convolution_param {
-		num_output: 384
-		kernel_size: 3
-		pad: 1
-		stride: 1
-	}
+  name: "conv3"
+  type: "Convolution"
+  bottom: "pool2"
+  top: "conv3"
+  param { lr_mult: 1.0 }
+  param { lr_mult: 2.0 }
+  convolution_param {
+    num_output: 384
+    kernel_size: 3
+    pad: 1
+    stride: 1
+  }
 }
+
 layer {
-	name: "relu3"
-	type: "ReLU"
-	bottom: "conv3"
-	top: "conv3"
+  name: "relu3"
+  type: "ReLU"
+  bottom: "conv3"
+  top: "conv3"
 }
+
 layer {
-	name: "conv4"
-	type: "Convolution"
-	bottom: "conv3"
-	top: "conv4"
-	param { lr_mult: 1.0 }
-	param { lr_mult: 2.0 }
-	convolution_param {
-		num_output: 384
-		kernel_size: 3
-		pad: 1
-		stride: 1
-	}
+  name: "conv4"
+  type: "Convolution"
+  bottom: "conv3"
+  top: "conv4"
+  param { lr_mult: 1.0 }
+  param { lr_mult: 2.0 }
+  convolution_param {
+    num_output: 384
+    kernel_size: 3
+    pad: 1
+    stride: 1
+  }
 }
+
 layer {
-	name: "relu4"
-	type: "ReLU"
-	bottom: "conv4"
-	top: "conv4"
+  name: "relu4"
+  type: "ReLU"
+  bottom: "conv4"
+  top: "conv4"
 }
+
 layer {
-	name: "conv5"
-	type: "Convolution"
-	bottom: "conv4"
-	top: "conv5"
-	param { lr_mult: 1.0 }
-	param { lr_mult: 2.0 }
-	convolution_param {
-		num_output: 256
-		kernel_size: 3
-		pad: 1
-		stride: 1
-	}
+  name: "conv5"
+  type: "Convolution"
+  bottom: "conv4"
+  top: "conv5"
+  param { lr_mult: 1.0 }
+  param { lr_mult: 2.0 }
+  convolution_param {
+    num_output: 256
+    kernel_size: 3
+    pad: 1
+    stride: 1
+  }
 }
+
 layer {
-	name: "relu5"
-	type: "ReLU"
-	bottom: "conv5"
-	top: "conv5"
+  name: "relu5"
+  type: "ReLU"
+  bottom: "conv5"
+  top: "conv5"
 }
 
 
@@ -183,6 +196,7 @@ layer {
     bias_filler { type: "constant" value: 0 }
   }
 }
+
 layer {
   name: "rpn_relu_3x3"
   type: "ReLU"
@@ -204,6 +218,7 @@ layer {
     bias_filler { type: "constant" value: 0 }
   }
 }
+
 layer {
   name: "rpn_bbox_pred"
   type: "Convolution"
@@ -218,6 +233,7 @@ layer {
     bias_filler { type: "constant" value: 0 }
   }
 }
+
 layer {
    bottom: "rpn_cls_score"
    top: "rpn_cls_score_reshape"
@@ -234,6 +250,7 @@ layer {
   bottom: "rpn_cls_score_reshape"
   top: "rpn_cls_prob"
 }
+
 layer {
   name: 'rpn_cls_prob_reshape'
   type: 'Reshape'
@@ -241,6 +258,7 @@ layer {
   top: 'rpn_cls_prob_reshape'
   reshape_param { shape { dim: 0 dim: 18 dim: -1 dim: 0 } }
 }
+
 layer {
   name: 'proposal'
   type: 'Python'
@@ -248,12 +266,20 @@ layer {
   bottom: 'rpn_bbox_pred'
   bottom: 'im_info'
   top: 'rois'
+  top: 'rpn_scores'
   python_param {
     module: 'multitask_network_cascades.pylayer.proposal_layer'
     layer: 'ProposalLayer'
     param_str: "{'feat_stride': 16, 'gradient_scale': 1}"
   }
 }
+
+layer {
+  name: 'silence'
+  type: 'Silence'
+  bottom: 'rpn_scores'
+}
+
 
 #------------ Roi Warping ------------
 
@@ -386,6 +412,7 @@ layer {
     num_output: 4096
   }
 }
+
 layer {
   name: "relu7"
   type: "ReLU"
@@ -718,6 +745,7 @@ layer {
     num_output: 4096
   }
 }
+
 layer {
   name: "relu7_ext"
   type: "ReLU"

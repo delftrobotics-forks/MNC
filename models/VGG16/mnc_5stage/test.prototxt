@@ -35,12 +35,14 @@ layer {
     kernel_size: 3
   }
 }
+
 layer {
   name: "relu1_1"
   type: "ReLU"
   bottom: "conv1_1"
   top: "conv1_1"
 }
+
 layer {
   name: "conv1_2"
   type: "Convolution"
@@ -60,12 +62,14 @@ layer {
     kernel_size: 3
   }
 }
+
 layer {
   name: "relu1_2"
   type: "ReLU"
   bottom: "conv1_2"
   top: "conv1_2"
 }
+
 layer {
   name: "pool1"
   type: "Pooling"
@@ -77,6 +81,7 @@ layer {
     stride: 2
   }
 }
+
 layer {
   name: "conv2_1"
   type: "Convolution"
@@ -96,12 +101,14 @@ layer {
     kernel_size: 3
   }
 }
+
 layer {
   name: "relu2_1"
   type: "ReLU"
   bottom: "conv2_1"
   top: "conv2_1"
 }
+
 layer {
   name: "conv2_2"
   type: "Convolution"
@@ -121,12 +128,14 @@ layer {
     kernel_size: 3
   }
 }
+
 layer {
   name: "relu2_2"
   type: "ReLU"
   bottom: "conv2_2"
   top: "conv2_2"
 }
+
 layer {
   name: "pool2"
   type: "Pooling"
@@ -138,6 +147,7 @@ layer {
     stride: 2
   }
 }
+
 layer {
   name: "conv3_1"
   type: "Convolution"
@@ -157,12 +167,14 @@ layer {
     kernel_size: 3
   }
 }
+
 layer {
   name: "relu3_1"
   type: "ReLU"
   bottom: "conv3_1"
   top: "conv3_1"
 }
+
 layer {
   name: "conv3_2"
   type: "Convolution"
@@ -182,12 +194,14 @@ layer {
     kernel_size: 3
   }
 }
+
 layer {
   name: "relu3_2"
   type: "ReLU"
   bottom: "conv3_2"
   top: "conv3_2"
 }
+
 layer {
   name: "conv3_3"
   type: "Convolution"
@@ -207,12 +221,14 @@ layer {
     kernel_size: 3
   }
 }
+
 layer {
   name: "relu3_3"
   type: "ReLU"
   bottom: "conv3_3"
   top: "conv3_3"
 }
+
 layer {
   name: "pool3"
   type: "Pooling"
@@ -224,6 +240,7 @@ layer {
     stride: 2
   }
 }
+
 layer {
   name: "conv4_1"
   type: "Convolution"
@@ -243,12 +260,14 @@ layer {
     kernel_size: 3
   }
 }
+
 layer {
   name: "relu4_1"
   type: "ReLU"
   bottom: "conv4_1"
   top: "conv4_1"
 }
+
 layer {
   name: "conv4_2"
   type: "Convolution"
@@ -268,12 +287,14 @@ layer {
     kernel_size: 3
   }
 }
+
 layer {
   name: "relu4_2"
   type: "ReLU"
   bottom: "conv4_2"
   top: "conv4_2"
 }
+
 layer {
   name: "conv4_3"
   type: "Convolution"
@@ -293,12 +314,14 @@ layer {
     kernel_size: 3
   }
 }
+
 layer {
   name: "relu4_3"
   type: "ReLU"
   bottom: "conv4_3"
   top: "conv4_3"
 }
+
 layer {
   name: "pool4"
   type: "Pooling"
@@ -310,6 +333,7 @@ layer {
     stride: 2
   }
 }
+
 layer {
   name: "conv5_1"
   type: "Convolution"
@@ -329,12 +353,14 @@ layer {
     kernel_size: 3
   }
 }
+
 layer {
   name: "relu5_1"
   type: "ReLU"
   bottom: "conv5_1"
   top: "conv5_1"
 }
+
 layer {
   name: "conv5_2"
   type: "Convolution"
@@ -354,12 +380,14 @@ layer {
     kernel_size: 3
   }
 }
+
 layer {
   name: "relu5_2"
   type: "ReLU"
   bottom: "conv5_2"
   top: "conv5_2"
 }
+
 layer {
   name: "conv5_3"
   type: "Convolution"
@@ -379,6 +407,7 @@ layer {
     kernel_size: 3
   }
 }
+
 layer {
   name: "relu5_3"
   type: "ReLU"
@@ -402,6 +431,7 @@ layer {
     bias_filler { type: "constant" value: 0 }
   }
 }
+
 layer {
   name: "rpn_relu_3x3"
   type: "ReLU"
@@ -423,6 +453,7 @@ layer {
     bias_filler { type: "constant" value: 0 }
   }
 }
+
 layer {
   name: "rpn_bbox_pred"
   type: "Convolution"
@@ -437,6 +468,7 @@ layer {
     bias_filler { type: "constant" value: 0 }
   }
 }
+
 layer {
    bottom: "rpn_cls_score"
    top: "rpn_cls_score_reshape"
@@ -453,6 +485,7 @@ layer {
   bottom: "rpn_cls_score_reshape"
   top: "rpn_cls_prob"
 }
+
 layer {
   name: 'rpn_cls_prob_reshape'
   type: 'Reshape'
@@ -460,6 +493,7 @@ layer {
   top: 'rpn_cls_prob_reshape'
   reshape_param { shape { dim: 0 dim: 18 dim: -1 dim: 0 } }
 }
+
 layer {
   name: 'proposal'
   type: 'Python'
@@ -467,11 +501,18 @@ layer {
   bottom: 'rpn_bbox_pred'
   bottom: 'im_info'
   top: 'rois'
+  top: 'rpn_scores'
   python_param {
     module: 'multitask_network_cascades.pylayer.proposal_layer'
     layer: 'ProposalLayer'
     param_str: "{'feat_stride': 16, 'gradient_scale': 1}"
   }
+}
+
+layer {
+  name: 'silence'
+  type: 'Silence'
+  bottom: 'rpn_scores'
 }
 
 #------------ Roi Warping ------------
@@ -605,6 +646,7 @@ layer {
     num_output: 4096
   }
 }
+
 layer {
   name: "relu7"
   type: "ReLU"
@@ -937,6 +979,7 @@ layer {
     num_output: 4096
   }
 }
+
 layer {
   name: "relu7_ext"
   type: "ReLU"

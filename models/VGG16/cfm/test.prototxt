@@ -458,14 +458,10 @@ layer {
 
 layer {
   name: "mask_pooling"
-  type: "Module"
+  type: "MaskPooling"
   bottom: "roi_pooling_conv5_mask"
   bottom: "masks"
   top: "roi_mask_conv5"
-  module_param {
-    module: "mnc"
-    type: "MaskPooling"
-  }
 }
 
 layer {
