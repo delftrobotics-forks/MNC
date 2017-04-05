@@ -1,4 +1,4 @@
-name: "ResNet50"
+name: "ResNet101"
 layer {
 	name: 'input-data'
 	type: 'Python'
@@ -1962,12 +1962,19 @@ layer {
 	propagate_down: 1
 	propagate_down: 0
 	top: 'rpn_rois'
+	top: 'rpn_scores'
 	top: 'rpn_rois_index'
 	python_param {
 		module: 'multitask_network_cascades.pylayer.proposal_layer'
 		layer: 'ProposalLayer'
 		param_str: "{ 'feat_stride': 16, 'use_clip': 1, 'clip_base': 512 }"
 	}
+}
+
+layer {
+	name: 'silence'
+	type: 'Silence'
+	bottom: 'rpn_scores'
 }
 
 layer {

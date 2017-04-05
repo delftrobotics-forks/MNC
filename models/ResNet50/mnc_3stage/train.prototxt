@@ -1906,7 +1906,7 @@ layer {
 	param { lr_mult: 1.0 }
 	param { lr_mult: 2.0 }
 	convolution_param {
-		num_output: 18	 # 2(bg/fg) * 9(anchors)
+		num_output: 18   # 2(bg/fg) * 9(anchors)
 		kernel_size: 1 pad: 0 stride: 1
 		weight_filler { type: "gaussian" std: 0.01 }
 		bias_filler { type: "constant" value: 0 }
@@ -1921,7 +1921,7 @@ layer {
 	param { lr_mult: 1.0 }
 	param { lr_mult: 2.0 }
 	convolution_param {
-		num_output: 36	 # 4 * 9(anchors)
+		num_output: 36   # 4 * 9(anchors)
 		kernel_size: 1 pad: 0 stride: 1
 		weight_filler { type: "gaussian" std: 0.01 }
 		bias_filler { type: "constant" value: 0 }
@@ -1963,12 +1963,19 @@ layer {
 	propagate_down: 1
 	propagate_down: 0
 	top: 'rpn_rois'
+	top: 'rpn_scores'
 	top: 'rpn_rois_index'
 	python_param {
 		module: 'multitask_network_cascades.pylayer.proposal_layer'
 		layer: 'ProposalLayer'
 		param_str: "{ 'feat_stride': 16, 'use_clip': 1, 'clip_base': 512 }"
 	}
+}
+
+layer {
+	name: 'silence'
+	type: 'Silence'
+	bottom: 'rpn_scores'
 }
 
 layer {

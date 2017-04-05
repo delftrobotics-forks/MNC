@@ -4133,7 +4133,7 @@ layer {
 	param { lr_mult: 1.0 }
 	param { lr_mult: 2.0 }
 	convolution_param {
-		num_output: 18	 # 2(bg/fg) * 9(anchors)
+		num_output: 18   # 2(bg/fg) * 9(anchors)
 		kernel_size: 1 pad: 0 stride: 1
 		weight_filler { type: "gaussian" std: 0.01 }
 		bias_filler { type: "constant" value: 0 }
@@ -4148,7 +4148,7 @@ layer {
 	param { lr_mult: 1.0 }
 	param { lr_mult: 2.0 }
 	convolution_param {
-		num_output: 36	 # 4 * 9(anchors)
+		num_output: 36   # 4 * 9(anchors)
 		kernel_size: 1 pad: 0 stride: 1
 		weight_filler { type: "gaussian" std: 0.01 }
 		bias_filler { type: "constant" value: 0 }
@@ -4187,11 +4187,18 @@ layer {
 	bottom: 'rpn_bbox_pred'
 	bottom: 'im_info'
 	top: 'rois'
+	top: 'rpn_scores'
 	python_param {
 		module: 'multitask_network_cascades.pylayer.proposal_layer'
 		layer: 'ProposalLayer'
 		param_str: "{'feat_stride': 16, 'gradient_scale': 1}"
 	}
+}
+
+layer {
+	name: 'silence'
+	type: 'Silence'
+	bottom: 'rpn_scores'
 }
 
 #------------ Roi Warping ------------
