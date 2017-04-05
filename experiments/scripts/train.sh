@@ -1,13 +1,15 @@
 #!/bin/bash
 
-DELETE_CACHE=${1:-true}
-GPU_ID=${2:-0}
-NET=${3:-"ZF"}
-STAGES=${4:-3}
-DATA_DIR=${5:-"/srv/caffe-data/datasets/boxes_family_gray"}
-ITERS=${6:-25000}
+GPU_ID=${1:-0}
+NET=${2:-"ZF"}
+STAGES=${3:-3}
+DATA_DIR=${4:-"/srv/caffe-data/datasets/boxes_family_gray"}
+ITERS=${5:-25000}
 
-[ "$DELETE_CACHE" = true ] && rm -rf cache/* && rm -rf data/cache/*
+read -p "Delete cache? [y/N] " yn
+case $yn in
+  [Yy]* ) rm -rf cache/*; rm -rf data/cache/*;
+esac
 
 case $NET in
   ZF)

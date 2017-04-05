@@ -1,18 +1,17 @@
 #!/bin/bash
 
-DELETE_CACHE=${1:-true}
-GPU_ID=${2:-0}
-NET=${3:-"ZF"}
-STAGES=${4:-3}
-DATA_DIR=${5:-"/srv/caffe-data/datasets/boxes_family_gray"}
-ITERS=${6:-25000}
-MODEL=${7:-"output/boxes_family_gray/zf_mnc_3stage_iter_25000.caffemodel.h5"}
-TASK=${8:-"seg"}
+GPU_ID=${1:-0}
+NET=${2:-"ZF"}
+STAGES=${3:-3}
+DATA_DIR=${4:-"/srv/caffe-data/datasets/boxes_family_gray"}
+ITERS=${5:-25000}
+MODEL=${6:-"output/boxes_family_gray/zf_mnc_3stage_iter_25000.caffemodel.h5"}
+TASK=${7:-"seg"}
 
-if [ "$DELETE_CACHE" = true ]; then
-  rm -rf cache/*
-  [ -d "output" ] && find output -name "*.pkl" -type f -exec rm {} \;
-fi
+read -p "Delete cache? [y/N] " yn
+case $yn in
+  [Yy]* ) rm -rf cache/*; [[ -d "output" ]] && find output -name "*.pkl" -type f -delete;
+esac
 
 time ./tools/test_net.py --gpu ${GPU_ID} \
   --def models/${NET}/mnc_${STAGES}stage/test.prototxt \
