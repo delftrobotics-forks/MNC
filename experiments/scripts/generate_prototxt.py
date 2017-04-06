@@ -1,3 +1,4 @@
+import argparse
 import os
 import sys
 import yaml
@@ -15,25 +16,41 @@ def readYamlFile(yaml_file):
 	with open(yaml_file, "r") as f:
 		return yaml.load(f)
 
-def run(yaml_file, template_file, prototxt_file):
+def run(args):
 	env = Environment(
 		autoescape  = False,
-		loader      = FileSystemLoader("models/templates"),
+		loader      = FileSystemLoader("templates"),
 		trim_blocks = False
 	)
 
-	context = readYamlFile(yaml_file)
-	createPrototxtFile(env, template_file, context, prototxt_file)
-	print("Saved to: '%s'" % prototxt_file)
+	context = {}
+	if args.yaml_files:
+		for y in args.yaml_files:
+			try:
+				context.update(readYamlFile(y))
+			except IOError:
+				print("Unable to open parameters file '%s'." % y)
+				sys.exit(-1)
+
+	if args.parameters:
+		for p in args.parameters:
+			name, sep, value = p.partition("=")
+			if sep == "=": context[name] = value
+
+	createPrototxtFile(env, args.template_file, context, args.prototxt_file)
+	print("Generated prototxt file: '%s'" % args.prototxt_file)
 
 if __name__ == "__main__":
-	if len(sys.argv) < 4:
-		print("Usage:", sys.argv[0], "[yaml_file] [template_file] [prototxt_file]")
-		sys.exit(-1)
+	parser = argparse.ArgumentParser(description = "Generate train/test prototxt files for the MNC network.")
+	parser.add_argument("template_file",      help = "path to the template file which stores the network architecture")
+	parser.add_argument("prototxt_file",      help = "path to the output prototxt file")
+	parser.add_argument("-y", "--yaml_files", help = "path to the YAML files which stores the parameters",       action = "append")
+	parser.add_argument("-p", "--parameters", help = "overrides certain parameters specified in the YAML files", action = "append")
+	args = parser.parse_args()
 
-	if not os.path.exists(os.path.join(os.getcwd(), "models/templates")):
+	if not os.path.exists(os.path.join(os.getcwd(), "templates")):
 		print("Please run this script from the MNC working directory.")
 		sys.exit(-1)
 
-	run(sys.argv[1], sys.argv[2], sys.argv[3])
+	run(args)
 
