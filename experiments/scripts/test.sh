@@ -7,6 +7,7 @@ DATA_DIR=${4:-"/srv/caffe-data/datasets/boxes_family_gray"}
 ITERS=${5:-25000}
 MODEL=${6:-"output/boxes_family_gray/zf_mnc_3stage_iter_25000.caffemodel.h5"}
 TASK=${7:-"seg"}
+DATASET=${DATA_DIR##/*/}
 
 read -p "Delete cache? [y/N] " yn
 case $yn in
@@ -14,7 +15,7 @@ case $yn in
 esac
 
 time ./tools/test_net.py --gpu ${GPU_ID} \
-  --def models/${NET}/mnc_${STAGES}stage/test.prototxt \
+  --def output/${DATASET}/test.prototxt \
   --net ${MODEL} \
   --imdb "path" \
   --data-dir ${DATA_DIR} \
