@@ -520,7 +520,7 @@ layer {
 		name: "cls_score_b" 
 	}
 	inner_product_param {
-		num_output: 2
+		num_output: {{ num_classes }}
 	}
 }
 
@@ -549,7 +549,7 @@ layer {
 		name: "seg_cls_score_b" 
 	}
 	inner_product_param {
-		num_output: 2
+		num_output: {{ num_classes }}
 	}
 }
 
@@ -853,7 +853,7 @@ layer {
 		name: "cls_score_b" 
 	}
 	inner_product_param {
-		num_output: 2
+		num_output: {{ num_classes }}
 	}
 }
 
@@ -878,7 +878,7 @@ layer {
 	param { name: "seg_cls_score_w" }
 	param { name: "seg_cls_score_b" }
 	inner_product_param {
-		num_output: 2
+		num_output: {{ num_classes }}
 	}
 }
 

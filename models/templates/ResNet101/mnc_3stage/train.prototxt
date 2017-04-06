@@ -10,7 +10,7 @@ layer {
 	python_param {
 		module: 'multitask_network_cascades.pylayer.mnc_data_layer'
 		layer: 'MNCDataLayer'
-		param_str: "{ 'num_classes': 2 }"
+		param_str: "{ 'num_classes': {{ num_classes }} }"
 	}
 }
 
@@ -4233,7 +4233,7 @@ layer {
 	python_param {
 		module: 'multitask_network_cascades.pylayer.proposal_target_layer'
 		layer: 'ProposalTargetLayer'
-		param_str: "{'num_classes': 2, 'bp_all': 1}"
+		param_str: "{'num_classes': {{ num_classes }}, 'bp_all': 1}"
 	}
 }
 
@@ -4910,7 +4910,7 @@ layer {
 		lr_mult: 2.0 
 	}
 	inner_product_param {
-		num_output: 2
+		num_output: {{ num_classes }}
 		weight_filler {
 			type: "gaussian"
 			std: 0.01

@@ -1,17 +1,17 @@
 name: "ResNet50"
-layer {
-	name: 'input-data'
-	type: 'Python'
-	top: 'data'
-	top: 'im_info'
-	top: 'gt_boxes'
-	top: 'gt_masks'
-	top: 'mask_info'
-	python_param {
-		module: 'multitask_network_cascades.pylayer.mnc_data_layer'
-		layer: 'MNCDataLayer'
-		param_str: "{ 'num_classes': 2 }"
-	}
+
+input: "data"
+input_shape {
+	dim: 1
+	dim: 3
+	dim: 224
+	dim: 224
+}
+
+input: "im_info"
+input_shape {
+	dim: 1
+	dim: 3
 }
 
 # ------------ Convolution -----------
@@ -1873,7 +1873,6 @@ layer {
 	type: "ReLU"
 }
 
-
 #------------ RPN ------------
 
 layer {
@@ -1881,8 +1880,8 @@ layer {
 	type: "Convolution"
 	bottom: "res4f"
 	top: "rpn_output"
-	param { lr_mult: 1.0 }
-	param { lr_mult: 2.0 }
+	param { lr_mult: 1.0 decay_mult: 1.0 }
+	param { lr_mult: 2.0 decay_mult: 0 }
 	convolution_param {
 		num_output: 512
 		kernel_size: 3 pad: 1 stride: 1
@@ -1903,10 +1902,10 @@ layer {
 	type: "Convolution"
 	bottom: "rpn_output"
 	top: "rpn_cls_score"
-	param { lr_mult: 1.0 }
-	param { lr_mult: 2.0 }
+	param { lr_mult: 1.0 decay_mult: 1.0 }
+	param { lr_mult: 2.0 decay_mult: 0 }
 	convolution_param {
-		num_output: 18   # 2(bg/fg) * 9(anchors)
+		num_output: 18     # 2(bg/fg) * 9(anchors)
 		kernel_size: 1 pad: 0 stride: 1
 		weight_filler { type: "gaussian" std: 0.01 }
 		bias_filler { type: "constant" value: 0 }
@@ -1918,10 +1917,10 @@ layer {
 	type: "Convolution"
 	bottom: "rpn_output"
 	top: "rpn_bbox_pred"
-	param { lr_mult: 1.0 }
-	param { lr_mult: 2.0 }
+	param { lr_mult: 1.0 decay_mult: 1.0 }
+	param { lr_mult: 2.0 decay_mult: 0 }
 	convolution_param {
-		num_output: 36   # 4 * 9(anchors)
+		num_output: 36     # 4 * 9(anchors)
 		kernel_size: 1 pad: 0 stride: 1
 		weight_filler { type: "gaussian" std: 0.01 }
 		bias_filler { type: "constant" value: 0 }
@@ -1959,16 +1958,12 @@ layer {
 	bottom: 'rpn_cls_prob_reshape'
 	bottom: 'rpn_bbox_pred'
 	bottom: 'im_info'
-	propagate_down: 0
-	propagate_down: 1
-	propagate_down: 0
-	top: 'rpn_rois'
+	top: 'rois'
 	top: 'rpn_scores'
-	top: 'rpn_rois_index'
 	python_param {
 		module: 'multitask_network_cascades.pylayer.proposal_layer'
 		layer: 'ProposalLayer'
-		param_str: "{ 'feat_stride': 16, 'use_clip': 1, 'clip_base': 512 }"
+		param_str: "{'feat_stride': 16, 'gradient_scale': 1}"
 	}
 }
 
@@ -1978,92 +1973,6 @@ layer {
 	bottom: 'rpn_scores'
 }
 
-layer {
-	name: 'roi-data'
-	type: 'Python'
-	bottom: 'rpn_rois'
-	bottom: 'gt_boxes'
-	bottom: 'im_info'
-	bottom: 'gt_masks'
-	bottom: 'mask_info'
-	bottom: 'rpn_rois_index'
-	propagate_down: 1
-	propagate_down: 0
-	propagate_down: 0
-	propagate_down: 0
-	propagate_down: 0
-	propagate_down: 0
-	top: 'rois'
-	top: 'labels'
-	top: 'bbox_targets'
-	top: 'bbox_inside_weights'
-	top: 'bbox_outside_weights'
-	top: 'mask_targets'
-	top: 'mask_weight'
-	top: 'gt_masks_info'
-	top: 'fg_inds'
-	top: 'bg_inds'
-	python_param {
-		module: 'multitask_network_cascades.pylayer.proposal_target_layer'
-		layer: 'ProposalTargetLayer'
-		param_str: "{'num_classes': 2, 'bp_all': 1}"
-	}
-}
-
-layer {
-	name: 'rpn-data'
-	type: 'Python'
-	bottom: 'rpn_cls_score'
-	bottom: 'gt_boxes'
-	bottom: 'im_info'
-	bottom: 'fg_inds'
-	bottom: 'bg_inds'
-	top: 'rpn_labels'
-	top: 'rpn_bbox_targets'
-	top: 'rpn_bbox_inside_weights'
-	top: 'rpn_bbox_outside_weights'
-	python_param {
-		module: 'multitask_network_cascades.pylayer.anchor_target_layer'
-		layer: 'AnchorTargetLayer'
-		param_str: "{'feat_stride': 16}"
-	}
-}
-
-#------------ RPN loss ------------
-# put rpn loss here since we need
-# proposal's index first
-
-layer {
-	name: "rpn_loss_cls"
-	type: "SoftmaxWithLoss"
-	bottom: "rpn_cls_score_reshape"
-	bottom: "rpn_labels"
-	propagate_down: 1
-	propagate_down: 0
-	top: "rpn_cls_loss"
-	loss_weight: 1
-	loss_param {
-		ignore_label: -1
-		normalize: true
-	}
-}
-
-layer {
-	name: "rpn_loss_bbox"
-	type: "Module"
-	bottom: "rpn_bbox_pred"
-	bottom: "rpn_bbox_targets"
-	bottom: 'rpn_bbox_inside_weights'
-	bottom: 'rpn_bbox_outside_weights'
-	top: "rpn_loss_bbox"
-	loss_weight: 1
-	module_param {
-		module: "mnc"
-		type: "SmoothL1Loss"
-		param_str: "{ 'sigma': 3 }"
-	}
-}
-
 #------------ Roi Warping ------------
 
 layer {
@@ -2071,8 +1980,6 @@ layer {
 	type: "Module"
 	bottom: "res4f"
 	bottom: "rois"
-	propagate_down: 1
-	propagate_down: 1
 	top: "roi_interpolate_conv5"
 	module_param {
 		module: "mnc"
@@ -2088,24 +1995,10 @@ layer {
 	type: "InnerProduct"
 	bottom: "roi_interpolate_conv5"
 	top: "fc6_maskest"
-	param {
-		name: "fc6_maskest_w" 
-		lr_mult: 1.0 
-	}
-	param {
-		name: "fc6_maskest_b" 
-		lr_mult: 2.0 
-	}
+	param { name: "fc6_maskest_w"}
+	param { name: "fc6_maskest_b"}
 	inner_product_param {
 		num_output: 256
-		weight_filler {
-			type: "gaussian"
-			std: 0.001
-		}
-		bias_filler {
-			type: "constant"
-			value: 0
-		}
 	}
 }
 
@@ -2121,47 +2014,12 @@ layer {
 	type: "InnerProduct"
 	bottom: "fc6_maskest"
 	top: "mask_pred"
-	param {
-		name: "mask_pred_w" 
-		lr_mult: 1.0 
-	}
-	param {
-		name: "mask_pred_b" 
-		lr_mult: 2.0 
-	}
+	param { name: "mask_pred_w" }
+	param { name: "mask_pred_b" }
 	inner_product_param {
-		num_output: 441 # 21 * 21
-		weight_filler {
-			type: "gaussian"
-			std: 0.001
-		}
-		bias_filler {
-			type: "constant"
-			value: 0
-		}
+		num_output: 441 # 21*21
 	}
 }
-
-layer {
-	name: "loss_mask"
-	type: "Module"
-	bottom: "mask_pred"
-	bottom: "mask_targets"
-	bottom: "mask_weight"
-	propagate_down: 1
-	propagate_down: 0
-	propagate_down: 0
-	top: "loss_mask"
-	loss_weight: 2
-	module_param {
-		module: "mnc"
-		type: "SigmoidCrossEntropyLoss"
-	}
-}
-
-#------------ Mask resize ------------
-# get masks from sigmoid prediction 
-# and use it for mask pooling
 
 layer {
 	name: "mask_output"
@@ -2174,13 +2032,7 @@ layer {
 	name: "mask_proposal"
 	type: 'Python'
 	bottom: 'mask_output'
-	bottom: 'gt_masks'
-	bottom: 'gt_masks_info'
-	propagate_down: 1
-	propagate_down: 0
-	propagate_down: 0
 	top: 'mask_proposal'
-	top: 'mask_proposal_label'
 	python_param {
 		module: 'multitask_network_cascades.pylayer.mask_layer'
 		layer: 'MaskLayer'
@@ -2204,8 +2056,6 @@ layer {
 layer {
 	name: "mask_pooling"
 	type: "Module"
-	propagate_down: 1
-	propagate_down: 1
 	bottom: "roi_interpolate_conv5"
 	bottom: "mask_proposal_resize"
 	top: "roi_mask_conv5"
@@ -2676,99 +2526,14 @@ layer {
 	top: "seg_cls_score"
 	param {
 		name: "seg_cls_score_w" 
-		lr_mult: 1.0 
 	}
 	param {
 		name: "seg_cls_score_b" 
-		lr_mult: 2.0 
 	}
 	inner_product_param {
-		num_output: 2
-		weight_filler {
-			type: "gaussian"
-			std: 0.01
-		}
-		bias_filler {
-			type: "constant"
-			value: 0
-		}
+		num_output: {{ num_classes }}
 	}
 }
-
-layer {
-	name: "loss_seg_cls"
-	type: "SoftmaxWithLoss"
-	bottom: "seg_cls_score"
-	bottom: "mask_proposal_label"
-	propagate_down: 1
-	propagate_down: 0
-	top: "seg_cls_loss"
-	loss_weight: 1.0
-	loss_param {
-		ignore_label: -1
-		normalize: true
-	}
-}
-
-
-
-#----- Bounding-box Regression -----
-
-layer {
-	name: "bbox_pred"
-	type: "InnerProduct"
-	bottom: "pool5"
-	top: "bbox_pred"
-	param {
-		name: "bbox_pred_w" 
-		lr_mult: 1.0 
-	}
-	param {
-		name: "bbox_pred_b" 
-		lr_mult: 2.0 
-	}
-	inner_product_param {
-		num_output: 8
-		weight_filler {
-			type: "gaussian"
-			std: 0.001
-		}
-		bias_filler {
-			type: "constant"
-			value: 0
-		}
-	}
-}
-
-layer {
-	name: "loss_bbox"
-	type: "Module"
-	bottom: "bbox_pred"
-	bottom: "bbox_targets"
-	bottom: 'bbox_inside_weights'
-	bottom: 'bbox_outside_weights'
-	top: "bbox_loss"
-	loss_weight: 1
-	module_param {
-		module: "mnc"
-		type: "SmoothL1Loss"
-		param_str: "{ 'sigma': 1 }"
-	}
-}
-
-layer {
-	name: "accuracy_seg"
-	type: "Accuracy"
-	bottom: "seg_cls_score"
-	bottom: "mask_proposal_label"
-	top: "accuracy_seg"
-}
-
-
-# --------- Next Stage ----------
-# We extend 3 stage mnc to 5 stage
-# layer structure are mostly similar
-# name are suffixed by _ext (extend)
 
 layer {
 	name: "seg_cls_prob"
@@ -2781,35 +2546,40 @@ layer {
 	}
 }
 
+#----- Bounding-box Regression -----
+
+layer {
+	name: "bbox_pred"
+	type: "InnerProduct"
+	bottom: "pool5"
+	top: "bbox_pred"
+	param {
+		name: "bbox_pred_w" 
+	}
+	param {
+		name: "bbox_pred_b" 
+	}
+	inner_product_param {
+		num_output: 8
+	}
+}
+
+# --------- Next Stage ----------
+# We extend 3 stage mnc to 5 stage
+# layer structure are mostly similar
+# name are suffixed by _ext (extend)
+
 layer {
 	name: "stage_bridge"
 	type: 'Python'
 	bottom: 'rois'
 	bottom: 'bbox_pred'
 	bottom: 'seg_cls_prob'
-	bottom: 'gt_boxes'
-	bottom: 'gt_masks'
 	bottom: 'im_info'
-	bottom: 'mask_info'
-	propagate_down: 1
-	propagate_down: 1
-	propagate_down: 0
-	propagate_down: 0
-	propagate_down: 0
-	propagate_down: 0
-	propagate_down: 0
 	top: 'rois_ext'
-	top: 'labels_ext'
-	top: 'mask_targets_ext'
-	top: 'mask_weight_ext'
-	top: 'gt_masks_info_ext'
-	top: 'bbox_targets_ext'
-	top: 'bbox_inside_weights_ext'
-	top: 'bbox_outside_weights_ext'
 	python_param {
 		module: 'multitask_network_cascades.pylayer.stage_bridge_layer'
 		layer: 'StageBridgeLayer'
-		param_str: "{ 'feat_stride': 16,  'use_clip': 1,  'clip_base': 512 }"
 	}
 }
 
@@ -2837,22 +2607,12 @@ layer {
 	top: "fc6_maskest_ext"
 	param {
 		name: "fc6_maskest_w" 
-		lr_mult: 1.0 
 	}
 	param {
 		name: "fc6_maskest_b" 
-		lr_mult: 2.0 
 	}
 	inner_product_param {
 		num_output: 256
-		weight_filler {
-			type: "gaussian"
-			std: 0.001
-		}
-		bias_filler {
-			type: "constant"
-			value: 0
-		}
 	}
 }
 
@@ -2870,39 +2630,12 @@ layer {
 	top: "mask_pred_ext"
 	param {
 		name: "mask_pred_w" 
-		lr_mult: 1.0 
 	}
 	param {
 		name: "mask_pred_b" 
-		lr_mult: 2.0 
 	}
 	inner_product_param {
-		num_output: 441 # 21 * 21
-		weight_filler {
-			type: "gaussian"
-			std: 0.001
-		}
-		bias_filler {
-			type: "constant"
-			value: 0
-		}
-	}
-}
-
-layer {
-	name: "loss_mask_ext"
-	type: "Module"
-	bottom: "mask_pred_ext"
-	bottom: "mask_targets_ext"
-	bottom: "mask_weight_ext"
-	propagate_down: 1
-	propagate_down: 0
-	propagate_down: 0
-	top: "loss_mask_ext"
-	loss_weight: 2
-	module_param {
-		module: "mnc"
-		type: "SigmoidCrossEntropyLoss"
+		num_output: 441 # 21*21
 	}
 }
 
@@ -2921,13 +2654,7 @@ layer {
 	name: "mask_proposal_ext"
 	type: 'Python'
 	bottom: 'mask_output_ext'
-	bottom: 'gt_masks'
-	bottom: 'gt_masks_info_ext'
-	propagate_down: 1
-	propagate_down: 0
-	propagate_down: 0
 	top: 'mask_proposal_ext'
-	top: 'mask_proposal_label_ext'
 	python_param {
 		module: 'multitask_network_cascades.pylayer.mask_layer'
 		layer: 'MaskLayer'
@@ -3422,34 +3149,20 @@ layer {
 	top: "seg_cls_score_ext"
 	param {
 		name: "seg_cls_score_w" 
-		lr_mult: 1.0 
 	}
 	param {
 		name: "seg_cls_score_b" 
-		lr_mult: 2.0 
 	}
 	inner_product_param {
-		num_output: 2
-		weight_filler {
-			type: "gaussian"
-			std: 0.01
-		}
-		bias_filler {
-			type: "constant"
-			value: 0
-		}
+		num_output: {{ num_classes }}
 	}
 }
 
 layer {
-	name: "loss_seg_cls_ext"
-	type: "SoftmaxWithLoss"
+	name: "seg_cls_prob_ext"
+	type: "Softmax"
 	bottom: "seg_cls_score_ext"
-	bottom: "mask_proposal_label_ext"
-	propagate_down: 1
-	propagate_down: 0
-	top: "seg_cls_loss_ext"
-	loss_weight: 1
+	top: "seg_cls_prob_ext"
 	loss_param {
 		ignore_label: -1
 		normalize: true
@@ -3465,46 +3178,11 @@ layer {
 	top: "bbox_pred_ext"
 	param {
 		name: "bbox_pred_w" 
-		lr_mult: 1.0 
 	}
 	param {
 		name: "bbox_pred_b" 
-		lr_mult: 2.0 
 	}
 	inner_product_param {
 		num_output: 8
-		weight_filler {
-			type: "gaussian"
-			std: 0.001
-		}
-		bias_filler {
-			type: "constant"
-			value: 0
-		}
 	}
-}
-
-layer {
-	name: "loss_bbox_ext"
-	type: "Module"
-	bottom: "bbox_pred_ext"
-	bottom: "bbox_targets_ext"
-	bottom: 'bbox_inside_weights_ext'
-	bottom: 'bbox_outside_weights_ext'
-	top: "bbox_loss_ext"
-	loss_weight: 1
-	module_param {
-		module: "mnc"
-		type: "SmoothL1Loss"
-		param_str: "{ 'sigma': 1 }"
-	}
-}
-
-
-layer {
-	name: "accuracy_seg_ext"
-	type: "Accuracy"
-	bottom: "seg_cls_score_ext"
-	bottom: "mask_proposal_label_ext"
-	top: "accuracy_seg_ext"
 }

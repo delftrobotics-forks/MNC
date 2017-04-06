@@ -1,17 +1,17 @@
 name: "ResNet50"
-
-input: "data"
-input_shape {
-	dim: 1
-	dim: 3
-	dim: 224
-	dim: 224
-}
-
-input: "im_info"
-input_shape {
-	dim: 1
-	dim: 3
+layer {
+	name: 'input-data'
+	type: 'Python'
+	top: 'data'
+	top: 'im_info'
+	top: 'gt_boxes'
+	top: 'gt_masks'
+	top: 'mask_info'
+	python_param {
+		module: 'multitask_network_cascades.pylayer.mnc_data_layer'
+		layer: 'MNCDataLayer'
+		param_str: "{ 'num_classes': {{ num_classes }} }"
+	}
 }
 
 # ------------ Convolution -----------
@@ -1873,6 +1873,7 @@ layer {
 	type: "ReLU"
 }
 
+
 #------------ RPN ------------
 
 layer {
@@ -1880,8 +1881,8 @@ layer {
 	type: "Convolution"
 	bottom: "res4f"
 	top: "rpn_output"
-	param { lr_mult: 1.0 decay_mult: 1.0 }
-	param { lr_mult: 2.0 decay_mult: 0 }
+	param { lr_mult: 1.0 }
+	param { lr_mult: 2.0 }
 	convolution_param {
 		num_output: 512
 		kernel_size: 3 pad: 1 stride: 1
@@ -1902,10 +1903,10 @@ layer {
 	type: "Convolution"
 	bottom: "rpn_output"
 	top: "rpn_cls_score"
-	param { lr_mult: 1.0 decay_mult: 1.0 }
-	param { lr_mult: 2.0 decay_mult: 0 }
+	param { lr_mult: 1.0 }
+	param { lr_mult: 2.0 }
 	convolution_param {
-		num_output: 18     # 2(bg/fg) * 9(anchors)
+		num_output: 18   # 2(bg/fg) * 9(anchors)
 		kernel_size: 1 pad: 0 stride: 1
 		weight_filler { type: "gaussian" std: 0.01 }
 		bias_filler { type: "constant" value: 0 }
@@ -1917,10 +1918,10 @@ layer {
 	type: "Convolution"
 	bottom: "rpn_output"
 	top: "rpn_bbox_pred"
-	param { lr_mult: 1.0 decay_mult: 1.0 }
-	param { lr_mult: 2.0 decay_mult: 0 }
+	param { lr_mult: 1.0 }
+	param { lr_mult: 2.0 }
 	convolution_param {
-		num_output: 36     # 4 * 9(anchors)
+		num_output: 36   # 4 * 9(anchors)
 		kernel_size: 1 pad: 0 stride: 1
 		weight_filler { type: "gaussian" std: 0.01 }
 		bias_filler { type: "constant" value: 0 }
@@ -1958,12 +1959,16 @@ layer {
 	bottom: 'rpn_cls_prob_reshape'
 	bottom: 'rpn_bbox_pred'
 	bottom: 'im_info'
-	top: 'rois'
+	propagate_down: 0
+	propagate_down: 1
+	propagate_down: 0
+	top: 'rpn_rois'
 	top: 'rpn_scores'
+	top: 'rpn_rois_index'
 	python_param {
 		module: 'multitask_network_cascades.pylayer.proposal_layer'
 		layer: 'ProposalLayer'
-		param_str: "{'feat_stride': 16, 'gradient_scale': 1}"
+		param_str: "{ 'feat_stride': 16, 'use_clip': 1, 'clip_base': 512 }"
 	}
 }
 
@@ -1973,6 +1978,92 @@ layer {
 	bottom: 'rpn_scores'
 }
 
+layer {
+	name: 'roi-data'
+	type: 'Python'
+	bottom: 'rpn_rois'
+	bottom: 'gt_boxes'
+	bottom: 'im_info'
+	bottom: 'gt_masks'
+	bottom: 'mask_info'
+	bottom: 'rpn_rois_index'
+	propagate_down: 1
+	propagate_down: 0
+	propagate_down: 0
+	propagate_down: 0
+	propagate_down: 0
+	propagate_down: 0
+	top: 'rois'
+	top: 'labels'
+	top: 'bbox_targets'
+	top: 'bbox_inside_weights'
+	top: 'bbox_outside_weights'
+	top: 'mask_targets'
+	top: 'mask_weight'
+	top: 'gt_masks_info'
+	top: 'fg_inds'
+	top: 'bg_inds'
+	python_param {
+		module: 'multitask_network_cascades.pylayer.proposal_target_layer'
+		layer: 'ProposalTargetLayer'
+		param_str: "{'num_classes': {{ num_classes }}, 'bp_all': 1}"
+	}
+}
+
+layer {
+	name: 'rpn-data'
+	type: 'Python'
+	bottom: 'rpn_cls_score'
+	bottom: 'gt_boxes'
+	bottom: 'im_info'
+	bottom: 'fg_inds'
+	bottom: 'bg_inds'
+	top: 'rpn_labels'
+	top: 'rpn_bbox_targets'
+	top: 'rpn_bbox_inside_weights'
+	top: 'rpn_bbox_outside_weights'
+	python_param {
+		module: 'multitask_network_cascades.pylayer.anchor_target_layer'
+		layer: 'AnchorTargetLayer'
+		param_str: "{'feat_stride': 16}"
+	}
+}
+
+#------------ RPN loss ------------
+# put rpn loss here since we need
+# proposal's index first
+
+layer {
+	name: "rpn_loss_cls"
+	type: "SoftmaxWithLoss"
+	bottom: "rpn_cls_score_reshape"
+	bottom: "rpn_labels"
+	propagate_down: 1
+	propagate_down: 0
+	top: "rpn_cls_loss"
+	loss_weight: 1
+	loss_param {
+		ignore_label: -1
+		normalize: true
+	}
+}
+
+layer {
+	name: "rpn_loss_bbox"
+	type: "Module"
+	bottom: "rpn_bbox_pred"
+	bottom: "rpn_bbox_targets"
+	bottom: 'rpn_bbox_inside_weights'
+	bottom: 'rpn_bbox_outside_weights'
+	top: "rpn_loss_bbox"
+	loss_weight: 1
+	module_param {
+		module: "mnc"
+		type: "SmoothL1Loss"
+		param_str: "{ 'sigma': 3 }"
+	}
+}
+
 #------------ Roi Warping ------------
 
 layer {
@@ -1980,6 +2071,8 @@ layer {
 	type: "Module"
 	bottom: "res4f"
 	bottom: "rois"
+	propagate_down: 1
+	propagate_down: 1
 	top: "roi_interpolate_conv5"
 	module_param {
 		module: "mnc"
@@ -1995,10 +2088,24 @@ layer {
 	type: "InnerProduct"
 	bottom: "roi_interpolate_conv5"
 	top: "fc6_maskest"
-	param { name: "fc6_maskest_w"}
-	param { name: "fc6_maskest_b"}
+	param {
+		name: "fc6_maskest_w" 
+		lr_mult: 1.0 
+	}
+	param {
+		name: "fc6_maskest_b" 
+		lr_mult: 2.0 
+	}
 	inner_product_param {
 		num_output: 256
+		weight_filler {
+			type: "gaussian"
+			std: 0.001
+		}
+		bias_filler {
+			type: "constant"
+			value: 0
+		}
 	}
 }
 
@@ -2014,12 +2121,47 @@ layer {
 	type: "InnerProduct"
 	bottom: "fc6_maskest"
 	top: "mask_pred"
-	param { name: "mask_pred_w" }
-	param { name: "mask_pred_b" }
+	param {
+		name: "mask_pred_w" 
+		lr_mult: 1.0 
+	}
+	param {
+		name: "mask_pred_b" 
+		lr_mult: 2.0 
+	}
 	inner_product_param {
-		num_output: 441 # 21*21
+		num_output: 441 # 21 * 21
+		weight_filler {
+			type: "gaussian"
+			std: 0.001
+		}
+		bias_filler {
+			type: "constant"
+			value: 0
+		}
 	}
 }
+
+layer {
+	name: "loss_mask"
+	type: "Module"
+	bottom: "mask_pred"
+	bottom: "mask_targets"
+	bottom: "mask_weight"
+	propagate_down: 1
+	propagate_down: 0
+	propagate_down: 0
+	top: "loss_mask"
+	loss_weight: 2
+	module_param {
+		module: "mnc"
+		type: "SigmoidCrossEntropyLoss"
+	}
+}
+
+#------------ Mask resize ------------
+# get masks from sigmoid prediction 
+# and use it for mask pooling
 
 layer {
 	name: "mask_output"
@@ -2032,7 +2174,13 @@ layer {
 	name: "mask_proposal"
 	type: 'Python'
 	bottom: 'mask_output'
+	bottom: 'gt_masks'
+	bottom: 'gt_masks_info'
+	propagate_down: 1
+	propagate_down: 0
+	propagate_down: 0
 	top: 'mask_proposal'
+	top: 'mask_proposal_label'
 	python_param {
 		module: 'multitask_network_cascades.pylayer.mask_layer'
 		layer: 'MaskLayer'
@@ -2056,6 +2204,8 @@ layer {
 layer {
 	name: "mask_pooling"
 	type: "Module"
+	propagate_down: 1
+	propagate_down: 1
 	bottom: "roi_interpolate_conv5"
 	bottom: "mask_proposal_resize"
 	top: "roi_mask_conv5"
@@ -2526,20 +2676,34 @@ layer {
 	top: "seg_cls_score"
 	param {
 		name: "seg_cls_score_w" 
+		lr_mult: 1.0 
 	}
 	param {
 		name: "seg_cls_score_b" 
+		lr_mult: 2.0 
 	}
 	inner_product_param {
-		num_output: 2
+		num_output: {{ num_classes }}
+		weight_filler {
+			type: "gaussian"
+			std: 0.01
+		}
+		bias_filler {
+			type: "constant"
+			value: 0
+		}
 	}
 }
 
 layer {
-	name: "seg_cls_prob"
-	type: "Softmax"
+	name: "loss_seg_cls"
+	type: "SoftmaxWithLoss"
 	bottom: "seg_cls_score"
-	top: "seg_cls_prob"
+	bottom: "mask_proposal_label"
+	propagate_down: 1
+	propagate_down: 0
+	top: "seg_cls_loss"
+	loss_weight: 1.0
 	loss_param {
 		ignore_label: -1
 		normalize: true
@@ -2555,634 +2719,46 @@ layer {
 	top: "bbox_pred"
 	param {
 		name: "bbox_pred_w" 
+		lr_mult: 1.0 
 	}
 	param {
 		name: "bbox_pred_b" 
+		lr_mult: 2.0 
 	}
 	inner_product_param {
 		num_output: 8
+		weight_filler {
+			type: "gaussian"
+			std: 0.001
+		}
+		bias_filler {
+			type: "constant"
+			value: 0
+		}
 	}
 }
 
-# --------- Next Stage ----------
-# We extend 3 stage mnc to 5 stage
-# layer structure are mostly similar
-# name are suffixed by _ext (extend)
-
 layer {
-	name: "stage_bridge"
-	type: 'Python'
-	bottom: 'rois'
-	bottom: 'bbox_pred'
-	bottom: 'seg_cls_prob'
-	bottom: 'im_info'
-	top: 'rois_ext'
-	python_param {
-		module: 'multitask_network_cascades.pylayer.stage_bridge_layer'
-		layer: 'StageBridgeLayer'
-	}
-}
-
-#------------ Roi Warping Ext ------------
-
-layer {
-	name: "roi_interpolate_conv5_ext"
+	name: "loss_bbox"
 	type: "Module"
-	bottom: "res4f"
-	bottom: "rois_ext"
-	top: "roi_interpolate_conv5_ext"
+	bottom: "bbox_pred"
+	bottom: "bbox_targets"
+	bottom: 'bbox_inside_weights'
+	bottom: 'bbox_outside_weights'
+	top: "bbox_loss"
+	loss_weight: 1
 	module_param {
 		module: "mnc"
-		type: "ROIWarping"
-		param_str: "{ 'pooled_w': 14, 'pooled_h': 14, 'spatial_scale': 0.0625 }"
-	}
-}
-
-#------------ Mask Estimation Ext ------------
-
-layer {
-	name: "fc6_maskest_ext"
-	type: "InnerProduct"
-	bottom: "roi_interpolate_conv5_ext"
-	top: "fc6_maskest_ext"
-	param {
-		name: "fc6_maskest_w" 
-	}
-	param {
-		name: "fc6_maskest_b" 
-	}
-	inner_product_param {
-		num_output: 256
+		type: "SmoothL1Loss"
+		param_str: "{ 'sigma': 1 }"
 	}
 }
 
 layer {
-	name: "relu6_maskest_ext"
-	type: "ReLU"
-	bottom: "fc6_maskest_ext"
-	top: "fc6_maskest_ext"
+	name: "accuracy_seg"
+	type: "Accuracy"
+	bottom: "seg_cls_score"
+	bottom: "mask_proposal_label"
+	top: "accuracy_seg"
 }
 
-layer {
-	name: "mask_pred_ext"
-	type: "InnerProduct"
-	bottom: "fc6_maskest_ext"
-	top: "mask_pred_ext"
-	param {
-		name: "mask_pred_w" 
-	}
-	param {
-		name: "mask_pred_b" 
-	}
-	inner_product_param {
-		num_output: 441 # 21*21
-	}
-}
-
-#------------ Mask Resize ------------
-# get masks from sigmoid prediction 
-# and use it for mask pooling
-
-layer {
-	name: "mask_output_ext"
-	type: "Sigmoid"
-	bottom: "mask_pred_ext"
-	top: "mask_output_ext"
-}
-
-layer {
-	name: "mask_proposal_ext"
-	type: 'Python'
-	bottom: 'mask_output_ext'
-	top: 'mask_proposal_ext'
-	python_param {
-		module: 'multitask_network_cascades.pylayer.mask_layer'
-		layer: 'MaskLayer'
-	}
-}
-
-layer {
-	name: "mask_resize_ext"
-	type: "Module"
-	bottom: "mask_proposal_ext"
-	top: "mask_proposal_resize_ext"
-	module_param {
-		module: "mnc"
-		type: "MaskResize"
-		param_str: "{ 'output_width': 14, 'output_height': 14 }"
-	}
-}
-
-
-# ------ Mask Feature Ext ---------
-
-layer {
-	name: "mask_pooling_ext"
-	type: "Module"
-	bottom: "roi_interpolate_conv5_ext"
-	bottom: "mask_proposal_resize_ext"
-	top: "roi_mask_conv5_ext"
-	module_param {
-		module: "mnc"
-		type: "MaskPooling"
-	}
-}
-
-layer {
-	name: "roi_interpolate_conv5_mask_ext"
-	type: "Pooling"
-	bottom: "roi_mask_conv5_ext"
-	top: "roi_interpolate_conv5_mask_ext"
-	pooling_param {
-		kernel_size: 2
-		stride: 1
-		pad: 0
-		pool: MAX
-	}
-}
-
-layer {
-	bottom: "roi_interpolate_conv5_mask_ext"
-	top: "res5a_branch1_ext"
-	name: "res5a_branch1_ext"
-	type: "Convolution"
-	convolution_param {
-		num_output: 2048
-		kernel_size: 1
-		pad: 0
-		stride: 2
-		bias_term: false
-	}
-}
-
-layer {
-	bottom: "res5a_branch1_ext"
-	top: "res5a_branch1_ext"
-	name: "bn5a_branch1_ext"
-	type: "BatchNorm"
-	batch_norm_param {
-		use_global_stats: true
-	}
-}
-
-layer {
-	bottom: "res5a_branch1_ext"
-	top: "res5a_branch1_ext"
-	name: "scale5a_branch1_ext"
-	type: "Scale"
-	scale_param {
-		bias_term: true
-	}
-}
-
-layer {
-	bottom: "roi_interpolate_conv5_mask_ext"
-	top: "res5a_branch2a_ext"
-	name: "res5a_branch2a_ext"
-	type: "Convolution"
-	convolution_param {
-		num_output: 512
-		kernel_size: 1
-		pad: 0
-		stride: 2
-		bias_term: false
-	}
-}
-
-layer {
-	bottom: "res5a_branch2a_ext"
-	top: "res5a_branch2a_ext"
-	name: "bn5a_branch2a_ext"
-	type: "BatchNorm"
-	batch_norm_param {
-		use_global_stats: true
-	}
-}
-
-layer {
-	bottom: "res5a_branch2a_ext"
-	top: "res5a_branch2a_ext"
-	name: "scale5a_branch2a_ext"
-	type: "Scale"
-	scale_param {
-		bias_term: true
-	}
-}
-
-layer {
-	bottom: "res5a_branch2a_ext"
-	top: "res5a_branch2a_ext"
-	name: "res5a_branch2a_relu_ext"
-	type: "ReLU"
-}
-
-layer {
-	bottom: "res5a_branch2a_ext"
-	top: "res5a_branch2b_ext"
-	name: "res5a_branch2b_ext"
-	type: "Convolution"
-	convolution_param {
-		num_output: 512
-		kernel_size: 3
-		pad: 1
-		stride: 1
-		bias_term: false
-	}
-}
-
-layer {
-	bottom: "res5a_branch2b_ext"
-	top: "res5a_branch2b_ext"
-	name: "bn5a_branch2b_ext"
-	type: "BatchNorm"
-	batch_norm_param {
-		use_global_stats: true
-	}
-}
-
-layer {
-	bottom: "res5a_branch2b_ext"
-	top: "res5a_branch2b_ext"
-	name: "scale5a_branch2b_ext"
-	type: "Scale"
-	scale_param {
-		bias_term: true
-	}
-}
-
-layer {
-	bottom: "res5a_branch2b_ext"
-	top: "res5a_branch2b_ext"
-	name: "res5a_branch2b_relu_ext"
-	type: "ReLU"
-}
-
-layer {
-	bottom: "res5a_branch2b_ext"
-	top: "res5a_branch2c_ext"
-	name: "res5a_branch2c_ext"
-	type: "Convolution"
-	convolution_param {
-		num_output: 2048
-		kernel_size: 1
-		pad: 0
-		stride: 1
-		bias_term: false
-	}
-}
-
-layer {
-	bottom: "res5a_branch2c_ext"
-	top: "res5a_branch2c_ext"
-	name: "bn5a_branch2c_ext"
-	type: "BatchNorm"
-	batch_norm_param {
-		use_global_stats: true
-	}
-}
-
-layer {
-	bottom: "res5a_branch2c_ext"
-	top: "res5a_branch2c_ext"
-	name: "scale5a_branch2c_ext"
-	type: "Scale"
-	scale_param {
-		bias_term: true
-	}
-}
-
-layer {
-	bottom: "res5a_branch1_ext"
-	bottom: "res5a_branch2c_ext"
-	top: "res5a_ext"
-	name: "res5a_ext"
-	type: "Eltwise"
-}
-
-layer {
-	bottom: "res5a_ext"
-	top: "res5a_ext"
-	name: "res5a_relu_ext"
-	type: "ReLU"
-}
-
-layer {
-	bottom: "res5a_ext"
-	top: "res5b_branch2a_ext"
-	name: "res5b_branch2a_ext"
-	type: "Convolution"
-	convolution_param {
-		num_output: 512
-		kernel_size: 1
-		pad: 0
-		stride: 1
-		bias_term: false
-	}
-}
-
-layer {
-	bottom: "res5b_branch2a_ext"
-	top: "res5b_branch2a_ext"
-	name: "bn5b_branch2a_ext"
-	type: "BatchNorm"
-	batch_norm_param {
-		use_global_stats: true
-	}
-}
-
-layer {
-	bottom: "res5b_branch2a_ext"
-	top: "res5b_branch2a_ext"
-	name: "scale5b_branch2a_ext"
-	type: "Scale"
-	scale_param {
-		bias_term: true
-	}
-}
-
-layer {
-	bottom: "res5b_branch2a_ext"
-	top: "res5b_branch2a_ext"
-	name: "res5b_branch2a_relu_ext"
-	type: "ReLU"
-}
-
-layer {
-	bottom: "res5b_branch2a_ext"
-	top: "res5b_branch2b_ext"
-	name: "res5b_branch2b_ext"
-	type: "Convolution"
-	convolution_param {
-		num_output: 512
-		kernel_size: 3
-		pad: 1
-		stride: 1
-		bias_term: false
-	}
-}
-
-layer {
-	bottom: "res5b_branch2b_ext"
-	top: "res5b_branch2b_ext"
-	name: "bn5b_branch2b_ext"
-	type: "BatchNorm"
-	batch_norm_param {
-		use_global_stats: true
-	}
-}
-
-layer {
-	bottom: "res5b_branch2b_ext"
-	top: "res5b_branch2b_ext"
-	name: "scale5b_branch2b_ext"
-	type: "Scale"
-	scale_param {
-		bias_term: true
-	}
-}
-
-layer {
-	bottom: "res5b_branch2b_ext"
-	top: "res5b_branch2b_ext"
-	name: "res5b_branch2b_relu_ext"
-	type: "ReLU"
-}
-
-layer {
-	bottom: "res5b_branch2b_ext"
-	top: "res5b_branch2c_ext"
-	name: "res5b_branch2c_ext"
-	type: "Convolution"
-	convolution_param {
-		num_output: 2048
-		kernel_size: 1
-		pad: 0
-		stride: 1
-		bias_term: false
-	}
-}
-
-layer {
-	bottom: "res5b_branch2c_ext"
-	top: "res5b_branch2c_ext"
-	name: "bn5b_branch2c_ext"
-	type: "BatchNorm"
-	batch_norm_param {
-		use_global_stats: true
-	}
-}
-
-layer {
-	bottom: "res5b_branch2c_ext"
-	top: "res5b_branch2c_ext"
-	name: "scale5b_branch2c_ext"
-	type: "Scale"
-	scale_param {
-		bias_term: true
-	}
-}
-
-layer {
-	bottom: "res5a_ext"
-	bottom: "res5b_branch2c_ext"
-	top: "res5b_ext"
-	name: "res5b_ext"
-	type: "Eltwise"
-}
-
-layer {
-	bottom: "res5b_ext"
-	top: "res5b_ext"
-	name: "res5b_relu_ext"
-	type: "ReLU"
-}
-
-layer {
-	bottom: "res5b_ext"
-	top: "res5c_branch2a_ext"
-	name: "res5c_branch2a_ext"
-	type: "Convolution"
-	convolution_param {
-		num_output: 512
-		kernel_size: 1
-		pad: 0
-		stride: 1
-		bias_term: false
-	}
-}
-
-layer {
-	bottom: "res5c_branch2a_ext"
-	top: "res5c_branch2a_ext"
-	name: "bn5c_branch2a_ext"
-	type: "BatchNorm"
-	batch_norm_param {
-		use_global_stats: true
-	}
-}
-
-layer {
-	bottom: "res5c_branch2a_ext"
-	top: "res5c_branch2a_ext"
-	name: "scale5c_branch2a_ext"
-	type: "Scale"
-	scale_param {
-		bias_term: true
-	}
-}
-
-layer {
-	bottom: "res5c_branch2a_ext"
-	top: "res5c_branch2a_ext"
-	name: "res5c_branch2a_relu_ext"
-	type: "ReLU"
-}
-
-layer {
-	bottom: "res5c_branch2a_ext"
-	top: "res5c_branch2b_ext"
-	name: "res5c_branch2b_ext"
-	type: "Convolution"
-	convolution_param {
-		num_output: 512
-		kernel_size: 3
-		pad: 1
-		stride: 1
-		bias_term: false
-	}
-}
-
-layer {
-	bottom: "res5c_branch2b_ext"
-	top: "res5c_branch2b_ext"
-	name: "bn5c_branch2b_ext"
-	type: "BatchNorm"
-	batch_norm_param {
-		use_global_stats: true
-	}
-}
-
-layer {
-	bottom: "res5c_branch2b_ext"
-	top: "res5c_branch2b_ext"
-	name: "scale5c_branch2b_ext"
-	type: "Scale"
-	scale_param {
-		bias_term: true
-	}
-}
-
-layer {
-	bottom: "res5c_branch2b_ext"
-	top: "res5c_branch2b_ext"
-	name: "res5c_branch2b_relu_ext"
-	type: "ReLU"
-}
-
-layer {
-	bottom: "res5c_branch2b_ext"
-	top: "res5c_branch2c_ext"
-	name: "res5c_branch2c_ext"
-	type: "Convolution"
-	convolution_param {
-		num_output: 2048
-		kernel_size: 1
-		pad: 0
-		stride: 1
-		bias_term: false
-	}
-}
-
-layer {
-	bottom: "res5c_branch2c_ext"
-	top: "res5c_branch2c_ext"
-	name: "bn5c_branch2c_ext"
-	type: "BatchNorm"
-	batch_norm_param {
-		use_global_stats: true
-	}
-}
-
-layer {
-	bottom: "res5c_branch2c_ext"
-	top: "res5c_branch2c_ext"
-	name: "scale5c_branch2c_ext"
-	type: "Scale"
-	scale_param {
-		bias_term: true
-	}
-}
-
-layer {
-	bottom: "res5b_ext"
-	bottom: "res5c_branch2c_ext"
-	top: "res5c_ext"
-	name: "res5c_ext"
-	type: "Eltwise"
-}
-
-layer {
-	bottom: "res5c_ext"
-	top: "res5c_ext"
-	name: "res5c_relu_ext"
-	type: "ReLU"
-}
-
-layer {
-	bottom: "res5c_ext"
-	top: "pool5_ext"
-	name: "pool5_ext"
-	type: "Pooling"
-	pooling_param {
-		kernel_size: 7
-		stride: 1
-		pool: AVE
-	}
-}
-
-#----- Mask-level Classification -----
-
-layer {
-	name: "seg_cls_score_ext"
-	type: "InnerProduct"
-	bottom: "pool5_ext"
-	top: "seg_cls_score_ext"
-	param {
-		name: "seg_cls_score_w" 
-	}
-	param {
-		name: "seg_cls_score_b" 
-	}
-	inner_product_param {
-		num_output: 2
-	}
-}
-
-layer {
-	name: "seg_cls_prob_ext"
-	type: "Softmax"
-	bottom: "seg_cls_score_ext"
-	top: "seg_cls_prob_ext"
-	loss_param {
-		ignore_label: -1
-		normalize: true
-	}
-}
-
-#----- Bounding-box Regression -----
-
-layer {
-	name: "bbox_pred_ext"
-	type: "InnerProduct"
-	bottom: "pool5_ext"
-	top: "bbox_pred_ext"
-	param {
-		name: "bbox_pred_w" 
-	}
-	param {
-		name: "bbox_pred_b" 
-	}
-	inner_product_param {
-		num_output: 8
-	}
-}
