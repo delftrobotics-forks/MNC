@@ -1,4 +1,4 @@
-train_net: "models/ResNet50/mnc_5stage/train.prototxt"
+train_net: "output/{{ dataset_name }}/train.prototxt"
 base_lr: 0.001
 lr_policy: "step"
 gamma: 0.1

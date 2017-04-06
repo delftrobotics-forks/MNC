@@ -1,4 +1,4 @@
-train_net: "models/ResNet101/mnc_3stage/train.prototxt"
+train_net: "output/{{ dataset_name }}/train.prototxt"
 base_lr: 0.001
 lr_policy: "step"
 gamma: 0.1
@@ -10,5 +10,5 @@ weight_decay: 0.0005
 # We disable standard caffe solver snapshotting and implement our own snapshot
 # function
 snapshot: 0
-snapshot_prefix: "resnet101_mnc_3stage"
+snapshot_prefix: "vgg16_mnc_5stage"
 iter_size: 8
