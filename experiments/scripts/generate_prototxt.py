@@ -16,6 +16,17 @@ def readYamlFile(yaml_file):
 	with open(yaml_file, "r") as f:
 		return yaml.load(f)
 
+def parseValue(string):
+	try:
+		return int(string)
+	except ValueError:
+		pass
+
+	try:
+		return float(string)
+	except ValueError:
+		return string
+
 def run(args):
 	env = Environment(
 		autoescape  = False,
@@ -35,7 +46,7 @@ def run(args):
 	if args.parameters:
 		for p in args.parameters:
 			name, sep, value = p.partition("=")
-			if sep == "=": context[name] = value
+			if sep == "=": context[name] = parseValue(value)
 
 	createPrototxtFile(env, args.template_file, context, args.prototxt_file)
 	print("Generated prototxt file: '%s'" % args.prototxt_file)
