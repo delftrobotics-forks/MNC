@@ -2525,10 +2525,10 @@ layer {
 	bottom: "pool5"
 	top: "seg_cls_score"
 	param {
-		name: "seg_cls_score_w" 
+		name: "seg_cls_score_w"
 	}
 	param {
-		name: "seg_cls_score_b" 
+		name: "seg_cls_score_b"
 	}
 	inner_product_param {
 		num_output: {{ num_classes }}
@@ -2554,13 +2554,13 @@ layer {
 	bottom: "pool5"
 	top: "bbox_pred"
 	param {
-		name: "bbox_pred_w" 
+		name: "bbox_pred_w"
 	}
 	param {
-		name: "bbox_pred_b" 
+		name: "bbox_pred_b"
 	}
 	inner_product_param {
-		num_output: 8
+		num_output: {{ num_classes * 4 }}
 	}
 }
 

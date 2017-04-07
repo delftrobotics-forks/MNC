@@ -2525,10 +2525,10 @@ layer {
 	bottom: "pool5"
 	top: "seg_cls_score"
 	param {
-		name: "seg_cls_score_w" 
+		name: "seg_cls_score_w"
 	}
 	param {
-		name: "seg_cls_score_b" 
+		name: "seg_cls_score_b"
 	}
 	inner_product_param {
 		num_output: {{ num_classes }}
@@ -2554,13 +2554,13 @@ layer {
 	bottom: "pool5"
 	top: "bbox_pred"
 	param {
-		name: "bbox_pred_w" 
+		name: "bbox_pred_w"
 	}
 	param {
-		name: "bbox_pred_b" 
+		name: "bbox_pred_b"
 	}
 	inner_product_param {
-		num_output: 8
+		num_output: {{ num_classes * 4 }}
 	}
 }
 
@@ -2580,6 +2580,7 @@ layer {
 	python_param {
 		module: 'multitask_network_cascades.pylayer.stage_bridge_layer'
 		layer: 'StageBridgeLayer'
+		param_str: "'num_classes': {{ num_classes }}"
 	}
 }
 
@@ -2606,10 +2607,10 @@ layer {
 	bottom: "roi_interpolate_conv5_ext"
 	top: "fc6_maskest_ext"
 	param {
-		name: "fc6_maskest_w" 
+		name: "fc6_maskest_w"
 	}
 	param {
-		name: "fc6_maskest_b" 
+		name: "fc6_maskest_b"
 	}
 	inner_product_param {
 		num_output: 256
@@ -2629,10 +2630,10 @@ layer {
 	bottom: "fc6_maskest_ext"
 	top: "mask_pred_ext"
 	param {
-		name: "mask_pred_w" 
+		name: "mask_pred_w"
 	}
 	param {
-		name: "mask_pred_b" 
+		name: "mask_pred_b"
 	}
 	inner_product_param {
 		num_output: 441 # 21*21
@@ -2640,7 +2641,7 @@ layer {
 }
 
 #------------ Mask Resize ------------
-# get masks from sigmoid prediction 
+# get masks from sigmoid prediction
 # and use it for mask pooling
 
 layer {
@@ -3148,10 +3149,10 @@ layer {
 	bottom: "pool5_ext"
 	top: "seg_cls_score_ext"
 	param {
-		name: "seg_cls_score_w" 
+		name: "seg_cls_score_w"
 	}
 	param {
-		name: "seg_cls_score_b" 
+		name: "seg_cls_score_b"
 	}
 	inner_product_param {
 		num_output: {{ num_classes }}
@@ -3177,12 +3178,12 @@ layer {
 	bottom: "pool5_ext"
 	top: "bbox_pred_ext"
 	param {
-		name: "bbox_pred_w" 
+		name: "bbox_pred_w"
 	}
 	param {
-		name: "bbox_pred_b" 
+		name: "bbox_pred_b"
 	}
 	inner_product_param {
-		num_output: 8
+		num_output: {{ num_classes * 4 }}
 	}
 }

@@ -2089,12 +2089,12 @@ layer {
 	bottom: "roi_interpolate_conv5"
 	top: "fc6_maskest"
 	param {
-		name: "fc6_maskest_w" 
-		lr_mult: 1.0 
+		name: "fc6_maskest_w"
+		lr_mult: 1.0
 	}
 	param {
-		name: "fc6_maskest_b" 
-		lr_mult: 2.0 
+		name: "fc6_maskest_b"
+		lr_mult: 2.0
 	}
 	inner_product_param {
 		num_output: 256
@@ -2122,12 +2122,12 @@ layer {
 	bottom: "fc6_maskest"
 	top: "mask_pred"
 	param {
-		name: "mask_pred_w" 
-		lr_mult: 1.0 
+		name: "mask_pred_w"
+		lr_mult: 1.0
 	}
 	param {
-		name: "mask_pred_b" 
-		lr_mult: 2.0 
+		name: "mask_pred_b"
+		lr_mult: 2.0
 	}
 	inner_product_param {
 		num_output: 441 # 21 * 21
@@ -2160,7 +2160,7 @@ layer {
 }
 
 #------------ Mask resize ------------
-# get masks from sigmoid prediction 
+# get masks from sigmoid prediction
 # and use it for mask pooling
 
 layer {
@@ -2675,12 +2675,12 @@ layer {
 	bottom: "pool5"
 	top: "seg_cls_score"
 	param {
-		name: "seg_cls_score_w" 
-		lr_mult: 1.0 
+		name: "seg_cls_score_w"
+		lr_mult: 1.0
 	}
 	param {
-		name: "seg_cls_score_b" 
-		lr_mult: 2.0 
+		name: "seg_cls_score_b"
+		lr_mult: 2.0
 	}
 	inner_product_param {
 		num_output: {{ num_classes }}
@@ -2718,15 +2718,15 @@ layer {
 	bottom: "pool5"
 	top: "bbox_pred"
 	param {
-		name: "bbox_pred_w" 
-		lr_mult: 1.0 
+		name: "bbox_pred_w"
+		lr_mult: 1.0
 	}
 	param {
-		name: "bbox_pred_b" 
-		lr_mult: 2.0 
+		name: "bbox_pred_b"
+		lr_mult: 2.0
 	}
 	inner_product_param {
-		num_output: 8
+		num_output: {{ num_classes * 4 }}
 		weight_filler {
 			type: "gaussian"
 			std: 0.001
