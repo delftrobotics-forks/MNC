@@ -4,16 +4,29 @@ GPU_ID=${1:-0}
 NET=${2:-"ZF"}
 STAGES=${3:-3}
 DATA_DIR=${4:-"/srv/caffe-data/datasets/boxes_family_gray"}
-ITERS=${5:-25000}
-MODEL=${6:-"output/boxes_family_gray/zf_mnc_3stage_iter_25000.caffemodel.h5"}
-TASK=${7:-"seg"}
+TASK=${5:-"seg"}
+MODEL=${6:-"output/boxes_family_gray/zf_mnc_3stage_iter_20.caffemodel.h5"}
 DATASET=${DATA_DIR##/*/}
 
-read -p "Delete cache? [y/N] " yn
+# Prompt cache removal.
+read -p "Remove cache? [y/N] " yn
 case $yn in
   [Yy]* ) rm -rf cache/*; [[ -d "output" ]] && find output -name "*.pkl" -type f -delete;
 esac
 
+# Compute the number of classes based on the classes.txt file.
+if [ -f $DATA_DIR/classes.txt ]; then
+	NUM_CLASSES=$(($(cat $DATA_DIR/classes.txt | wc -l) + 1))
+else
+	echo "Could not find file 'classes.txt' in the data directory, aborting."
+	exit -1
+fi
+
+# Generate prototxt file.
+python experiments/scripts/generate_prototxt.py \
+	${NET}/mnc_${STAGES}stage/test.prototxt.template output/${DATASET}/test.prototxt -p num_classes=${NUM_CLASSES}
+
+# Start testing.
 time ./tools/test_net.py --gpu ${GPU_ID} \
   --def output/${DATASET}/test.prototxt \
   --net ${MODEL} \

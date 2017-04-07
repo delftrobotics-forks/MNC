@@ -4,7 +4,7 @@ GPU_ID=${1:-0}
 NET=${2:-"ZF"}
 STAGES=${3:-3}
 DATA_DIR=${4:-"/srv/caffe-data/datasets/boxes_family_gray"}
-ITERS=${5:-10}
+ITERS=${5:-20}
 DATASET=${DATA_DIR##/*/}
 
 # Prompt cache removal.
@@ -26,13 +26,10 @@ fi
 
 # Generate prototxt files.
 python experiments/scripts/generate_prototxt.py \
-	${NET}/mnc_${STAGES}stage/train.prototxt  output/${DATASET}/train.prototxt  -p num_classes=${NUM_CLASSES}
+	${NET}/mnc_${STAGES}stage/train.prototxt.template  output/${DATASET}/train.prototxt  -p num_classes=${NUM_CLASSES}
 
 python experiments/scripts/generate_prototxt.py \
-	${NET}/mnc_${STAGES}stage/test.prototxt   output/${DATASET}/test.prototxt   -p num_classes=${NUM_CLASSES}
-
-python experiments/scripts/generate_prototxt.py \
-	${NET}/mnc_${STAGES}stage/solver.prototxt output/${DATASET}/solver.prototxt -p dataset_name=${DATASET}
+	${NET}/mnc_${STAGES}stage/solver.prototxt.template output/${DATASET}/solver.prototxt -p dataset_name=${DATASET}
 
 # Get path for Caffe model.
 case $NET in
