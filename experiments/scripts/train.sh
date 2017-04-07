@@ -5,7 +5,7 @@ NET=${2:-"ZF"}
 STAGES=${3:-3}
 DATA_DIR=${4:-"/srv/caffe-data/datasets/boxes_family_gray"}
 ITERS=${5:-20}
-DATASET=${DATA_DIR##/*/}
+DATASET=${DATA_DIR##*/}
 
 # Prompt cache removal.
 read -p "Remove cache? [y/N] " yn
@@ -14,8 +14,8 @@ case $yn in
 esac
 
 # Compute the number of classes based on the classes.txt file.
-if [ -f $DATA_DIR/classes.txt ]; then
-	NUM_CLASSES=$(($(cat $DATA_DIR/classes.txt | wc -l) + 1))
+if [ -f ${DATA_DIR}/classes.txt ]; then
+	NUM_CLASSES=$(($(cat ${DATA_DIR}/classes.txt | wc -l) + 1))
 else
 	echo "Could not find file 'classes.txt' in the data directory, aborting."
 	exit -1
