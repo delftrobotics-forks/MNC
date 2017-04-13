@@ -29,6 +29,7 @@ class StageBridgeLayer(caffe.Layer):
         # bottom 0 is ~ n ROIs to train Fast RCNN
         # bottom 1 is ~ n * 4(1+c) bbox prediction
         # bottom 2 is ~ n * (1+c) bbox scores (seg classification)
+        self._num_classes = layer_params['num_classes']
         self._phase = 'TEST' if self.phase == 1 else 'TRAIN'
         if self._phase == 'TRAIN':
             self._use_clip = layer_params['use_clip']
@@ -49,11 +50,11 @@ class StageBridgeLayer(caffe.Layer):
             self._top_name_map['mask_weight'] = 3
             top[4].reshape(1, 4)
             self._top_name_map['gt_mask_info'] = 4
-            top[5].reshape(1, 21 * 4)
+            top[5].reshape(1, self._num_classes * 4)
             self._top_name_map['bbox_targets'] = 5
-            top[6].reshape(1, 21 * 4)
+            top[6].reshape(1, self._num_classes * 4)
             self._top_name_map['bbox_inside_weights'] = 6
-            top[7].reshape(1, 21 * 4)
+            top[7].reshape(1, self._num_classes * 4)
             self._top_name_map['bbox_outside_weights'] = 7
         elif self._phase == 'TEST':
             top[0].reshape(1, 5)
@@ -206,7 +207,7 @@ class StageBridgeLayer(caffe.Layer):
         bbox_target_data = np.hstack((labels[:, np.newaxis], bbox_target_data))\
             .astype(np.float32, copy=False)
         bbox_targets, bbox_inside_weights = get_bbox_regression_label(
-            bbox_target_data, 21)
+            bbox_target_data, self._num_classes)
 
         scaled_rois = rois[:, 1:5] / float(im_scale)
         scaled_gt_boxes = gt_boxes[:, :4] / float(im_scale)
