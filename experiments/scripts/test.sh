@@ -6,6 +6,11 @@ STAGES=${3:-3}
 DATA_DIR=${4:-"/srv/caffe-data/datasets/boxes_family_gray"}
 TASK=${5:-"seg"}
 MODEL=${6:-"output/boxes_family_gray/zf_mnc_3stage_iter_20.caffemodel.h5"}
+
+# Remove slashes at the end of the path.
+DATA_DIR=${DATA_DIR%/}
+
+# Get dataset name.
 DATASET=${DATA_DIR##*/}
 
 # Prompt cache removal.
