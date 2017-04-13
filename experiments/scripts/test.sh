@@ -16,7 +16,7 @@ DATASET=${DATA_DIR##*/}
 # Prompt cache removal.
 read -p "Remove cache? [y/N] " yn
 case $yn in
-  [Yy]* ) rm -rf cache/*; [[ -d "output" ]] && find output -name "*.pkl" -type f -delete;
+  [Yy]* ) rm -rf cache/*; [[ -d "output/${DATASET}" ]] && find output/${DATASET} -name "*.pkl" -type f -delete;
 esac
 
 # Compute the number of classes based on the classes.txt file.
