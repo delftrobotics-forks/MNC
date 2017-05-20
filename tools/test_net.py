@@ -85,7 +85,7 @@ if __name__ == '__main__':
     caffe.set_mode_gpu()
     caffe.set_device(args.gpu_id)
 
-    imdb, roidb, maskdb = get_db(args.imdb_name, args.data_dir, args.image_set)
+    imdb, roidb, maskdb = get_db(args.imdb_name, args.data_dir, args.image_set, caffe.TEST)
 
     _tester = TesterWrapper(args.prototxt, imdb, args.caffemodel, args.task_name, args.data_dir)
     _tester.get_result()
