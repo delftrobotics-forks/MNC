@@ -44,18 +44,22 @@ class StageBridgeLayer(caffe.Layer):
             self._top_name_map['rois'] = 0
             top[1].reshape(1, 1)
             self._top_name_map['labels'] = 1
-            top[2].reshape(1, 1, cfg.MASK_SIZE, cfg.MASK_SIZE)
-            self._top_name_map['mask_targets'] = 2
-            top[3].reshape(1, 1, cfg.MASK_SIZE, cfg.MASK_SIZE)
-            self._top_name_map['mask_weight'] = 3
-            top[4].reshape(1, 4)
-            self._top_name_map['gt_mask_info'] = 4
-            top[5].reshape(1, self._num_classes * 4)
-            self._top_name_map['bbox_targets'] = 5
-            top[6].reshape(1, self._num_classes * 4)
-            self._top_name_map['bbox_inside_weights'] = 6
+            top[2].reshape(1, 3, 2)
+            self._top_name_map['kpts_targets'] = 2
+            top[3].reshape(1, 3, 2)
+            self._top_name_map['kpts_weight'] = 3
+            top[4].reshape(1, 1, cfg.MASK_SIZE, cfg.MASK_SIZE)
+            self._top_name_map['mask_targets'] = 4
+            top[5].reshape(1, 1, cfg.MASK_SIZE, cfg.MASK_SIZE)
+            self._top_name_map['mask_weight'] = 5
+            top[6].reshape(1, 4)
+            self._top_name_map['gt_mask_info'] = 6
             top[7].reshape(1, self._num_classes * 4)
-            self._top_name_map['bbox_outside_weights'] = 7
+            self._top_name_map['bbox_targets'] = 7
+            top[8].reshape(1, self._num_classes * 4)
+            self._top_name_map['bbox_inside_weights'] = 8
+            top[9].reshape(1, self._num_classes * 4)
+            self._top_name_map['bbox_outside_weights'] = 9
         elif self._phase == 'TEST':
             top[0].reshape(1, 5)
             self._top_name_map['rois'] = 0
@@ -149,6 +153,7 @@ class StageBridgeLayer(caffe.Layer):
         gt_masks = bottom[4].data
         im_info = bottom[5].data[0, :]
         mask_info = bottom[6].data
+        gt_kpts = bottom[7].data
 
         # select bbox_deltas according to
         artificial_deltas = np.zeros((rois.shape[0], 4))
@@ -165,13 +170,15 @@ class StageBridgeLayer(caffe.Layer):
         )
         all_rois[:, 1:5], self._clip_keep = clip_boxes(all_rois[:, 1:5], im_info[:2])
 
-        labels, rois_out, fg_inds, keep_inds, mask_targets, top_mask_info, bbox_targets, bbox_inside_weights = \
-            self._sample_output(all_rois, gt_boxes, im_info[2], gt_masks, mask_info)
+        labels, rois_out, fg_inds, keep_inds, mask_targets, top_mask_info, bbox_targets, bbox_inside_weights, kpts_targets = \
+            self._sample_output(all_rois, gt_boxes, im_info[2], gt_masks, mask_info, gt_kpts)
         bbox_outside_weights = np.array(bbox_inside_weights > 0).astype(np.float32)
         self._keep_inds = keep_inds
 
         mask_weight = np.zeros((rois_out.shape[0], 1, cfg.MASK_SIZE, cfg.MASK_SIZE))
+        kpts_weight = np.zeros(kpts_targets.shape)
         mask_weight[0:len(fg_inds), :, :, :] = 1
+        kpts_weight[0:len(fg_inds), :, :] = 1
 
         blobs = {
             'rois': rois_out,
@@ -181,20 +188,34 @@ class StageBridgeLayer(caffe.Layer):
             'gt_mask_info': top_mask_info,
             'bbox_targets': bbox_targets,
             'bbox_inside_weights': bbox_inside_weights,
-            'bbox_outside_weights': bbox_outside_weights
+            'bbox_outside_weights': bbox_outside_weights,
+            'kpts_targets': kpts_targets,
+            'kpts_weight': kpts_weight
         }
         return blobs
 
-    def _sample_output(self, all_rois, gt_boxes, im_scale, gt_masks, mask_info):
+    def _contains_kpts(self, roi, kpts):
+        return kpts[0, 0] >= roi[0] and kpts[0, 0] <= roi[2] and kpts[0, 1] >= roi[1] and kpts[0, 1] <= roi[3] and \
+               kpts[1, 0] >= roi[0] and kpts[1, 0] <= roi[2] and kpts[1, 1] >= roi[1] and kpts[1, 1] <= roi[3] and \
+               kpts[2, 0] >= roi[0] and kpts[2, 0] <= roi[2] and kpts[2, 1] >= roi[1] and kpts[2, 1] <= roi[3]
+
+    def _sample_output(self, all_rois, gt_boxes, im_scale, gt_masks, mask_info, gt_kpts):
         overlaps = bbox_overlaps(
             np.ascontiguousarray(all_rois[:, 1:5], dtype=np.float),
             np.ascontiguousarray(gt_boxes[:, :4], dtype=np.float))
         gt_assignment = overlaps.argmax(axis=1)
         max_overlaps = overlaps.max(axis=1)
         labels = gt_boxes[gt_assignment, 4]
+
+        kpts_overlap = np.zeros((len(all_rois), len(gt_kpts)))
+        for i in range(all_rois.shape[0]):
+            for j in range(gt_kpts.shape[0]):
+                kpts_overlap[i, j] = self._contains_kpts(all_rois[i, 1:5] / float(im_scale), gt_kpts[j, :, :])
+        found_kpts = np.sum(kpts_overlap, 1) > 0
+
         # Sample foreground indexes
-        fg_inds = np.where(max_overlaps >= cfg.TRAIN.BBOX_THRESH)[0]
-        bg_inds = np.where(max_overlaps < cfg.TRAIN.BBOX_THRESH)[0]
+        fg_inds = np.where((max_overlaps >= cfg.TRAIN.BBOX_THRESH) & (found_kpts == True))[0]
+        bg_inds = np.where((max_overlaps < cfg.TRAIN.BBOX_THRESH) & (found_kpts == False))[0]
         keep_inds = np.append(fg_inds, bg_inds).astype(int)
         # Select sampled values from various arrays:
         labels = labels[keep_inds]
@@ -216,6 +237,8 @@ class StageBridgeLayer(caffe.Layer):
         top_mask_info = np.zeros((len(keep_inds), 12))
         top_mask_info[len(fg_inds):, :] = -1
 
+        kpts_targets = np.zeros((len(keep_inds), 3, 2))
+
         for i, val in enumerate(fg_inds):
             gt_box = scaled_gt_boxes[gt_assignment[val]]
             gt_box = np.around(gt_box).astype(int)
@@ -233,7 +256,14 @@ class StageBridgeLayer(caffe.Layer):
             top_mask_info[i, 4:8] = ex_box
             top_mask_info[i, 8:12] = gt_box
 
-        return labels, rois, fg_inds, keep_inds, pos_masks, top_mask_info, bbox_targets, bbox_inside_weights
+            kpt = gt_kpts[np.where(kpts_overlap[val, :])[0][0], :, :].copy()
+            roi_w = scaled_rois[i, 2] - scaled_rois[i, 0]
+            roi_h = scaled_rois[i, 3] - scaled_rois[i, 1]
+            kpt[:, 0] = (kpt[:, 0] - scaled_rois[i, 0]) / float(roi_w)
+            kpt[:, 1] = (kpt[:, 1] - scaled_rois[i, 1]) / float(roi_h)
+            kpts_targets[i, :] = kpt
+
+        return labels, rois, fg_inds, keep_inds, pos_masks, top_mask_info, bbox_targets, bbox_inside_weights, kpts_targets
 
     def forward_test(self, bottom, top):
         rois = bottom[0].data

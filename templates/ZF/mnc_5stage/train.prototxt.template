@@ -4,13 +4,25 @@ layer {
 	type: 'Python'
 	top: 'data'
 	top: 'im_info'
+	top: 'im_path'
 	top: 'gt_boxes'
 	top: 'gt_masks'
 	top: 'mask_info'
 	python_param {
 		module: 'multitask_network_cascades.pylayer.mnc_data_layer'
 		layer: 'MNCDataLayer'
-		param_str: "{ 'num_classes': {{ num_classes }} }"
+		param_str: "{ 'num_classes': 2 }"
+	}
+}
+
+layer {
+	name: 'misc-data'
+	type: 'Python'
+	bottom: 'im_path'
+	top: 'gt_kpts'
+	python_param {
+		module: 'multitask_network_cascades.pylayer.misc_data_layer'
+		layer: 'MiscDataLayer'
 	}
 }
 
@@ -278,12 +290,6 @@ layer {
 }
 
 layer {
-	name: 'silence'
-	type: 'Silence'
-	bottom: 'rpn_scores'
-}
-
-layer {
 	name: 'roi-data'
 	type: 'Python'
 	bottom: 'rpn_rois'
@@ -292,7 +298,9 @@ layer {
 	bottom: 'gt_masks'
 	bottom: 'mask_info'
 	bottom: 'rpn_rois_index'
+	bottom: 'gt_kpts'
 	propagate_down: 1
+	propagate_down: 0
 	propagate_down: 0
 	propagate_down: 0
 	propagate_down: 0
@@ -303,6 +311,8 @@ layer {
 	top: 'bbox_targets'
 	top: 'bbox_inside_weights'
 	top: 'bbox_outside_weights'
+	top: 'kpts_targets'
+	top: 'kpts_weight'
 	top: 'mask_targets'
 	top: 'mask_weight'
 	top: 'gt_masks_info'
@@ -311,7 +321,7 @@ layer {
 	python_param {
 		module: 'multitask_network_cascades.pylayer.proposal_target_layer'
 		layer: 'ProposalTargetLayer'
-		param_str: "{'num_classes': {{ num_classes }}, 'bp_all': 1}"
+		param_str: "{'num_classes': 2, 'bp_all': 1}"
 	}
 }
 
@@ -383,6 +393,84 @@ layer {
 		module: "mnc"
 		type: "ROIWarping"
 		param_str: "{ 'pooled_w': 12, 'pooled_h': 12, 'spatial_scale': 0.0625 }"
+	}
+}
+
+#--------- Keypoints Estimation ----------
+
+layer {
+	name: "fc6_kpts_est"
+	type: "InnerProduct"
+	bottom: "roi_interpolate_conv5"
+	top: "fc6_kpts_est"
+	param {
+		name: "fc6_kpts_est_w"
+		lr_mult: 1.0
+	}
+	param {
+		name: "fc6_kpts_est_b"
+		lr_mult: 2.0
+	}
+	inner_product_param {
+		num_output: 256
+		weight_filler {
+			type: "gaussian"
+			std: 0.001
+		}
+		bias_filler {
+			type: "constant"
+			value: 0
+		}
+	}
+}
+
+layer {
+	name: "relu6_kpts_est"
+	type: "ReLU"
+	bottom: "fc6_kpts_est"
+	top: "fc6_kpts_est"
+}
+
+layer {
+	name: "kpts_pred"
+	type: "InnerProduct"
+	bottom: "fc6_kpts_est"
+	top: "kpts_pred"
+	param {
+		name: "kpts_pred_w"
+		lr_mult: 1.0
+	}
+	param {
+		name: "kpts_pred_b"
+		lr_mult: 2.0
+	}
+	inner_product_param {
+		num_output: 6 # 3(num. keypoints) * 2(x/y)
+		weight_filler {
+			type: "gaussian"
+			std: 0.001
+		}
+		bias_filler {
+			type: "constant"
+			value: 0
+		}
+	}
+}
+
+layer {
+	name: "loss_kpts"
+	type: "Module"
+	bottom: "kpts_pred"
+	bottom: "kpts_targets"
+	bottom: "kpts_weight"
+	propagate_down: 1
+	propagate_down: 0
+	propagate_down: 0
+	top: "loss_kpts"
+	loss_weight: 2
+	module_param {
+		module: "mnc"
+		type: "SigmoidCrossEntropyLoss"
 	}
 }
 
@@ -677,7 +765,7 @@ layer {
 		lr_mult: 2.0
 	}
 	inner_product_param {
-		num_output: {{ num_classes }}
+		num_output: 2
 		weight_filler {
 			type: "gaussian"
 			std: 0.01
@@ -720,7 +808,7 @@ layer {
 		lr_mult: 2.0
 	}
 	inner_product_param {
-		num_output: {{ num_classes }}
+		num_output: 2
 		weight_filler {
 			type: "gaussian"
 			std: 0.01
@@ -763,7 +851,7 @@ layer {
 		lr_mult: 2.0
 	}
 	inner_product_param {
-		num_output: {{ num_classes * 4 }}
+		num_output: 8
 		weight_filler {
 			type: "gaussian"
 			std: 0.001
@@ -833,8 +921,10 @@ layer {
 	bottom: 'gt_masks'
 	bottom: 'im_info'
 	bottom: 'mask_info'
+	bottom: 'gt_kpts'
 	propagate_down: 1
 	propagate_down: 1
+	propagate_down: 0
 	propagate_down: 0
 	propagate_down: 0
 	propagate_down: 0
@@ -842,6 +932,8 @@ layer {
 	propagate_down: 0
 	top: 'rois_ext'
 	top: 'labels_ext'
+	top: 'kpts_targets_ext'
+	top: 'kpts_weight_ext'
 	top: 'mask_targets_ext'
 	top: 'mask_weight_ext'
 	top: 'gt_masks_info_ext'
@@ -851,7 +943,7 @@ layer {
 	python_param {
 		module: 'multitask_network_cascades.pylayer.stage_bridge_layer'
 		layer: 'StageBridgeLayer'
-		param_str: "{ 'feat_stride': 16,  'use_clip': 1,  'clip_base': 512, 'num_classes': {{ num_classes }} }"
+		param_str: "{ 'feat_stride': 16,  'use_clip': 1,  'clip_base': 512, 'num_classes': 2 }"
 	}
 }
 
@@ -870,6 +962,96 @@ layer {
 		type: "ROIWarping"
 		param_str: "{ 'pooled_w': 12, 'pooled_h': 12, 'spatial_scale': 0.0625 }"
 	}
+}
+
+#--------- Keypoints Estimation Ext ----------
+
+layer {
+	name: "fc6_kpts_est_ext"
+	type: "InnerProduct"
+	bottom: "roi_interpolate_conv5_ext"
+	top: "fc6_kpts_est_ext"
+	param {
+		name: "fc6_kpts_est_w"
+		lr_mult: 1.0
+	}
+	param {
+		name: "fc6_kpts_est_b"
+		lr_mult: 2.0
+	}
+	inner_product_param {
+		num_output: 256
+		weight_filler {
+			type: "gaussian"
+			std: 0.001
+		}
+		bias_filler {
+			type: "constant"
+			value: 0
+		}
+	}
+}
+
+layer {
+	name: "relu6_kpts_est_ext"
+	type: "ReLU"
+	bottom: "fc6_kpts_est_ext"
+	top: "fc6_kpts_est_ext"
+}
+
+layer {
+	name: "kpts_pred_ext"
+	type: "InnerProduct"
+	bottom: "fc6_kpts_est_ext"
+	top: "kpts_pred_ext"
+	param {
+		name: "kpts_pred_w"
+		lr_mult: 1.0
+	}
+	param {
+		name: "kpts_pred_b"
+		lr_mult: 2.0
+	}
+	inner_product_param {
+		num_output: 6 # 3(num. keypoints) * 2(x/y)
+		weight_filler {
+			type: "gaussian"
+			std: 0.001
+		}
+		bias_filler {
+			type: "constant"
+			value: 0
+		}
+	}
+}
+
+layer {
+	name: "loss_kpts_ext"
+	type: "Module"
+	bottom: "kpts_pred_ext"
+	bottom: "kpts_targets_ext"
+	bottom: "kpts_weight_ext"
+	propagate_down: 1
+	propagate_down: 0
+	propagate_down: 0
+	top: "loss_kpts_ext"
+	loss_weight: 2
+	module_param {
+		module: "mnc"
+		type: "SigmoidCrossEntropyLoss"
+	}
+}
+
+layer {
+	name: 'silence'
+	type: 'Silence'
+	bottom: 'rpn_scores'
+	bottom: 'kpts_targets'
+	bottom: 'kpts_pred'
+	bottom: 'kpts_weight'
+	bottom: 'kpts_targets_ext'
+	bottom: 'kpts_pred_ext'
+	bottom: 'kpts_weight_ext'
 }
 
 #------------ Mask Estimation Ext ------------
@@ -1163,7 +1345,7 @@ layer {
 		lr_mult: 2.0
 	}
 	inner_product_param {
-		num_output: {{ num_classes }}
+		num_output: 2
 		weight_filler {
 			type: "gaussian"
 			std: 0.01
@@ -1206,7 +1388,7 @@ layer {
 		lr_mult: 2.0
 	}
 	inner_product_param {
-		num_output: {{ num_classes }}
+		num_output: 2
 		weight_filler {
 			type: "gaussian"
 			std: 0.01
@@ -1249,7 +1431,7 @@ layer {
 		lr_mult: 2.0
 	}
 	inner_product_param {
-		num_output: {{ num_classes * 4 }}
+		num_output: 8
 		weight_filler {
 			type: "gaussian"
 			std: 0.001

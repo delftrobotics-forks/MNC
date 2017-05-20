@@ -31,13 +31,15 @@ class MNCDataLayer(caffe.Layer):
         # Just pseudo setup
         top[1].reshape(1, 3)
         self._name_to_top_map['im_info'] = 1
-        top[2].reshape(1, 4)
-        self._name_to_top_map['gt_boxes'] = 2
+        top[2].reshape(1, 1)
+        self._name_to_top_map['im_path'] = 2
+        top[3].reshape(1, 4)
+        self._name_to_top_map['gt_boxes'] = 3
         if cfg.MNC_MODE:
-            top[3].reshape(1, 21, 21)
-            self._name_to_top_map['gt_masks'] = 3
-            top[4].reshape(1, 3)
-            self._name_to_top_map['mask_info'] = 4
+            top[4].reshape(1, 21, 21)
+            self._name_to_top_map['gt_masks'] = 4
+            top[5].reshape(1, 3)
+            self._name_to_top_map['mask_info'] = 5
         assert len(top) == len(self._name_to_top_map)
 
     def reshape(self, bottom, top):
@@ -59,7 +61,10 @@ class MNCDataLayer(caffe.Layer):
             # Reshape net's input blobs
             top[top_ind].reshape(*blob.shape)
             # Copy data into net's input blobs
-            top[top_ind].data[...] = blob.astype(np.float32, copy=False)
+            if blob_name == 'im_path':
+                top[top_ind].data[...] = blob.astype(np.int64, copy=False)
+            else:
+                top[top_ind].data[...] = blob.astype(np.float32, copy=False)
 
     def backward(self, top, propagate_down, bottom):
         """This layer does not propagate gradients."""
@@ -145,7 +150,8 @@ class MNCDataLayer(caffe.Layer):
         blobs = {
             'data': im_blob,
             'gt_boxes': gt_boxes,
-            'im_info': np.array([[im_blob.shape[2], im_blob.shape[3], im_scales[0]]], dtype=np.float32)
+            'im_info': np.array([[im_blob.shape[2], im_blob.shape[3], im_scales[0]]], dtype=np.float32),
+            'im_path': np.array(list(bytearray(roidb['image'], "UTF-8")))
         }
 
         if cfg.MNC_MODE:
