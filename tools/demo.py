@@ -25,12 +25,7 @@ from multitask_network_cascades.utils.vis_seg import _convert_pred_to_image, _ge
 from PIL import Image
 
 # VOC 20 classes
-CLASSES = ('aeroplane', 'bicycle', 'bird', 'boat',
-           'bottle', 'bus', 'car', 'cat', 'chair',
-           'cow', 'diningtable', 'dog', 'horse',
-           'motorbike', 'person', 'pottedplant',
-           'sheep', 'sofa', 'train', 'tvmonitor')
-
+CLASSES = ('chicken-breast',)
 
 def parse_args():
     """Parse input arguments."""
@@ -84,21 +79,22 @@ def im_detect(im, net):
     rois = net.blobs['rois'].data.copy()
     masks = net.blobs['mask_proposal'].data[...]
     scores = net.blobs['seg_cls_prob'].data[...]
+    kpts = net.blobs['kpts_pred'].data[...]
     # 2. output from phase2
-    if "rois_ext" in net.blobs:
-        rois_phase2 = net.blobs['rois_ext'].data[...]
-        rois = np.concatenate((rois, rois_phase2), axis=0)
-    if "mask_proposal_ext" in net.blobs:
-        masks_phase2 = net.blobs['mask_proposal_ext'].data[...]
-        masks = np.concatenate((masks, masks_phase2), axis=0)
-    if "seg_cls_prob_ext" in net.blobs:
-        scores_phase2 = net.blobs['seg_cls_prob_ext'].data[...]
-        scores = np.concatenate((scores, scores_phase2), axis=0)
+    #if "rois_ext" in net.blobs:
+        #rois_phase2 = net.blobs['rois_ext'].data[...]
+        #rois = np.concatenate((rois, rois_phase2), axis=0)
+    #if "mask_proposal_ext" in net.blobs:
+        #masks_phase2 = net.blobs['mask_proposal_ext'].data[...]
+        #masks = np.concatenate((masks, masks_phase2), axis=0)
+    #if "seg_cls_prob_ext" in net.blobs:
+        #scores_phase2 = net.blobs['seg_cls_prob_ext'].data[...]
+        #scores = np.concatenate((scores, scores_phase2), axis=0)
     # Boxes are in resized space, we un-scale them back
     rois = rois[:, 1:5] / im_scales[0]
     rois, _ = clip_boxes(rois, im.shape)
     # concatenate two stages to get final network output
-    return masks, rois, scores
+    return masks, rois, kpts, scores
 
 
 def get_vis_dict(result_box, result_mask, img_name, cls_names, vis_thresh=0.5):
@@ -131,7 +127,7 @@ if __name__ == '__main__':
     # Warm up for the first two images
     im = 128 * np.ones((300, 500, 3), dtype=np.float32)
     for i in range(2):
-        _, _, _ = im_detect(im, net)
+        _, _, _, _ = im_detect(im, net)
 
     demo_dir = './data/demo'
     im_names = [f for f in os.listdir(demo_dir) if f.endswith(".png") or f.endswith(".jpg")]
@@ -141,26 +137,42 @@ if __name__ == '__main__':
         gt_image = os.path.join(demo_dir, im_name)
         im = cv2.imread(gt_image)
         start = time.time()
-        masks, boxes, scores = im_detect(im, net)
+        masks, boxes, kpts, scores = im_detect(im, net)
         end = time.time()
         print('forward time {}'.format(end-start))
-        result_mask, result_box = gpu_mask_voting(masks, boxes, scores, len(CLASSES) + 1,
-                                                  100, im.shape[1], im.shape[0])
-        pred_dict = get_vis_dict(result_box, result_mask, 'data/demo/' + im_name, CLASSES)
 
-        img_width = im.shape[1]
-        img_height = im.shape[0]
-        
-        inst_img, cls_img = _convert_pred_to_image(img_width, img_height, pred_dict)
-        color_map = _get_voc_color_map()
-        target_cls_file = os.path.join(demo_dir, 'processed', im_name)
-        cls_out_img = np.zeros((img_height, img_width, 3))
-        for i in range(img_height):
-            for j in range(img_width):
-                cls_out_img[i][j] = color_map[cls_img[i][j]][::-1]
+        if True:
+          idx = np.argmax(scores[:, 1])
+          box = boxes[idx, :]
+          cv2.rectangle(im, (box[0], box[1]), (box[2], box[3]), (255, 0, 0), 5)
 
-        visualization = im * 0.5 + cls_out_img * 0.5
-        cv2.imwrite(target_cls_file, visualization)
+          box_w = box[2] - box[0]
+          box_h = box[3] - box[1]
+          for k in kpts[idx, :].reshape(-1, 2):
+            k[0] = k[0] * box_w + box[0]
+            k[1] = k[1] * box_h + box[1]
+            cv2.circle(im, (k[0], k[1]), 5, (0, 255, 0), -1)
+
+          filename = os.path.join(demo_dir, 'processed', im_name)
+          cv2.imwrite(filename, im)
+
+        #result_mask, result_box = gpu_mask_voting(masks, boxes, scores, len(CLASSES) + 1,
+                                                  #100, im.shape[1], im.shape[0])
+        #pred_dict = get_vis_dict(result_box, result_mask, 'data/demo/' + im_name, CLASSES)
+
+        #img_width = im.shape[1]
+        #img_height = im.shape[0]
+
+        #inst_img, cls_img = _convert_pred_to_image(img_width, img_height, pred_dict)
+        #color_map = _get_voc_color_map()
+        #target_cls_file = os.path.join(demo_dir, 'processed', im_name)
+        #cls_out_img = np.zeros((img_height, img_width, 3))
+        #for i in range(img_height):
+            #for j in range(img_width):
+                #cls_out_img[i][j] = color_map[cls_img[i][j]][::-1]
+
+        #visualization = im * 0.5 + cls_out_img * 0.5
+        #cv2.imwrite(target_cls_file, visualization)
         #cv2.imwrite(target_cls_file, cls_out_img)
         #
         #background = Image.open(gt_image)
