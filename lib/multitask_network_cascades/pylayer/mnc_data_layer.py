@@ -150,7 +150,7 @@ class MNCDataLayer(caffe.Layer):
         blobs = {
             'data': im_blob,
             'gt_boxes': gt_boxes,
-            'im_info': np.array([[im_blob.shape[2], im_blob.shape[3], im_scales[0]]], dtype=np.float32),
+            'im_info': np.array([[im_blob.shape[2], im_blob.shape[3], im_scales[0], roidb['flipped']]], dtype=np.float32),
             'im_path': np.array(list(bytearray(roidb['image'], "UTF-8")))
         }
 

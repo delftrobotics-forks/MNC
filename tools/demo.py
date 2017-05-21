@@ -25,11 +25,7 @@ from multitask_network_cascades.utils.vis_seg import _convert_pred_to_image, _ge
 from PIL import Image
 
 # VOC 20 classes
-CLASSES = ('aeroplane', 'bicycle', 'bird', 'boat',
-           'bottle', 'bus', 'car', 'cat', 'chair',
-           'cow', 'diningtable', 'dog', 'horse',
-           'motorbike', 'person', 'pottedplant',
-           'sheep', 'sofa', 'train', 'tvmonitor')
+CLASSES = ('o')
 
 
 def parse_args():
@@ -84,6 +80,9 @@ def im_detect(im, net):
     rois = net.blobs['rois'].data.copy()
     masks = net.blobs['mask_proposal'].data[...]
     scores = net.blobs['seg_cls_prob'].data[...]
+    keypoints = net.blobs['kpts_pred'].data[...]
+    best_index = np.argmax(scores[:, 1])
+    print(keypoints[best_index, :])
     # 2. output from phase2
     if "rois_ext" in net.blobs:
         rois_phase2 = net.blobs['rois_ext'].data[...]
@@ -96,9 +95,13 @@ def im_detect(im, net):
         scores = np.concatenate((scores, scores_phase2), axis=0)
     # Boxes are in resized space, we un-scale them back
     rois = rois[:, 1:5] / im_scales[0]
+    centers = np.stack([(rois[:, 0] + rois[:, 2]) / 2, (rois[:, 1] + rois[:, 3]) / 2], axis=1)
+    dimensions = np.stack([(rois[:, 2] - rois[:, 0]) / 2, (rois[:, 3] - rois[:, 1]) / 2], axis=1)
+    keypoints *= dimensions
+    keypoints += centers
     rois, _ = clip_boxes(rois, im.shape)
     # concatenate two stages to get final network output
-    return masks, rois, scores
+    return masks, rois, scores, keypoints
 
 
 def get_vis_dict(result_box, result_mask, img_name, cls_names, vis_thresh=0.5):
@@ -131,7 +134,7 @@ if __name__ == '__main__':
     # Warm up for the first two images
     im = 128 * np.ones((300, 500, 3), dtype=np.float32)
     for i in range(2):
-        _, _, _ = im_detect(im, net)
+        _, _, _, _ = im_detect(im, net)
 
     demo_dir = './data/demo'
     im_names = [f for f in os.listdir(demo_dir) if f.endswith(".png") or f.endswith(".jpg")]
@@ -141,26 +144,37 @@ if __name__ == '__main__':
         gt_image = os.path.join(demo_dir, im_name)
         im = cv2.imread(gt_image)
         start = time.time()
-        masks, boxes, scores = im_detect(im, net)
+        masks, boxes, scores, keypoints = im_detect(im, net)
         end = time.time()
         print('forward time {}'.format(end-start))
-        result_mask, result_box = gpu_mask_voting(masks, boxes, scores, len(CLASSES) + 1,
-                                                  100, im.shape[1], im.shape[0])
-        pred_dict = get_vis_dict(result_box, result_mask, 'data/demo/' + im_name, CLASSES)
+        #result_mask, result_box = gpu_mask_voting(masks, boxes, scores, len(CLASSES) + 1,
+        #                                          100, im.shape[1], im.shape[0])
+        #pred_dict = get_vis_dict(result_box, result_mask, 'data/demo/' + im_name, CLASSES)
 
-        img_width = im.shape[1]
-        img_height = im.shape[0]
-        
-        inst_img, cls_img = _convert_pred_to_image(img_width, img_height, pred_dict)
-        color_map = _get_voc_color_map()
-        target_cls_file = os.path.join(demo_dir, 'processed', im_name)
-        cls_out_img = np.zeros((img_height, img_width, 3))
-        for i in range(img_height):
-            for j in range(img_width):
-                cls_out_img[i][j] = color_map[cls_img[i][j]][::-1]
+        #img_width = im.shape[1]
+        #img_height = im.shape[0]
 
-        visualization = im * 0.5 + cls_out_img * 0.5
-        cv2.imwrite(target_cls_file, visualization)
+        #inst_img, cls_img = _convert_pred_to_image(img_width, img_height, pred_dict)
+        #color_map = _get_voc_color_map()
+        #target_cls_file = os.path.join(demo_dir, 'processed', im_name)
+        #cls_out_img = np.zeros((img_height, img_width, 3))
+        #for i in range(img_height):
+        #    for j in range(img_width):
+        #        cls_out_img[i][j] = color_map[cls_img[i][j]][::-1]
+
+        #visualization = im * 0.5 + cls_out_img * 0.5
+        #visualization += min(visualization.flatten())
+        #visualization /= max(visualization.flatten())
+        #visualization = (visualization * 255).astype(np.uint8)
+        visualization = im.copy()
+        best_index = np.argmax(scores[:, 1])
+        box = boxes[best_index, :]
+        kp = keypoints[best_index, :]
+        cv2.rectangle(visualization, (box[0], box[1]), (box[2], box[3]), (0, 255, 0), 2)
+        cv2.circle(visualization, (kp[0], kp[1]), 3, (0, 0, 255), -1)
+        cv2.imshow("Image", visualization)
+        cv2.waitKey()
+        #cv2.imwrite(target_cls_file, visualization)
         #cv2.imwrite(target_cls_file, cls_out_img)
         #
         #background = Image.open(gt_image)

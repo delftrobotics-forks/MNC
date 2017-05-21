@@ -1,9 +1,11 @@
 name: "ZF"
+
 layer {
 	name: 'input-data'
 	type: 'Python'
 	top: 'data'
 	top: 'im_info'
+	top: 'im_path'
 	top: 'gt_boxes'
 	top: 'gt_masks'
 	top: 'mask_info'
@@ -11,6 +13,18 @@ layer {
 		module: 'multitask_network_cascades.pylayer.mnc_data_layer'
 		layer: 'MNCDataLayer'
 		param_str: "{ 'num_classes': {{ num_classes }} }"
+	}
+}
+
+layer {
+	name: 'misc-data'
+	type: 'Python'
+	bottom: 'im_path'
+	bottom: 'im_info'
+	top: 'gt_kpts'
+	python_param {
+		module: 'multitask_network_cascades.pylayer.misc_data_layer'
+		layer: 'MiscDataLayer'
 	}
 }
 
@@ -293,7 +307,9 @@ layer {
 	bottom: 'gt_masks'
 	bottom: 'mask_info'
 	bottom: 'rpn_rois_index'
+	bottom: 'gt_kpts'
 	propagate_down: 1
+	propagate_down: 0
 	propagate_down: 0
 	propagate_down: 0
 	propagate_down: 0
@@ -304,6 +320,7 @@ layer {
 	top: 'bbox_targets'
 	top: 'bbox_inside_weights'
 	top: 'bbox_outside_weights'
+	top: 'kpts_targets'
 	top: 'mask_targets'
 	top: 'mask_weight'
 	top: 'gt_masks_info'
@@ -386,6 +403,103 @@ layer {
 		param_str: "{ 'pooled_w': 12, 'pooled_h': 12, 'spatial_scale': 0.0625 }"
 	}
 }
+
+#------------ Keypoint Estimation ------------
+
+layer {
+	name: "fc6_kpts_est"
+	type: "InnerProduct"
+	bottom: "roi_interpolate_conv5"
+	top: "fc6_kpts_est"
+	param {
+		name: "fc6_kpts_est_w" 
+		lr_mult: 1.0 
+	}
+	param {
+		name: "fc6_kpts_est_b" 
+		lr_mult: 2.0 
+	}
+	inner_product_param {
+		num_output: 256
+		weight_filler {
+			type: "gaussian"
+			std: 0.001
+		}
+		bias_filler {
+			type: "constant"
+			value: 0
+		}
+	}
+}
+
+layer {
+	name: "relu6_kpts_est"
+	type: "ReLU"
+	bottom: "fc6_kpts_est"
+	top: "fc6_kpts_est"
+}
+
+layer {
+	name: "kpts_pred"
+	type: "InnerProduct"
+	bottom: "fc6_kpts_est"
+	top: "kpts_pred"
+	param {
+		name: "kpts_pred_w" 
+		lr_mult: 1.0 
+	}
+	param {
+		name: "kpts_pred_b" 
+		lr_mult: 2.0 
+	}
+	inner_product_param {
+		num_output: 2
+		weight_filler {
+			type: "gaussian"
+			std: 0.001
+		}
+		bias_filler {
+			type: "constant"
+			value: 0
+		}
+	}
+}
+
+layer {
+	name: 'split_kpts_pred'
+	type: 'Python'
+	bottom: 'kpts_pred'
+	bottom: 'kpts_targets'
+	top: 'kpts_pred_split'
+	python_param {
+		module: 'multitask_network_cascades.pylayer.split_keypoints_layer'
+		layer: 'SplitKeypointsLayer'
+	}
+}
+
+layer {
+	name: "loss_kpts"
+	type: "EuclideanLoss"
+	bottom: "kpts_pred_split"
+	bottom: "kpts_targets"
+	top: "loss_kpts"
+}
+
+#layer {
+#	name: 'test-data'
+#	type: 'Python'
+#	bottom: 'data'
+#	bottom: 'gt_kpts'
+#	bottom: 'im_info'
+#	bottom: 'kpts_targets'
+#	bottom: 'rois'
+#	bottom: 'kpts_pred_split'
+#	bottom: 'roi_interpolate_conv5'
+#	python_param {
+#		module: 'multitask_network_cascades.pylayer.test_layer'
+#		layer: 'TestLayer'
+#	}
+#}
 
 #------------ Mask Estimation ------------
 
