@@ -48,7 +48,7 @@ __C.TRAIN.SNAPSHOT_INFIX = ''
 # Sample FG
 __C.TRAIN.FG_FRACTION = [0.3]
 __C.TRAIN.FG_THRESH_HI = [1.0]
-__C.TRAIN.FG_THRESH_LO = [0.8]
+__C.TRAIN.FG_THRESH_LO = [0.5]
 # Sample BF according to remaining samples
 __C.TRAIN.BG_FRACTION = [0.85, 0.15]
 __C.TRAIN.BG_THRESH_HI = [0.5, 0.1]

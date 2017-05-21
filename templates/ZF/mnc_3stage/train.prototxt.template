@@ -321,6 +321,7 @@ layer {
 	top: 'bbox_inside_weights'
 	top: 'bbox_outside_weights'
 	top: 'kpts_targets'
+	top: 'kpts_weight'
 	top: 'mask_targets'
 	top: 'mask_weight'
 	top: 'gt_masks_info'
@@ -453,7 +454,7 @@ layer {
 		lr_mult: 2.0 
 	}
 	inner_product_param {
-		num_output: 2
+		num_output: 441 # 21 * 21
 		weight_filler {
 			type: "gaussian"
 			std: 0.001
@@ -465,25 +466,42 @@ layer {
 	}
 }
 
-layer {
-	name: 'split_kpts_pred'
-	type: 'Python'
-	bottom: 'kpts_pred'
-	bottom: 'kpts_targets'
-	top: 'kpts_pred_split'
-	python_param {
-		module: 'multitask_network_cascades.pylayer.split_keypoints_layer'
-		layer: 'SplitKeypointsLayer'
-	}
-}
+#layer {
+#	name: 'split_kpts_pred'
+#	type: 'Python'
+#	bottom: 'kpts_pred'
+#	bottom: 'kpts_targets'
+#	top: 'kpts_pred_split'
+#	python_param {
+#		module: 'multitask_network_cascades.pylayer.split_keypoints_layer'
+#		layer: 'SplitKeypointsLayer'
+#	}
+#}
 
 layer {
 	name: "loss_kpts"
-	type: "EuclideanLoss"
-	bottom: "kpts_pred_split"
+	type: "Module"
+	bottom: "kpts_pred"
 	bottom: "kpts_targets"
+	bottom: "kpts_weight"
+	propagate_down: 1
+	propagate_down: 0
+	propagate_down: 0
 	top: "loss_kpts"
+	loss_weight: 20
+	module_param {
+		module: "mnc"
+		type: "SigmoidCrossEntropyLoss"
+	}
 }
+
+#layer {
+#	name: "loss_kpts"
+#	type: "EuclideanLoss"
+#	bottom: "kpts_pred_split"
+#	bottom: "kpts_targets"
+#	top: "loss_kpts"
+#}
 
 #layer {
 #	name: 'test-data'
@@ -493,8 +511,8 @@ layer {
 #	bottom: 'im_info'
 #	bottom: 'kpts_targets'
 #	bottom: 'rois'
-#	bottom: 'kpts_pred_split'
-#	bottom: 'roi_interpolate_conv5'
+#	bottom: 'kpts_pred'
+#	bottom: 'mask_targets'
 #	python_param {
 #		module: 'multitask_network_cascades.pylayer.test_layer'
 #		layer: 'TestLayer'

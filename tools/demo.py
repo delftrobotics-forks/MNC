@@ -80,9 +80,7 @@ def im_detect(im, net):
     rois = net.blobs['rois'].data.copy()
     masks = net.blobs['mask_proposal'].data[...]
     scores = net.blobs['seg_cls_prob'].data[...]
-    keypoints = net.blobs['kpts_pred'].data[...]
-    best_index = np.argmax(scores[:, 1])
-    print(keypoints[best_index, :])
+    keypoints = net.blobs['kpts_output'].data[...].reshape(-1, 21, 21)
     # 2. output from phase2
     if "rois_ext" in net.blobs:
         rois_phase2 = net.blobs['rois_ext'].data[...]
@@ -95,10 +93,6 @@ def im_detect(im, net):
         scores = np.concatenate((scores, scores_phase2), axis=0)
     # Boxes are in resized space, we un-scale them back
     rois = rois[:, 1:5] / im_scales[0]
-    centers = np.stack([(rois[:, 0] + rois[:, 2]) / 2, (rois[:, 1] + rois[:, 3]) / 2], axis=1)
-    dimensions = np.stack([(rois[:, 2] - rois[:, 0]) / 2, (rois[:, 3] - rois[:, 1]) / 2], axis=1)
-    keypoints *= dimensions
-    keypoints += centers
     rois, _ = clip_boxes(rois, im.shape)
     # concatenate two stages to get final network output
     return masks, rois, scores, keypoints
@@ -156,7 +150,7 @@ if __name__ == '__main__':
 
         #inst_img, cls_img = _convert_pred_to_image(img_width, img_height, pred_dict)
         #color_map = _get_voc_color_map()
-        #target_cls_file = os.path.join(demo_dir, 'processed', im_name)
+        target_cls_file = os.path.join(demo_dir, 'processed', im_name)
         #cls_out_img = np.zeros((img_height, img_width, 3))
         #for i in range(img_height):
         #    for j in range(img_width):
@@ -168,13 +162,24 @@ if __name__ == '__main__':
         #visualization = (visualization * 255).astype(np.uint8)
         visualization = im.copy()
         best_index = np.argmax(scores[:, 1])
-        box = boxes[best_index, :]
-        kp = keypoints[best_index, :]
+        box = boxes[best_index, :].astype(np.int)
+        mask = cv2.resize(masks[best_index, 0, :, :], (box[2] - box[0], box[3] - box[1])) * 255
+        kpt = cv2.resize(keypoints[best_index, :, :], (box[2] - box[0], box[3] - box[1]))
+        kpt -= min(kpt.flatten())
+        kpt /= max(kpt.flatten())
+        kpt *= 255
+        _, _, _, max_loc = cv2.minMaxLoc(kpt)
+        print(np.unique(kpt))
+        visualization[box[1]:box[3], box[0]:box[2], 0] = mask
+        visualization[box[1]:box[3], box[0]:box[2], 1] = kpt
+        cv2.circle(visualization, (max_loc[0] + box[0], max_loc[1] + box[1]), 3, (0,0,255), -1)
+        print(masks.shape)
+        #kp = keypoints[best_index, :]
         cv2.rectangle(visualization, (box[0], box[1]), (box[2], box[3]), (0, 255, 0), 2)
-        cv2.circle(visualization, (kp[0], kp[1]), 3, (0, 0, 255), -1)
-        cv2.imshow("Image", visualization)
-        cv2.waitKey()
-        #cv2.imwrite(target_cls_file, visualization)
+        #cv2.circle(visualization, (kp[0], kp[1]), 3, (0, 0, 255), -1)
+        #cv2.imshow("Image", visualization)
+        #cv2.waitKey()
+        cv2.imwrite(target_cls_file, visualization)
         #cv2.imwrite(target_cls_file, cls_out_img)
         #
         #background = Image.open(gt_image)

@@ -46,19 +46,21 @@ class ProposalTargetLayer(caffe.Layer):
         self._top_name_map['bbox_outside_weights'] = 4
         # Add mask-related information
         if cfg.MNC_MODE:
-            top[5].reshape(1, 1, 2)
+            top[5].reshape(1, 1, cfg.MASK_SIZE, cfg.MASK_SIZE)
             self._top_name_map['kpts_targets'] = 5
             top[6].reshape(1, 1, cfg.MASK_SIZE, cfg.MASK_SIZE)
-            self._top_name_map['mask_targets'] = 6
+            self._top_name_map['kpts_weight'] = 6
             top[7].reshape(1, 1, cfg.MASK_SIZE, cfg.MASK_SIZE)
-            self._top_name_map['mask_weight'] = 7
-            top[8].reshape(1, 4)
-            self._top_name_map['gt_masks_info'] = 8
+            self._top_name_map['mask_targets'] = 7
+            top[8].reshape(1, 1, cfg.MASK_SIZE, cfg.MASK_SIZE)
+            self._top_name_map['mask_weight'] = 8
+            top[9].reshape(1, 4)
+            self._top_name_map['gt_masks_info'] = 9
             if cfg.TRAIN.MIX_INDEX:
-                top[9].reshape(1, 4)
-                self._top_name_map['fg_inds'] = 9
                 top[10].reshape(1, 4)
-                self._top_name_map['bg_inds'] = 10
+                self._top_name_map['fg_inds'] = 10
+                top[11].reshape(1, 4)
+                self._top_name_map['bg_inds'] = 11
 
     def reshape(self, bottom, top):
         """Reshaping happens during the call to forward."""
@@ -204,7 +206,7 @@ def _sample_rois(all_rois, gt_boxes, rois_per_image, num_classes, gt_masks, im_s
         pos_masks = np.zeros((len(keep_inds), 1, cfg.MASK_SIZE,  cfg.MASK_SIZE))
         top_mask_info = np.zeros((len(keep_inds), 12))
         top_mask_info[len(fg_inds):, :] = -1
-        kpts_targets = np.zeros((len(fg_inds), 1, 2))
+        kpts_targets = np.zeros((len(keep_inds), 1, cfg.MASK_SIZE, cfg.MASK_SIZE))
 
         for i, val in enumerate(fg_inds):
             gt_box = scaled_gt_boxes[gt_assignment[val]]
@@ -233,16 +235,19 @@ def _sample_rois(all_rois, gt_boxes, rois_per_image, num_classes, gt_masks, im_s
             kpt = gt_kpts[np.where(kpts_overlap[val, :])[0][0], :, :].copy()
             kpt[0, 0] = (kpt[0, 0] - center[0]) / roi_w
             kpt[0, 1] = (kpt[0, 1] - center[1]) / roi_h
-            kpts_targets[i, :, :] = kpt
+            kpts_targets[i, 0, cfg.MASK_SIZE // 2 + int(kpt[0, 1] * cfg.MASK_SIZE / 2), cfg.MASK_SIZE // 2 + int(kpt[0, 0] * cfg.MASK_SIZE / 2)] = 1
 
         mask_weight = np.zeros((rois.shape[0], 1, cfg.MASK_SIZE, cfg.MASK_SIZE))
+        kpts_weight = np.zeros((rois.shape[0], 1, cfg.MASK_SIZE, cfg.MASK_SIZE))
 
         # only assign box-level foreground as positive mask regression
         mask_weight[0:len(fg_inds), :, :, :] = 1
+        kpts_weight[0:len(fg_inds), :, :, :] = 1
 
         blobs['mask_targets'] = pos_masks
         blobs['mask_weight'] = mask_weight
         blobs['gt_masks_info'] = top_mask_info
         blobs['kpts_targets'] = kpts_targets
+        blobs['kpts_weight'] = kpts_weight
 
     return blobs, fg_inds, bg_inds, keep_inds

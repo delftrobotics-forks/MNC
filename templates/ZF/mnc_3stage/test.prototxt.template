@@ -345,7 +345,7 @@ layer {
 		lr_mult: 2.0 
 	}
 	inner_product_param {
-		num_output: 2
+		num_output: 441 # 21 * 21
 		weight_filler {
 			type: "gaussian"
 			std: 0.001
@@ -355,6 +355,13 @@ layer {
 			value: 0
 		}
 	}
+}
+
+layer {
+	name: "kpts_output"
+	type: "Sigmoid"
+	bottom: "kpts_pred"
+	top: "kpts_output"
 }
 
 #------------ Mask Estimation ------------
