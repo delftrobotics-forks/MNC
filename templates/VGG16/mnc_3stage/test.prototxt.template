@@ -812,7 +812,7 @@ layer {
 		name: "bbox_pred_b"
 	}
 	inner_product_param {
-		num_output: 8
+		num_output: {{ num_classes * 4 }}
 	}
 }
 

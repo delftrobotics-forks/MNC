@@ -380,10 +380,10 @@ layer {
 	bottom: "roi_interpolate_conv5_box"
 	top: "fc6"
 	param {
-		name: "fc6_w" 
+		name: "fc6_w"
 	}
 	param {
-		name: "fc6_b" 
+		name: "fc6_b"
 	}
 	inner_product_param {
 		num_output: 4096
@@ -403,7 +403,7 @@ layer {
 	bottom: "fc6"
 	top: "fc7"
 	param {
-		name: "fc7_w" 
+		name: "fc7_w"
 	}
 	param {
 		name: "fc7_b"
@@ -453,10 +453,10 @@ layer {
 	bottom: "roi_interpolate_conv5_mask"
 	top: "fc6_mask"
 	param {
-		name: "fc6_mask_w" 
+		name: "fc6_mask_w"
 	}
 	param {
-		name: "fc6_mask_b" 
+		name: "fc6_mask_b"
 	}
 	inner_product_param {
 		num_output: 4096
@@ -476,10 +476,10 @@ layer {
 	bottom: "fc6_mask"
 	top: "fc7_mask"
 	param {
-		name: "fc7_mask_w" 
+		name: "fc7_mask_w"
 	}
 	param {
-		name: "fc7_mask_b" 
+		name: "fc7_mask_b"
 	}
 	inner_product_param {
 		num_output: 4096
@@ -514,10 +514,10 @@ layer {
 	bottom: "join_box_mask"
 	top: "cls_score"
 	param {
-		name: "cls_score_w" 
+		name: "cls_score_w"
 	}
 	param {
-		name: "cls_score_b" 
+		name: "cls_score_b"
 	}
 	inner_product_param {
 		num_output: {{ num_classes }}
@@ -543,10 +543,10 @@ layer {
 	bottom: "join_box_mask"
 	top: "seg_cls_score"
 	param {
-		name: "seg_cls_score_w" 
+		name: "seg_cls_score_w"
 	}
 	param {
-		name: "seg_cls_score_b" 
+		name: "seg_cls_score_b"
 	}
 	inner_product_param {
 		num_output: {{ num_classes }}
@@ -572,13 +572,13 @@ layer {
 	bottom: "join_box_mask"
 	top: "bbox_pred"
 	param {
-		name: "bbox_pred_w" 
+		name: "bbox_pred_w"
 	}
 	param {
-		name: "bbox_pred_b" 
+		name: "bbox_pred_b"
 	}
 	inner_product_param {
-		num_output: 8
+		num_output: {{ num_classes * 4 }}
 	}
 }
 
