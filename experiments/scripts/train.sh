@@ -1,10 +1,10 @@
 #!/bin/bash
 
 GPU_ID=${1:-0}
-NET=${2:-"ZF"}
+NET=${2:-"ResNet50"}
 STAGES=${3:-3}
-DATA_DIR=${4:-/srv/caffe-data/datasets/coffee}
-ITERS=${5:-200}
+DATA_DIR=${4:-/srv/caffe-data/datasets/meyn}
+ITERS=${5:-1000}
 
 # Remove slashes at the end of the path.
 DATA_DIR=${DATA_DIR%/}
@@ -31,10 +31,10 @@ fi
 
 # Generate prototxt files.
 python experiments/scripts/generate_prototxt.py \
-	${NET}/mnc_${STAGES}stage/train.prototxt.template  output/${DATASET}/train.prototxt  -p num_classes=${NUM_CLASSES}
+	${NET}/mnc_${STAGES}stage/train.prototxt.template  output/${DATASET}/train.prototxt  -p num_classes=${NUM_CLASSES} -p use_segmentation=False
 
 python experiments/scripts/generate_prototxt.py \
-	${NET}/mnc_${STAGES}stage/solver.prototxt.template output/${DATASET}/solver.prototxt -p dataset_name=${DATASET}
+	${NET}/mnc_${STAGES}stage/solver.prototxt.template output/${DATASET}/solver.prototxt -p dataset_name=${DATASET} - p use_segmentation=False
 
 # Get path for Caffe model.
 case $NET in
