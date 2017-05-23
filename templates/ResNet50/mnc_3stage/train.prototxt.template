@@ -2081,6 +2081,7 @@ layer {
 	}
 }
 
+{% if use_segmentation == 'True' %}
 #------------ Mask Estimation ------------
 
 layer {
@@ -2709,6 +2710,7 @@ layer {
 		normalize: true
 	}
 }
+{% endif %}
 
 #----- Bounding-box Regression -----
 
@@ -2754,6 +2756,7 @@ layer {
 	}
 }
 
+{% if use_segmentation == 'True' %}
 layer {
 	name: "accuracy_seg"
 	type: "Accuracy"
@@ -2761,4 +2764,4 @@ layer {
 	bottom: "mask_proposal_label"
 	top: "accuracy_seg"
 }
-
+{% endif %}
