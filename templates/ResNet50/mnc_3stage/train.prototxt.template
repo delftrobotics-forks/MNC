@@ -4,6 +4,7 @@ layer {
 	type: 'Python'
 	top: 'data'
 	top: 'im_info'
+	top: 'im_path'
 	top: 'gt_boxes'
 	top: 'gt_masks'
 	top: 'mask_info'
@@ -11,6 +12,18 @@ layer {
 		module: 'multitask_network_cascades.pylayer.mnc_data_layer'
 		layer: 'MNCDataLayer'
 		param_str: "{ 'num_classes': {{ num_classes }} }"
+	}
+}
+
+layer {
+	name: 'misc-data'
+	type: 'Python'
+	bottom: 'im_path'
+	bottom: 'im_info'
+	top: 'gt_kpts'
+	python_param {
+		module: 'multitask_network_cascades.pylayer.misc_data_layer'
+		layer: 'MiscDataLayer'
 	}
 }
 
@@ -1973,12 +1986,6 @@ layer {
 }
 
 layer {
-	name: 'silence'
-	type: 'Silence'
-	bottom: 'rpn_scores'
-}
-
-layer {
 	name: 'roi-data'
 	type: 'Python'
 	bottom: 'rpn_rois'
@@ -1987,7 +1994,9 @@ layer {
 	bottom: 'gt_masks'
 	bottom: 'mask_info'
 	bottom: 'rpn_rois_index'
+	bottom: 'gt_kpts'
 	propagate_down: 1
+	propagate_down: 0
 	propagate_down: 0
 	propagate_down: 0
 	propagate_down: 0
@@ -1998,6 +2007,8 @@ layer {
 	top: 'bbox_targets'
 	top: 'bbox_inside_weights'
 	top: 'bbox_outside_weights'
+	top: 'kpts_targets'
+	top: 'kpts_weight'
 	top: 'mask_targets'
 	top: 'mask_weight'
 	top: 'gt_masks_info'
@@ -2028,6 +2039,14 @@ layer {
 		param_str: "{'feat_stride': 16}"
 	}
 }
+
+layer {
+	name: 'silence'
+	type: 'Silence'
+	bottom: 'rpn_scores'
+	bottom: 'labels'
+}
+
 
 #------------ RPN loss ------------
 # put rpn loss here since we need
@@ -2078,6 +2097,92 @@ layer {
 		module: "mnc"
 		type: "ROIWarping"
 		param_str: "{ 'pooled_w': 14, 'pooled_h': 14, 'spatial_scale': 0.0625 }"
+	}
+}
+
+#------------ Keypoint Estimation ------------
+
+layer {
+	name: "fc6_kpts_est"
+	type: "InnerProduct"
+	bottom: "roi_interpolate_conv5"
+	top: "fc6_kpts_est"
+	param {
+		name: "fc6_kpts_est_w"
+		lr_mult: 1.0
+	}
+	param {
+		name: "fc6_kpts_est_b"
+		lr_mult: 2.0
+	}
+	inner_product_param {
+		num_output: 256
+		weight_filler {
+			type: "gaussian"
+			std: 0.001
+		}
+		bias_filler {
+			type: "constant"
+			value: 0
+		}
+	}
+}
+
+layer {
+	name: "relu6_kpts_est"
+	type: "ReLU"
+	bottom: "fc6_kpts_est"
+	top: "fc6_kpts_est"
+}
+
+layer {
+	name: "kpts_pred"
+	type: "InnerProduct"
+	bottom: "fc6_kpts_est"
+	top: "kpts_pred"
+	param {
+		name: "kpts_pred_w"
+		lr_mult: 1.0
+	}
+	param {
+		name: "kpts_pred_b"
+		lr_mult: 2.0
+	}
+	inner_product_param {
+		num_output: 1323 # 3 * 21 * 21
+		weight_filler {
+			type: "gaussian"
+			std: 0.001
+		}
+		bias_filler {
+			type: "constant"
+			value: 0
+		}
+	}
+}
+
+layer {
+	bottom: "kpts_pred"
+	top: "kpts_pred_reshape"
+	name: "kpts_pred_reshape"
+	type: "Reshape"
+	reshape_param { shape { dim: -1 dim: 3 dim: 21 dim: 21 } }
+}
+
+layer {
+	name: "loss_kpts"
+	type: "Module"
+	bottom: "kpts_pred_reshape"
+	bottom: "kpts_targets"
+	bottom: "kpts_weight"
+	propagate_down: 1
+	propagate_down: 0
+	propagate_down: 0
+	top: "loss_kpts"
+	loss_weight: 20
+	module_param {
+		module: "mnc"
+		type: "SigmoidCrossEntropyLoss"
 	}
 }
 
@@ -2761,4 +2866,3 @@ layer {
 	bottom: "mask_proposal_label"
 	top: "accuracy_seg"
 }
-

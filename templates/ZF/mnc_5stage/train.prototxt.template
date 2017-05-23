@@ -11,7 +11,7 @@ layer {
 	python_param {
 		module: 'multitask_network_cascades.pylayer.mnc_data_layer'
 		layer: 'MNCDataLayer'
-		param_str: "{ 'num_classes': 2 }"
+		param_str: "{ 'num_classes': {{ num_classes }} }"
 	}
 }
 
@@ -321,7 +321,7 @@ layer {
 	python_param {
 		module: 'multitask_network_cascades.pylayer.proposal_target_layer'
 		layer: 'ProposalTargetLayer'
-		param_str: "{'num_classes': 2, 'bp_all': 1}"
+		param_str: "{'num_classes': {{ num_classes }}, 'bp_all': 1}"
 	}
 }
 
@@ -765,7 +765,7 @@ layer {
 		lr_mult: 2.0
 	}
 	inner_product_param {
-		num_output: 2
+		num_output: {{ num_classes }}
 		weight_filler {
 			type: "gaussian"
 			std: 0.01
@@ -808,7 +808,7 @@ layer {
 		lr_mult: 2.0
 	}
 	inner_product_param {
-		num_output: 2
+		num_output: {{ num_classes }}
 		weight_filler {
 			type: "gaussian"
 			std: 0.01
@@ -851,7 +851,7 @@ layer {
 		lr_mult: 2.0
 	}
 	inner_product_param {
-		num_output: 8
+		num_output: {{ num_classes * 4 }}
 		weight_filler {
 			type: "gaussian"
 			std: 0.001
@@ -943,7 +943,7 @@ layer {
 	python_param {
 		module: 'multitask_network_cascades.pylayer.stage_bridge_layer'
 		layer: 'StageBridgeLayer'
-		param_str: "{ 'feat_stride': 16,  'use_clip': 1,  'clip_base': 512, 'num_classes': 2 }"
+		param_str: "{ 'feat_stride': 16,  'use_clip': 1,  'clip_base': 512, 'num_classes': {{ num_classes }} }"
 	}
 }
 
@@ -1345,7 +1345,7 @@ layer {
 		lr_mult: 2.0
 	}
 	inner_product_param {
-		num_output: 2
+		num_output: {{ num_classes }}
 		weight_filler {
 			type: "gaussian"
 			std: 0.01
@@ -1388,7 +1388,7 @@ layer {
 		lr_mult: 2.0
 	}
 	inner_product_param {
-		num_output: 2
+		num_output: {{ num_classes }}
 		weight_filler {
 			type: "gaussian"
 			std: 0.01
@@ -1431,7 +1431,7 @@ layer {
 		lr_mult: 2.0
 	}
 	inner_product_param {
-		num_output: 8
+		num_output: {{ num_classes * 4 }}
 		weight_filler {
 			type: "gaussian"
 			std: 0.001

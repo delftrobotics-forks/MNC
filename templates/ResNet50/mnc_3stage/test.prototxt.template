@@ -1988,6 +1988,82 @@ layer {
 	}
 }
 
+#------------ Keypoint Estimation ------------
+
+layer {
+	name: "fc6_kpts_est"
+	type: "InnerProduct"
+	bottom: "roi_interpolate_conv5"
+	top: "fc6_kpts_est"
+	param {
+		name: "fc6_kpts_est_w"
+		lr_mult: 1.0
+	}
+	param {
+		name: "fc6_kpts_est_b"
+		lr_mult: 2.0
+	}
+	inner_product_param {
+		num_output: 256
+		weight_filler {
+			type: "gaussian"
+			std: 0.001
+		}
+		bias_filler {
+			type: "constant"
+			value: 0
+		}
+	}
+}
+
+layer {
+	name: "relu6_kpts_est"
+	type: "ReLU"
+	bottom: "fc6_kpts_est"
+	top: "fc6_kpts_est"
+}
+
+layer {
+	name: "kpts_pred"
+	type: "InnerProduct"
+	bottom: "fc6_kpts_est"
+	top: "kpts_pred"
+	param {
+		name: "kpts_pred_w"
+		lr_mult: 1.0
+	}
+	param {
+		name: "kpts_pred_b"
+		lr_mult: 2.0
+	}
+	inner_product_param {
+		num_output: 1323 # 3* 21 * 21
+		weight_filler {
+			type: "gaussian"
+			std: 0.001
+		}
+		bias_filler {
+			type: "constant"
+			value: 0
+		}
+	}
+}
+
+layer {
+	bottom: "kpts_pred"
+	top: "kpts_pred_reshape"
+	name: "kpts_pred_reshape"
+	type: "Reshape"
+	reshape_param { shape { dim: -1 dim: 3 dim: 21 dim: 21 } }
+}
+
+layer {
+	name: "kpts_output"
+	type: "Sigmoid"
+	bottom: "kpts_pred_reshape"
+	top: "kpts_output"
+}
+
 #------------ Mask Estimation ------------
 
 layer {
@@ -2563,6 +2639,3 @@ layer {
 		num_output: {{ num_classes * 4 }}
 	}
 }
-
-
-

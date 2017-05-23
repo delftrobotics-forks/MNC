@@ -413,12 +413,12 @@ layer {
 	bottom: "roi_interpolate_conv5"
 	top: "fc6_kpts_est"
 	param {
-		name: "fc6_kpts_est_w" 
-		lr_mult: 1.0 
+		name: "fc6_kpts_est_w"
+		lr_mult: 1.0
 	}
 	param {
-		name: "fc6_kpts_est_b" 
-		lr_mult: 2.0 
+		name: "fc6_kpts_est_b"
+		lr_mult: 2.0
 	}
 	inner_product_param {
 		num_output: 256
@@ -446,12 +446,12 @@ layer {
 	bottom: "fc6_kpts_est"
 	top: "kpts_pred"
 	param {
-		name: "kpts_pred_w" 
-		lr_mult: 1.0 
+		name: "kpts_pred_w"
+		lr_mult: 1.0
 	}
 	param {
-		name: "kpts_pred_b" 
-		lr_mult: 2.0 
+		name: "kpts_pred_b"
+		lr_mult: 2.0
 	}
 	inner_product_param {
 		num_output: 441 # 21 * 21
@@ -527,12 +527,12 @@ layer {
 	bottom: "roi_interpolate_conv5"
 	top: "fc6_maskest"
 	param {
-		name: "fc6_maskest_w" 
-		lr_mult: 1.0 
+		name: "fc6_maskest_w"
+		lr_mult: 1.0
 	}
 	param {
-		name: "fc6_maskest_b" 
-		lr_mult: 2.0 
+		name: "fc6_maskest_b"
+		lr_mult: 2.0
 	}
 	inner_product_param {
 		num_output: 256
@@ -560,12 +560,12 @@ layer {
 	bottom: "fc6_maskest"
 	top: "mask_pred"
 	param {
-		name: "mask_pred_w" 
-		lr_mult: 1.0 
+		name: "mask_pred_w"
+		lr_mult: 1.0
 	}
 	param {
-		name: "mask_pred_b" 
-		lr_mult: 2.0 
+		name: "mask_pred_b"
+		lr_mult: 2.0
 	}
 	inner_product_param {
 		num_output: 441 # 21 * 21
@@ -598,7 +598,7 @@ layer {
 }
 
 #------------ Mask resize ------------
-# get masks from sigmoid prediction 
+# get masks from sigmoid prediction
 # and use it for mask pooling
 
 layer {
@@ -658,12 +658,12 @@ layer {
 	bottom: "roi_interpolate_conv5_box"
 	top: "fc6"
 	param {
-		name: "fc6_w" 
-		lr_mult: 1.0 
+		name: "fc6_w"
+		lr_mult: 1.0
 	}
 	param {
-		name: "fc6_b" 
-		lr_mult: 2.0 
+		name: "fc6_b"
+		lr_mult: 2.0
 	}
 	inner_product_param {
 		num_output: 4096
@@ -683,12 +683,12 @@ layer {
 	bottom: "fc6"
 	top: "fc7"
 	param {
-		name: "fc7_w" 
-		lr_mult: 1.0 
+		name: "fc7_w"
+		lr_mult: 1.0
 	}
 	param {
-		name: "fc7_b" 
-		lr_mult: 2.0 
+		name: "fc7_b"
+		lr_mult: 2.0
 	}
 	inner_product_param {
 		num_output: 4096
@@ -737,12 +737,12 @@ layer {
 	bottom: "roi_interpolate_conv5_mask"
 	top: "fc6_mask"
 	param {
-		name: "fc6_mask_w" 
-		lr_mult: 1.0 
+		name: "fc6_mask_w"
+		lr_mult: 1.0
 	}
 	param {
-		name: "fc6_mask_b" 
-		lr_mult: 2.0 
+		name: "fc6_mask_b"
+		lr_mult: 2.0
 	}
 	inner_product_param {
 		num_output: 4096
@@ -762,12 +762,12 @@ layer {
 	bottom: "fc6_mask"
 	top: "fc7_mask"
 	param {
-		name: "fc7_mask_w" 
-		lr_mult: 1.0 
+		name: "fc7_mask_w"
+		lr_mult: 1.0
 	}
 	param {
-		name: "fc7_mask_b" 
-		lr_mult: 2.0 
+		name: "fc7_mask_b"
+		lr_mult: 2.0
 	}
 	inner_product_param {
 		num_output: 4096
@@ -802,12 +802,12 @@ layer {
 	bottom: "join_box_mask"
 	top: "cls_score"
 	param {
-		name: "cls_score_w" 
-		lr_mult: 1.0 
+		name: "cls_score_w"
+		lr_mult: 1.0
 	}
 	param {
-		name: "cls_score_b" 
-		lr_mult: 2.0 
+		name: "cls_score_b"
+		lr_mult: 2.0
 	}
 	inner_product_param {
 		num_output: {{ num_classes }}
@@ -845,12 +845,12 @@ layer {
 	bottom: "join_box_mask"
 	top: "seg_cls_score"
 	param {
-		name: "seg_cls_score_w" 
-		lr_mult: 1.0 
+		name: "seg_cls_score_w"
+		lr_mult: 1.0
 	}
 	param {
-		name: "seg_cls_score_b" 
-		lr_mult: 2.0 
+		name: "seg_cls_score_b"
+		lr_mult: 2.0
 	}
 	inner_product_param {
 		num_output: {{ num_classes }}
@@ -888,12 +888,12 @@ layer {
 	bottom: "join_box_mask"
 	top: "bbox_pred"
 	param {
-		name: "bbox_pred_w" 
-		lr_mult: 1.0 
+		name: "bbox_pred_w"
+		lr_mult: 1.0
 	}
 	param {
-		name: "bbox_pred_b" 
-		lr_mult: 2.0 
+		name: "bbox_pred_b"
+		lr_mult: 2.0
 	}
 	inner_product_param {
 		num_output: {{ num_classes * 4 }}
@@ -939,5 +939,3 @@ layer {
 	bottom: "labels"
 	top: "accuracy_det"
 }
-
-
