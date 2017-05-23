@@ -7,6 +7,7 @@
 
 import caffe
 import json
+import math
 import numpy as np
 import numpy.random as npr
 import os
@@ -46,9 +47,9 @@ class ProposalTargetLayer(caffe.Layer):
         self._top_name_map['bbox_outside_weights'] = 4
         # Add mask-related information
         if cfg.MNC_MODE:
-            top[5].reshape(1, 1, cfg.MASK_SIZE, cfg.MASK_SIZE)
+            top[5].reshape(1, 3, cfg.MASK_SIZE, cfg.MASK_SIZE)
             self._top_name_map['kpts_targets'] = 5
-            top[6].reshape(1, 1, cfg.MASK_SIZE, cfg.MASK_SIZE)
+            top[6].reshape(1, 3, cfg.MASK_SIZE, cfg.MASK_SIZE)
             self._top_name_map['kpts_weight'] = 6
             top[7].reshape(1, 1, cfg.MASK_SIZE, cfg.MASK_SIZE)
             self._top_name_map['mask_targets'] = 7
@@ -206,7 +207,7 @@ def _sample_rois(all_rois, gt_boxes, rois_per_image, num_classes, gt_masks, im_s
         pos_masks = np.zeros((len(keep_inds), 1, cfg.MASK_SIZE,  cfg.MASK_SIZE))
         top_mask_info = np.zeros((len(keep_inds), 12))
         top_mask_info[len(fg_inds):, :] = -1
-        kpts_targets = np.zeros((len(keep_inds), 1, cfg.MASK_SIZE, cfg.MASK_SIZE))
+        kpts_targets = np.zeros((len(keep_inds), 3, cfg.MASK_SIZE, cfg.MASK_SIZE))
 
         for i, val in enumerate(fg_inds):
             gt_box = scaled_gt_boxes[gt_assignment[val]]
@@ -230,15 +231,20 @@ def _sample_rois(all_rois, gt_boxes, rois_per_image, num_classes, gt_masks, im_s
 
             # scale keypoints to [-1, 1]
             center = ((rois[i, 1] + rois[i, 3]) / 2, (rois[i, 2] + rois[i, 4]) / 2)
-            roi_w = (rois[i, 3] - rois[i, 1]) / 2
-            roi_h = (rois[i, 4] - rois[i, 2]) / 2
+            roi_w = (rois[i, 3] - rois[i, 1])
+            roi_h = (rois[i, 4] - rois[i, 2])
             kpt = gt_kpts[np.where(kpts_overlap[val, :])[0][0], :, :].copy()
-            kpt[0, 0] = (kpt[0, 0] - center[0]) / roi_w
-            kpt[0, 1] = (kpt[0, 1] - center[1]) / roi_h
-            kpts_targets[i, 0, cfg.MASK_SIZE // 2 + int(kpt[0, 1] * cfg.MASK_SIZE / 2), cfg.MASK_SIZE // 2 + int(kpt[0, 0] * cfg.MASK_SIZE / 2)] = 1
+            for j in range(3):
+                kpt[j, 0] = (kpt[j, 0] - center[0]) / (roi_w / 2)
+                kpt[j, 1] = (kpt[j, 1] - center[1]) / (roi_h / 2)
+
+                x = int(cfg.MASK_SIZE / 2 + kpt[j, 0] * cfg.MASK_SIZE / 2)
+                y = int(cfg.MASK_SIZE / 2 + kpt[j, 1] * cfg.MASK_SIZE / 2)
+
+                kpts_targets[i, j, min(max(0, y), cfg.MASK_SIZE - 1), min(max(0, x), cfg.MASK_SIZE - 1)] = 1
 
         mask_weight = np.zeros((rois.shape[0], 1, cfg.MASK_SIZE, cfg.MASK_SIZE))
-        kpts_weight = np.zeros((rois.shape[0], 1, cfg.MASK_SIZE, cfg.MASK_SIZE))
+        kpts_weight = np.zeros((rois.shape[0], 3, cfg.MASK_SIZE, cfg.MASK_SIZE))
 
         # only assign box-level foreground as positive mask regression
         mask_weight[0:len(fg_inds), :, :, :] = 1
