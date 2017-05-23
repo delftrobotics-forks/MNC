@@ -1,10 +1,10 @@
 #!/bin/bash
 
 GPU_ID=${1:-0}
-NET=${2:-"ZF"}
+NET=${2:-"ResNet50"}
 STAGES=${3:-3}
-DATA_DIR=${4:-/srv/caffe-data/datasets/coffee}
-ITERS=${5:-200}
+DATA_DIR=${4:-/srv/caffe-data/datasets/meyn}
+ITERS=${5:-1000}
 
 # Remove slashes at the end of the path.
 DATA_DIR=${DATA_DIR%/}
