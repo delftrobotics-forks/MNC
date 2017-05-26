@@ -1,11 +1,11 @@
 #!/bin/bash
 
 GPU_ID=${1:-0}
-NET=${2:-"ZF"}
+NET=${2:-"ResNet50"}
 STAGES=${3:-3}
-DATA_DIR=${4:-"/srv/caffe-data/datasets/boxes_family_gray"}
+DATA_DIR=${4:-"/srv/caffe-data/datasets/meyn"}
 TASK=${5:-"seg"}
-MODEL=${6:-"output/boxes_family_gray/zf_mnc_3stage_iter_20.caffemodel.h5"}
+MODEL=${6:-"output/meyn/resnet50_mnc_3stage_iter_1000.caffemodel.h5"}
 
 # Remove slashes at the end of the path.
 DATA_DIR=${DATA_DIR%/}
