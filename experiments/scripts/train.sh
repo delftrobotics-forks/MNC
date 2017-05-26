@@ -18,6 +18,13 @@ case $yn in
 	[Yy]* ) rm -rf cache/*; rm -rf data/cache/*;
 esac
 
+# Prompt old models removal.
+read -p "Remove old models? [y/N] " yn
+case $yn in
+	[Yy]* ) rm -rf output/${DATASET}*;
+esac
+
+
 # Compute the number of classes based on the classes.txt file.
 if [ -f ${DATA_DIR}/classes.txt ]; then
 	NUM_CLASSES=$(($(cat ${DATA_DIR}/classes.txt | wc -l) + 1))
