@@ -30,6 +30,8 @@ class MiscDataLayer(caffe.Layer):
             json_data = json.load(json_file)
 
         top[0].reshape(len(json_data), 3, 2)
+        top[1].reshape(len(json_data))
+
         for key, val in json_data.items():
             index = int(key) - 1
 
@@ -46,6 +48,8 @@ class MiscDataLayer(caffe.Layer):
                 top[0].data[index, 0, 0] = im_width - top[0].data[index, 0, 0]
                 top[0].data[index, 1, 0] = im_width - top[0].data[index, 1, 0]
                 top[0].data[index, 2, 0] = im_width - top[0].data[index, 2, 0]
+
+            top[1].data[index] = val["object_class"]
 
     def backward(self, top, propagate_down, bottom):
         pass
