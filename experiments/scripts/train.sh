@@ -3,7 +3,7 @@
 GPU_ID=${1:-0}
 NET=${2:-"ResNet50"}
 STAGES=${3:-3}
-DATA_DIR=${4:-/srv/caffe-data/datasets/meyn}
+DATA_DIR=${4:-/srv/caffe-data/datasets/meyn-complete}
 ITERS=${5:-1000}
 
 # Remove slashes at the end of the path.
