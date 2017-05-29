@@ -80,7 +80,7 @@ def im_detect(im, net):
     rois = net.blobs['rois'].data.copy()
     masks = net.blobs['mask_proposal'].data[...]
     scores = net.blobs['seg_cls_prob'].data[...]
-    keypoints = net.blobs['kpts_output'].data[...].reshape(-1, 3, 21, 21)
+    keypoints = net.blobs['kpts_output'].data[...]
     # 2. output from phase2
     if "rois_ext" in net.blobs:
         rois_phase2 = net.blobs['rois_ext'].data[...]
@@ -161,20 +161,24 @@ if __name__ == '__main__':
         #visualization /= max(visualization.flatten())
         #visualization = (visualization * 255).astype(np.uint8)
         visualization = im.copy()
-        best_index = np.argmax(scores[:, 1])
-        box = boxes[best_index, :].astype(np.int)
-        mask = cv2.resize(masks[best_index, 0, :, :], (box[2] - box[0], box[3] - box[1])) * 255
+        cls_scores = scores[:, 1:]
+        best_index = np.where(cls_scores == np.max(cls_scores))
+        row, col = best_index[0][0], best_index[1][0]
+        box = boxes[row, :].astype(np.int)
+        #mask = cv2.resize(masks[best_index, 0, :, :], (box[2] - box[0], box[3] - box[1])) * 255
         #visualization[box[1]:box[3], box[0]:box[2], 0] = mask
-        cv2.rectangle(visualization, (box[0], box[1]), (box[2], box[3]), (0, 255, 0), 2)
+        color = (0, 255, 0) if np.argmax(cls_scores[row, :]) == 0 else (255, 0, 0)
+        cv2.rectangle(visualization, (box[0], box[1]), (box[2], box[3]), color, 5)
 
         for i in range(3):
-            kpt = cv2.resize(keypoints[best_index, i, :, :], (box[2] - box[0], box[3] - box[1]))
+            kpt = cv2.resize(keypoints[row, i, :, :], (box[2] - box[0], box[3] - box[1]))
             kpt -= min(kpt.flatten())
             kpt /= max(kpt.flatten())
             kpt *= 255
             _, _, _, max_loc = cv2.minMaxLoc(kpt)
-            visualization[box[1]:box[3], box[0]:box[2], 1] = kpt
-            cv2.circle(visualization, (max_loc[0] + box[0], max_loc[1] + box[1]), 3, (0,0,255), -1)
+
+            #visualization[box[1]:box[3], box[0]:box[2], 1] = kpt
+            cv2.circle(visualization, (max_loc[0] + box[0], max_loc[1] + box[1]), 5, (0,0,255), -1)
         #kp = keypoints[best_index, :]
         #cv2.circle(visualization, (kp[0], kp[1]), 3, (0, 0, 255), -1)
         #cv2.imshow("Image", visualization)
