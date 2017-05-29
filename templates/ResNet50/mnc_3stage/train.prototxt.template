@@ -21,6 +21,7 @@ layer {
 	bottom: 'im_path'
 	bottom: 'im_info'
 	top: 'gt_kpts'
+	top: 'gt_labels'
 	python_param {
 		module: 'multitask_network_cascades.pylayer.misc_data_layer'
 		layer: 'MiscDataLayer'
@@ -1995,7 +1996,9 @@ layer {
 	bottom: 'mask_info'
 	bottom: 'rpn_rois_index'
 	bottom: 'gt_kpts'
+	bottom: 'gt_labels'
 	propagate_down: 1
+	propagate_down: 0
 	propagate_down: 0
 	propagate_down: 0
 	propagate_down: 0
@@ -2103,43 +2106,23 @@ layer {
 #------------ Keypoint Estimation ------------
 
 layer {
-	name: "kpts_pred"
-	type: "InnerProduct"
+	name: "kpts_pred_mask"
+	type: "Deconvolution"
 	bottom: "roi_interpolate_conv5"
-	top: "kpts_pred"
-	param {
-		name: "kpts_pred_w"
-		lr_mult: 1.0
+	top: "kpts_pred_mask"
+	convolution_param {
+		kernel_size: 5
+		stride: 3
+		num_output: 6
+		pad: 1
+		weight_filler { type: "gaussian" std: 0.01 }
 	}
-	param {
-		name: "kpts_pred_b"
-		lr_mult: 2.0
-	}
-	inner_product_param {
-		num_output: 1323 # 3 * 21 * 21
-		weight_filler {
-			type: "gaussian"
-			std: 0.001
-		}
-		bias_filler {
-			type: "constant"
-			value: 0
-		}
-	}
-}
-
-layer {
-	bottom: "kpts_pred"
-	top: "kpts_pred_reshape"
-	name: "kpts_pred_reshape"
-	type: "Reshape"
-	reshape_param { shape { dim: -1 dim: 3 dim: 21 dim: 21 } }
 }
 
 layer {
 	name: "loss_kpts"
 	type: "Module"
-	bottom: "kpts_pred_reshape"
+	bottom: "kpts_pred_mask"
 	bottom: "kpts_targets"
 	bottom: "kpts_weight"
 	propagate_down: 1

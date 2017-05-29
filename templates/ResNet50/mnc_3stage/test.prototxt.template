@@ -1991,43 +1991,23 @@ layer {
 #------------ Keypoint Estimation ------------
 
 layer {
-	name: "kpts_pred"
-	type: "InnerProduct"
+	name: "kpts_pred_mask"
+	type: "Deconvolution"
 	bottom: "roi_interpolate_conv5"
-	top: "kpts_pred"
-	param {
-		name: "kpts_pred_w"
-		lr_mult: 1.0
+	top: "kpts_pred_mask"
+	convolution_param {
+		kernel_size: 5
+		stride: 3
+		num_output: 6
+		pad: 1
+		weight_filler { type: "gaussian" std: 0.01 }
 	}
-	param {
-		name: "kpts_pred_b"
-		lr_mult: 2.0
-	}
-	inner_product_param {
-		num_output: 1323 # 3* 21 * 21
-		weight_filler {
-			type: "gaussian"
-			std: 0.001
-		}
-		bias_filler {
-			type: "constant"
-			value: 0
-		}
-	}
-}
-
-layer {
-	bottom: "kpts_pred"
-	top: "kpts_pred_reshape"
-	name: "kpts_pred_reshape"
-	type: "Reshape"
-	reshape_param { shape { dim: -1 dim: 3 dim: 21 dim: 21 } }
 }
 
 layer {
 	name: "kpts_output"
 	type: "Sigmoid"
-	bottom: "kpts_pred_reshape"
+	bottom: "kpts_pred_mask"
 	top: "kpts_output"
 }
 
